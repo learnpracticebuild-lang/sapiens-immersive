@@ -1044,6 +1044,19 @@ const PALETTES = {
     accent: '#D4A845', accentDim: 'rgba(212,168,69,0.1)', accentMid: 'rgba(212,168,69,0.3)',
     accentGlow: 'rgba(212,168,69,0.05)', border: 'rgba(255,255,255,0.06)',
     glassBg: 'rgba(30,30,30,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // ── Part II: 农业革命 ──
+  scene5: {
+    bg: '#F5F0E0', bgSecondary: '#EBE4CE', fg: '#2A2011', fgSecondary: '#7A6C4E',
+    accent: '#B8860B', accentDim: 'rgba(184,134,11,0.1)', accentMid: 'rgba(184,134,11,0.3)',
+    accentGlow: 'rgba(184,134,11,0.05)', border: 'rgba(42,32,17,0.07)',
+    glassBg: 'rgba(245,240,224,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene6: {
+    bg: '#F2EDE4', bgSecondary: '#E6DFD2', fg: '#1E1914', fgSecondary: '#6D6050',
+    accent: '#8B4513', accentDim: 'rgba(139,69,19,0.1)', accentMid: 'rgba(139,69,19,0.3)',
+    accentGlow: 'rgba(139,69,19,0.05)', border: 'rgba(30,25,20,0.07)',
+    glassBg: 'rgba(242,237,228,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
   }
 };
 
@@ -1073,9 +1086,9 @@ const CONTENT_DATA = {
   meta: {
     book: '人类简史',
     bookSub: 'SAPIENS: A Brief History of Humankind',
-    part: '第一部分',
-    partTitle: '认知革命',
-    partSub: 'THE COGNITIVE REVOLUTION',
+    part: '沉浸式深度导读',
+    partTitle: '从认知革命到农业革命',
+    partSub: 'COGNITIVE & AGRICULTURAL REVOLUTION',
     author: '尤瓦尔·赫拉利'
   },
   scenes: [
@@ -1235,6 +1248,117 @@ const CONTENT_DATA = {
           }
         }
       ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART II · 农业革命 · THE AGRICULTURAL REVOLUTION
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 5: 奢侈品陷阱
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-5', number: '第二部分 · 场景 05', palette: 'scene5',
+      title: '史上最大的骗局',
+      subtitle: "HISTORY'S BIGGEST FRAUD",
+      heroQuote: '我们以为自己驯化了小麦，但其实是小麦驯化了我们。',
+      narrative: [
+        '大约一万年前，智人开始将越来越多的精力投入到少数几种动植物的操控上。从日出到日落，人们播种、浇水、除草、牧羊。他们以为这种新生活方式会带来更好的生活。<b>这是人类历史上最大的一次误判。</b>',
+        '让我们用冷酷的数据来审视"农业革命"的真实面目。一个采集者每天需要工作3-6小时，食谱包含数十种食物来源，营养均衡。而一个早期农民呢？<b>每天从黎明弯腰劳作到天黑，食谱缩减到一两种谷物，营养严重失衡。</b>考古学家发现，农业革命后人类的平均身高下降了约12厘米，骨骼疾病（特别是脊椎和膝关节）激增，龋齿率飙升。',
+        '那为什么人类没有回头？答案是一个残酷的陷阱：<b>人口增长</b>。农业使每单位土地能养活更多的人——虽然每个人的生活质量下降了，但总人口暴增。当一个村庄的人口从50人增长到500人后，他们已经不可能再回到采集生活——周围的土地根本养不活这么多采集者。',
+        '赫拉利将此称为<b>"奢侈品陷阱"</b>——一种看似微小的改善，慢慢变成了不可逆转的必需品。第一代种小麦的人可能只是为了在饮食中"补充"一点谷物。但几代人之后，他们的后代已经完全依赖小麦，再也离不开了。这个模式在人类历史中反复上演：从农业到智能手机，从电子邮件到社交媒体。',
+        '从小麦的角度来看，农业革命是一次巨大的成功。<b>一万年前，小麦只是中东一种不起眼的野草；今天，它覆盖了地球225万平方公里的土地</b>——这是地球表面积的1.5%。如果以基因传播的成功度来衡量，小麦是地球上最成功的植物。而实现这一切的工具，就是智人。',
+        '所以问题来了：到底是谁驯化了谁？是智人驯化了小麦，还是小麦驯化了智人？一种野草成功地让一种灵长类动物放弃了自由自在的生活，转而日复一日地为它浇水、施肥、驱赶害虫。<b>如果用"基因复制的成功率"作为衡量标准，小麦赢了，智人输了。</b>'
+      ],
+      dataViz: {
+        type: 'agri-trap',
+        title: '奢侈品陷阱：人口增长 vs 个体生活质量'
+      },
+      comparison: {
+        dimensions: [
+          { label: '饮食多样性', foraging: { score: 9, text: '数十种植物、动物、昆虫、菌类，营养全面均衡，几乎不存在维生素缺乏' }, farming: { score: 2, text: '严重依赖1-2种谷物（小麦/稻米），蛋白质和维生素匮乏，铁缺乏症普遍' } },
+          { label: '每日劳动时间', foraging: { score: 8, text: '3-6小时采集狩猎，剩余时间社交、休息、游戏、讲故事' }, farming: { score: 2, text: '黎明到黄昏连续劳作10-14小时：播种、除草、灌溉、收割、储存' } },
+          { label: '骨骼与关节健康', foraging: { score: 8, text: '骨密度高，关节灵活，脊椎健康——多样化的运动模式防止了重复性损伤' }, farming: { score: 2, text: '考古遗骨显示：椎间盘突出、膝关节磨损、足弓塌陷普遍——长期弯腰和负重的代价' } },
+          { label: '抗饥荒能力', foraging: { score: 7, text: '食物来源多元化，一种食物歉收可转向其他数十种替代品' }, farming: { score: 2, text: '单一作物极度脆弱——一场旱灾、蝗灾或病害就意味着全村饥荒' } },
+          { label: '传染病风险', foraging: { score: 8, text: '分散居住，频繁迁徙，人畜隔离——传染病难以大规模传播' }, farming: { score: 2, text: '定居密集+人畜共处=瘟疫温床。天花、麻疹、流感、结核均源于农耕社会' } },
+          { label: '社会地位平等', foraging: { score: 9, text: '无土地私有、无粮仓积累、无阶级——你带不走的东西不会变成权力' }, farming: { score: 2, text: '粮食可储存→财富可积累→阶级分化：地主/祭司/国王 vs 农奴/奴隶' } },
+          { label: '人口总量', foraging: { score: 2, text: '全球采集者总人口峰值约500-800万——被土地承载力严格限制' }, farming: { score: 9, text: '人口爆发：公元前5000年约500万→公元1年约2.5亿。更多的人，但更差的生活' } }
+        ]
+      },
+      deepDives: [
+        {
+          title: '奢侈品陷阱：不可逆的棘轮效应', icon: '🪤',
+          chain: {
+            premise: '进化不关心个体的幸福感，只关心基因的复制数量。一种行为即使降低了每个个体的生活质量，只要它能增加群体的总人口（从而增加基因拷贝数），就会被"选择"保留下来。',
+            evidence: '农业革命的全过程完美印证了这一逻辑：①第一代农民只是在采集之余"顺便"种一点小麦，作为补充食物——这是"奢侈品"阶段。②几代人之后，人口因为额外的卡路里而增长，但食谱多样性下降——小麦从奢侈品变成了"日常品"。③当人口增长到原有土地无法养活的程度时，再也没有人能回到采集生活——小麦变成了"必需品"。④为了养活更多的人口，需要开垦更多的土地、投入更多的劳动——一个永无止境的正反馈循环。',
+            conclusion: '"奢侈品陷阱"不是农业时代的独特现象，它是人类行为的底层模式。电子邮件最初是为了"节省时间"的奢侈品，如今每天消耗数小时已成为不可摆脱的必需品。汽车、空调、智能手机——每一种"让生活更轻松"的发明，最终都会变成一种新的束缚。我们永远在用今天的自由换取明天的便利，然后发现便利已变成了枷锁。'
+          }
+        },
+        {
+          title: '小麦的视角：一株野草的全球征服', icon: '🌾',
+          chain: {
+            premise: '评判一个物种的进化"成功"，不看个体的幸福感或智力水平，只看一个指标：该物种DNA拷贝在地球上的总数量和分布范围。',
+            evidence: '一万年前，小麦只是中东"肥沃新月带"的一种普通野草，占地面积微不足道。今天，小麦种植面积达225万平方公里（约等于英国面积的9倍），是地球上分布最广的植物之一。对比之下：智人个体的生活质量在农业革命后显著下降——身高降低、疾病增多、劳动时间激增、社会不平等加剧。但智人的总数量从500万暴增到数亿。',
+            conclusion: '如果我们站在小麦的基因角度，农业革命是一次辉煌的胜利。小麦"说服"了一种聪明的灵长类动物为它清除竞争者（除草）、提供水源（灌溉）、运送养分（施肥）、保护它免受敌害（驱虫）。智人以为自己是主人，但他们的每一天、每一滴汗水，都在为小麦的基因扩张服务。这不是隐喻——这就是从进化论角度看到的事实。'
+          }
+        },
+        {
+          title: '农业革命为何不可逆转', icon: '🔒',
+          chain: {
+            premise: '一种社会变革能否逆转，取决于变革过程中是否产生了结构性锁定（structural lock-in）——即变革创造了某些条件，使得回到原状在物理上或社会上已不可能。',
+            evidence: '农业革命至少产生了三重锁定：①人口锁定——农业提高了每公顷土地的卡路里产出，人口随之膨胀。一旦人口超过了采集模式的承载上限，就不可能回头。②知识锁定——定居数代后，采集技能（识别数百种野生植物、追踪动物、导航）在几代人内失传。③社会结构锁定——农业创造了粮仓、税收、军队、官僚体系，这些制度一旦建立就会自我强化。',
+            conclusion: '这三重锁定解释了为什么农业革命尽管让大多数人变得更悲惨，却从未被推翻。不是因为农民"选择"了这种生活，而是因为他们在一步步微小的"改良"中，把退路彻底封死了。人类从来不是在"采集"和"农耕"之间做了一次理性选择——他们是一步步滑入了一个无法攀出的陷阱。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 6: 想象的秩序
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-6', number: '第二部分 · 场景 06', palette: 'scene6',
+      title: '建设想象的秩序',
+      subtitle: 'BUILDING PYRAMIDS',
+      heroQuote: '人类创造的每一种秩序——从《汉谟拉比法典》到《美国独立宣言》——都是建立在想象之上，而非建立在客观现实之上。',
+      narrative: [
+        '农业革命不仅改变了人类的食物来源，更从根本上重塑了人类社会的组织方式。当数千人开始定居在同一个地区时，一个全新的问题浮现了：<b>如何让互不相识的陌生人和平共处、协同合作？</b>答案是虚构——规模更大、更精密的虚构。',
+        '让我们并排审视两份人类历史上最著名的法律文本。<b>公元前1776年，巴比伦国王汉谟拉比颁布法典</b>，宣称自己受命于众神，将人分为上等人、平民和奴隶，各自有不同的权利和义务。他宣称这是宇宙的自然秩序。',
+        '<b>公元1776年，北美十三殖民地发表《独立宣言》</b>，宣称"人人生而平等，造物主赋予他们若干不可剥夺的权利"。它宣称这是不证自明的真理。',
+        '赫拉利的关键洞察是：<b>这两份文件都在说谎——或者更准确地说，都在讲故事。</b>所谓"上等人/奴隶"的等级划分不存在于生物学中，所谓"人人生而平等"同样不存在于生物学中。没有任何科学实验能检测出"权利"这种分子。两份文件都是"想象的秩序"——一套大多数人选择相信的虚构规则。',
+        '但"想象的秩序"绝非无力的幻觉。它之所以强大到可以主宰数百万人的命运，是因为它做到了三件事：<b>①它被嵌入了物质世界</b>（法典刻在石碑上、等级体现在建筑格局中）；<b>②它塑造了我们的欲望</b>（我们以为出于本能的愿望，其实是文化编程的产物）；<b>③它是主体间的</b>（你一个人不信没用，必须所有人同时停止相信，秩序才会崩塌）。',
+        '最深刻也最令人不安的是第二点。想想看：一个中世纪欧洲贵族的最高理想是参加十字军东征——为上帝收复圣地。一个现代西方人的最高理想可能是环球旅行——追寻自我、体验多元文化。<b>这两种"发自内心"的渴望，没有一种来自生物本能，全部来自各自时代的想象秩序。</b>浪漫主义告诉你要"追随内心"，消费主义告诉你要"购买体验"——你以为是自己在选择，其实是秩序在替你选择。'
+      ],
+      dataViz: {
+        type: 'two-documents',
+        title: '两份"虚构"文本的对照解剖'
+      },
+      deepDives: [
+        {
+          title: '《汉谟拉比法典》vs《独立宣言》：同一种谎言', icon: '⚖️',
+          chain: {
+            premise: '一个社会秩序要被视为"正当"，就必须声称自己反映了某种超越人类意志的客观真理——无论这种真理是"神的旨意"还是"自然法则"。',
+            evidence: '《汉谟拉比法典》声称：恩利尔神命令汉谟拉比"让正义之光照耀大地"。法典将人分为三等：上等自由民的生命价值30银舍客勒，平民的生命价值20银舍客勒，奴隶的生命价值……由其主人的财产损失决定。汉谟拉比称此为"宇宙的公正秩序"。三千多年后，《独立宣言》声称："我们认为这些真理是不证自明的：人人生而平等，造物主赋予他们某些不可剥夺的权利。"——但这里的"平等"最初只适用于白人有产男性，不包括女性、黑人、原住民。杰斐逊本人拥有超过600名奴隶。',
+            conclusion: '两份文件使用了完全相同的修辞策略：将一套虚构的社会规则伪装成超越人类的客观真理。区别不在于哪个"更真"——从纯粹的生物学角度看，两个都是虚构。区别在于哪个虚构故事能让更多人相信，从而更有效地组织大规模合作。当代人觉得"人人平等"是真理而"等级制度"是迷信，只是因为我们恰好生活在前一个故事占据主流的时代。'
+          }
+        },
+        {
+          title: '秩序如何重塑你的欲望', icon: '🧲',
+          chain: {
+            premise: '人类天然的生物欲望极其有限：食物、温暖、安全、性。然而现代人拥有成千上万种"欲望"——旅行、升职、时尚、浪漫爱情、自我实现。这些额外的欲望从何而来？',
+            evidence: '赫拉利追溯了两大"欲望制造机器"：①浪漫主义（约1800年起）——告诉人们"你必须追随内心、尽可能多地体验不同事物，才能发挥全部潜能"。在浪漫主义之前，没有人觉得"环游世界"是人生必做的事。②消费主义（约1900年起）——告诉人们"你必须购买更多产品和体验，才能获得幸福"。在消费主义之前，没有人觉得新鞋子、新手机会让自己更快乐。这两种意识形态结合后产生了现代旅游业——浪漫主义提供动机（"去远方找自己"），消费主义提供方法（"买一张机票"）。',
+            conclusion: '你以为是自己在"选择"去巴黎度假，但这个选择从头到尾都是想象秩序的产物：浪漫主义编程了你的"渴望远方"，消费主义编程了你的"用消费来实现渴望"，旅游业则提供了标准化的实现路径。如果你生在中世纪，你的"内心渴望"会是去耶路撒冷朝圣。这不是比喻——这就是想象秩序运作的方式：它不命令你做什么，它让你"打心底"想做什么。'
+          }
+        },
+        {
+          title: '"主体间现实"：为什么你无法独自逃离', icon: '🕸️',
+          chain: {
+            premise: '世界上存在三种层次的现实：①客观现实（一块石头，无论你信不信它都存在）；②主观现实（我的头疼，只存在于我的意识中）；③主体间现实（金钱、国家、法律——存在于多个意识的共同网络中）。想象的秩序属于第三种。',
+            evidence: '主体间现实有一个极其狡猾的特征：你无法通过个人意志来改变它。你一个人不相信金钱的价值，不会让金钱消失——因为其他70亿人仍然相信。你一个人不承认法律的权威，不会让法律消失——因为警察和法官仍然相信。要推翻一个想象的秩序，你必须让数百万人同时停止相信，并且同时开始相信另一个新的想象秩序。这就是为什么革命如此罕见：它需要用一个新的虚构来替换旧的虚构，而不是用"现实"来替换"虚构"。',
+            conclusion: '这是赫拉利最反直觉的洞察之一：我们永远无法走出想象的秩序，我们只能从一个想象秩序跳到另一个。法国大革命推翻了"国王的神圣权力"这一虚构，代之以"人民主权"这一新的虚构。苏联解体推翻了"共产主义"这一虚构，代之以"自由市场"这一新的虚构。监狱的围墙不在外面——它在我们的大脑里。'
+          }
+        }
+      ]
     }
   ]
 };
@@ -1302,14 +1426,24 @@ function renderApp() {
       html += `</div></div>`;
     }
     html += `</div></section>`;
+
+    // Part divider between Part I (scene 4) and Part II (scene 5)
+    if (scene.id === 'scene-4') {
+      html += `
+        <section class="hero" id="part2-intro" data-palette="scene5" style="min-height:80vh;">
+          <div class="hero-overline reveal" style="animation:none;">第二部分</div>
+          <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">农业革命</h1>
+          <p class="hero-subtitle reveal reveal-delay-2" style="animation:none;">THE AGRICULTURAL REVOLUTION</p>
+        </section>`;
+    }
   });
 
   // Footer
   html += `
     <footer class="footer" data-palette="hero">
-      <div class="reveal footer-title">第一部分 · 终</div>
-      <p class="reveal footer-text reveal-delay-1">认知革命使智人从一种普通的动物变成了世界的主宰。<br>但真正的问题是：我们用这种力量创造的世界，是否让我们更加幸福？</p>
-      <div class="reveal footer-next reveal-delay-2">第二部分 · 农业革命 · 即将到来</div>
+      <div class="reveal footer-title">第二部分 · 终</div>
+      <p class="reveal footer-text reveal-delay-1">农业革命使智人从自由的采集者变成了土地的囚徒，从平等的部落变成了等级分明的帝国。<br>但虚构的故事也赋予了人类一种超越自然的力量——建造金字塔、编写法典、连接千万陌生人的力量。</p>
+      <div class="reveal footer-next reveal-delay-2">第三部分 · 人类的融合统一 · 即将到来</div>
     </footer>`;
 
   app.innerHTML = html;
@@ -1401,6 +1535,87 @@ function renderDataViz(viz) {
             <div class="big-number" style="font-size:clamp(2rem,5vw,3.5rem);" data-count-to="1000000" data-suffix="+">0</div>
             <div class="big-number-label">人 · 虚构合作上限</div>
           </div>
+        </div>
+      </div>`;
+  }
+  if (viz.type === 'agri-trap') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div class="svg-container" data-viz="agri-trap">
+          <svg viewBox="0 0 600 220" fill="none">
+            <text x="0" y="18" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">人口总量</text>
+            <rect x="80" y="8" width="500" height="22" rx="4" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="450" x="80" y="8" width="0" height="22" rx="4" fill="var(--accent)"/>
+            <text class="bar-label" x="535" y="23" font-family="var(--serif)" font-size="11" font-weight="700" fill="var(--accent)" opacity="0">↑ 5000%</text>
+
+            <text x="0" y="62" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">个体生活质量</text>
+            <rect x="80" y="52" width="500" height="22" rx="4" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="100" x="80" y="52" width="0" height="22" rx="4" fill="#DC2626" opacity="0.6"/>
+            <text class="bar-label" x="185" y="67" font-family="var(--serif)" font-size="11" font-weight="700" fill="#DC2626" opacity="0">↓ 急剧下降</text>
+
+            <line x1="80" y1="96" x2="580" y2="96" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="0" y="126" font-family="var(--sans)" font-size="10" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.05em">每日劳动</text>
+            <rect x="80" y="114" width="500" height="12" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="125" x="80" y="114" width="0" height="12" rx="3" fill="var(--accent)" opacity="0.3"/>
+            <text class="bar-label" x="210" y="124" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0">采集者 3-6小时</text>
+            <rect x="80" y="134" width="500" height="12" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="416" x="80" y="134" width="0" height="12" rx="3" fill="#DC2626" opacity="0.35"/>
+            <text class="bar-label" x="500" y="144" font-family="var(--sans)" font-size="9" fill="#DC2626" opacity="0">农民 10-14小时</text>
+
+            <text x="0" y="178" font-family="var(--sans)" font-size="10" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.05em">平均身高</text>
+            <rect x="80" y="166" width="500" height="12" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="440" x="80" y="166" width="0" height="12" rx="3" fill="var(--accent)" opacity="0.3"/>
+            <text class="bar-label" x="525" y="176" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0">采集者 ~177cm</text>
+            <rect x="80" y="186" width="500" height="12" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="340" x="80" y="186" width="0" height="12" rx="3" fill="#DC2626" opacity="0.35"/>
+            <text class="bar-label" x="425" y="196" font-family="var(--sans)" font-size="9" fill="#DC2626" opacity="0">农民 ~165cm (↓12cm)</text>
+          </svg>
+        </div>
+        <div class="number-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
+          <div>
+            <div class="big-number" data-count-to="225" data-suffix="万">0</div>
+            <div class="big-number-label">km² · 小麦种植面积</div>
+          </div>
+          <div>
+            <div class="big-number" style="color:#DC2626;" data-count-to="12">0</div>
+            <div class="big-number-label">cm · 身高下降</div>
+          </div>
+          <div>
+            <div class="big-number" data-count-to="5000" data-suffix="%">0</div>
+            <div class="big-number-label">人口增长率</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  if (viz.type === 'two-documents') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:2rem 0;">
+          <div style="padding:1.5rem; border-radius:10px; background:var(--accent-glow); border:1px solid var(--border);">
+            <div style="font-family:var(--sans); font-size:0.55rem; font-weight:700; letter-spacing:0.2em; color:var(--accent); margin-bottom:0.75rem; text-transform:uppercase;">公元前 1776 年</div>
+            <div style="font-family:var(--serif); font-size:1.1rem; font-weight:700; margin-bottom:0.75rem;">汉谟拉比法典</div>
+            <div style="font-size:0.8rem; line-height:1.8; opacity:0.75;">
+              "安努与恩利尔二神，为人类福祉计，命令我，荣耀而敬神的君主汉谟拉比，<b>发扬正义于世</b>，灭除不法邪恶之人，使强不凌弱。"
+            </div>
+            <div style="margin-top:1rem; font-size:0.65rem; color:var(--fg-secondary); opacity:0.6; line-height:1.7;">
+              核心假设：人由神创造为不同等级。<br>上等人命 = 30银舍客勒<br>平民命 = 20银舍客勒<br>奴隶 = 财产损失
+            </div>
+          </div>
+          <div style="padding:1.5rem; border-radius:10px; background:var(--accent-glow); border:1px solid var(--border);">
+            <div style="font-family:var(--sans); font-size:0.55rem; font-weight:700; letter-spacing:0.2em; color:var(--accent); margin-bottom:0.75rem; text-transform:uppercase;">公元 1776 年</div>
+            <div style="font-family:var(--serif); font-size:1.1rem; font-weight:700; margin-bottom:0.75rem;">美国独立宣言</div>
+            <div style="font-size:0.8rem; line-height:1.8; opacity:0.75;">
+              "我们认为下面这些真理是不证自明的：<b>人人生而平等</b>，造物主赋予他们若干不可剥夺的权利，其中包括生命权、自由权和追求幸福的权利。"
+            </div>
+            <div style="margin-top:1rem; font-size:0.65rem; color:var(--fg-secondary); opacity:0.6; line-height:1.7;">
+              核心假设：人由造物主创造为平等。<br>但：仅限白人有产男性<br>作者杰斐逊拥有600+奴隶<br>女性无投票权至1920年
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center; padding:1.5rem 0; font-family:var(--serif); font-size:0.85rem; opacity:0.6; line-height:2;">
+          两份文件相隔3552年，使用完全相同的修辞策略：<br>将虚构的社会规则伪装成超越人类的客观真理。
         </div>
       </div>`;
   }
@@ -1543,9 +1758,14 @@ function initScrollSystem() {
       // Determine active scene
       const viewMid = scrollTop + window.innerHeight * 0.45;
       let newPalette = 'hero';
-      scenes.forEach(s => {
+      // Check all palette-bearing sections (scenes + part intros)
+      document.querySelectorAll('[data-palette]').forEach(s => {
         if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
           newPalette = s.dataset.palette;
+        }
+      });
+      scenes.forEach(s => {
+        if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
           navLinks.forEach(l => l.classList.toggle('active', l.dataset.scene === s.id));
         }
       });
@@ -1598,12 +1818,19 @@ function animateDunbar(container) {
 
 function animateCounter(el, from, to, duration, suffix) {
   const start = performance.now();
+  function formatVal(val) {
+    if (suffix === '万') return val; // keep raw number, suffix added separately
+    if (suffix === '%') return val;
+    if (val >= 1000000) return (val / 1000000).toFixed(0) + 'M';
+    if (val >= 10000 && !suffix) return Math.round(val / 1000) + 'K';
+    return val;
+  }
   function tick(now) {
     const p = Math.min((now - start) / duration, 1);
     const eased = 1 - Math.pow(1 - p, 3);
     const val = Math.round(from + (to - from) * eased);
-    el.textContent = val >= 1000000 ? (val / 1000000).toFixed(0) + 'M' : val >= 1000 ? Math.round(val/1000) + 'K' : val;
-    if (suffix && p >= 1) el.textContent += suffix;
+    el.textContent = formatVal(val) + (p >= 1 && suffix ? suffix : (p < 1 && suffix === '+' ? '' : ''));
+    if (p >= 1) el.textContent = formatVal(to) + (suffix || '');
     if (p < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
