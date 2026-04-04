@@ -836,7 +836,17 @@ body {
   background: linear-gradient(90deg, var(--accent), #DC2626);
   border-radius: 5px;
   width: 0%;
-  transition: width 1.8s var(--ease-out);
+  transition: width 2s var(--ease-out);
+}
+/* Extinction region — hidden until animated (not using .reveal to avoid conflict) */
+.extinction-region {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
+}
+.extinction-region.ext-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 .ext-percent {
   font-family: var(--serif);
@@ -855,6 +865,59 @@ body {
   line-height: 1.7;
   opacity: 0.6;
 }
+
+/* ═══════════════════════════════════════════════════════
+   KEYBOARD NAV HINT
+   ═══════════════════════════════════════════════════════ */
+.kb-hint {
+  position: fixed;
+  bottom: 2rem;
+  right: 2.5rem;
+  z-index: 400;
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--fg-secondary);
+  opacity: 0.4;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: opacity 0.8s var(--ease-smooth);
+  pointer-events: none;
+}
+.kb-hint.hidden { opacity: 0; }
+.kb-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--accent-glow);
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MODAL STAGGERED ANIMATION (Breathing)
+   ═══════════════════════════════════════════════════════ */
+.modal-stagger {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+}
+.modal-overlay.open .modal-stagger {
+  opacity: 1;
+  transform: translateY(0);
+}
+.modal-stagger-1 { transition-delay: 0.15s; }
+.modal-stagger-2 { transition-delay: 0.35s; }
+.modal-stagger-3 { transition-delay: 0.55s; }
+.modal-stagger-4 { transition-delay: 0.75s; }
+.modal-stagger-5 { transition-delay: 0.95s; }
 
 /* ═══════════════════════════════════════════════════════
    FOOTER
@@ -930,6 +993,11 @@ body {
 <div class="progress-bar" id="progressBar"></div>
 <nav class="scene-nav" id="sceneNav"></nav>
 <div id="app"></div>
+
+<!-- Keyboard nav hint -->
+<div class="kb-hint" id="kbHint">
+  <kbd>Space</kbd> / <kbd>↓</kbd> 下一场景 &nbsp; <kbd>↑</kbd> 上一场景
+</div>
 
 <!-- MODAL (single instance, content swapped by JS) -->
 <div class="modal-overlay" id="modalOverlay">
@@ -1379,7 +1447,7 @@ function renderExtinction(ext) {
   let html = `<div class="extinction-section"><div class="dd-trigger-label reveal">灭绝档案 · Extinction Record</div>`;
   ext.regions.forEach((region, i) => {
     html += `
-      <div class="extinction-region reveal" data-ext-region data-delay="${i*600}" data-percent="${region.percentLost}">
+      <div class="extinction-region" data-ext-region data-delay="${i*600}" data-percent="${region.percentLost}">
         <div class="ext-header">
           <span class="ext-region-name">${region.name}</span>
           <span class="ext-arrival">智人到达：${region.arrival}</span>
@@ -1415,10 +1483,17 @@ function initScrollSystem() {
   }, { threshold: 0.1 });
   document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => revealObs.observe(el));
 
-  // Extinction observer
+  // Extinction observer — reveal first, then animate bars after a beat
   const extObs = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { animateExtRegion(e.target); extObs.unobserve(e.target); } });
-  }, { threshold: 0.15 });
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('ext-visible');
+        // Wait for fade-in to complete before animating bars
+        setTimeout(() => animateExtRegion(e.target), 400);
+        extObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
   document.querySelectorAll('[data-ext-region]').forEach(el => extObs.observe(el));
 
   // Comparison observer
@@ -1547,22 +1622,24 @@ function initDeepDiveModal() {
   function openModal(sceneIdx, ddIdx) {
     const dd = CONTENT_DATA.scenes[sceneIdx].deepDives[ddIdx];
     body.innerHTML = `
-      <div class="modal-icon">${dd.icon}</div>
-      <h3 class="modal-title">${dd.title}</h3>
+      <div class="modal-icon modal-stagger modal-stagger-1">${dd.icon}</div>
+      <h3 class="modal-title modal-stagger modal-stagger-2">${dd.title}</h3>
       <div class="logic-chain-modal">
-        <div class="chain-step-modal">
+        <div class="chain-step-modal modal-stagger modal-stagger-3">
           <div class="chain-label-modal">前 提</div>
           <div class="chain-text-modal">${dd.chain.premise}</div>
         </div>
-        <div class="chain-step-modal">
+        <div class="chain-step-modal modal-stagger modal-stagger-4">
           <div class="chain-label-modal">证 据</div>
           <div class="chain-text-modal">${dd.chain.evidence}</div>
         </div>
-        <div class="chain-step-modal">
+        <div class="chain-step-modal modal-stagger modal-stagger-5">
           <div class="chain-label-modal">结 论</div>
           <div class="chain-text-modal">${dd.chain.conclusion}</div>
         </div>
       </div>`;
+    // Force reflow so stagger transitions fire from initial state
+    body.offsetHeight;
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -1641,9 +1718,71 @@ function animateExtRegion(region) {
 
 
 // ═══════════════════════════════════════════════════════════════
+// KEYBOARD NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function initKeyboardNav() {
+  const kbHint = document.getElementById('kbHint');
+  let hintDismissed = false;
+
+  // Dismiss hint after first manual scroll
+  function dismissHint() {
+    if (!hintDismissed) {
+      hintDismissed = true;
+      kbHint.classList.add('hidden');
+      window.removeEventListener('wheel', dismissHint);
+      window.removeEventListener('touchstart', dismissHint);
+    }
+  }
+  window.addEventListener('wheel', dismissHint, { passive: true, once: true });
+  window.addEventListener('touchstart', dismissHint, { passive: true, once: true });
+
+  // Collect all navigable anchors: hero + scenes
+  function getAnchors() {
+    const anchors = [document.getElementById('hero')];
+    CONTENT_DATA.scenes.forEach(s => {
+      const el = document.getElementById(s.id);
+      if (el) anchors.push(el);
+    });
+    return anchors;
+  }
+
+  // Find current scene index based on scroll position
+  function currentIdx(anchors) {
+    const scrollMid = window.scrollY + window.innerHeight * 0.4;
+    let idx = 0;
+    for (let i = anchors.length - 1; i >= 0; i--) {
+      if (scrollMid >= anchors[i].offsetTop) { idx = i; break; }
+    }
+    return idx;
+  }
+
+  document.addEventListener('keydown', e => {
+    // Don't hijack keys when modal is open
+    if (document.getElementById('modalOverlay').classList.contains('open')) return;
+
+    const anchors = getAnchors();
+    const cur = currentIdx(anchors);
+
+    if (e.key === 'ArrowDown' || (e.key === ' ' && !e.shiftKey)) {
+      e.preventDefault();
+      const next = Math.min(cur + 1, anchors.length - 1);
+      anchors[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      dismissHint();
+    } else if (e.key === 'ArrowUp' || (e.key === ' ' && e.shiftKey)) {
+      e.preventDefault();
+      const prev = Math.max(cur - 1, 0);
+      anchors[prev].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      dismissHint();
+    }
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
 renderApp();
+initKeyboardNav();
 </script>
 </body>
 </html>
