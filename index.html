@@ -6,712 +6,1000 @@
 <title>人类简史 · 认知革命 — 沉浸式学习引擎</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* ═══════════════════════════════════════════
-     CSS FOUNDATION
-     ═══════════════════════════════════════════ */
-  :root {
-    --paper: #FAFAF8;
-    --charcoal: #1A1A1A;
-    --amber: #D4A845;
-    --amber-dim: rgba(212, 168, 69, 0.15);
-    --amber-mid: rgba(212, 168, 69, 0.4);
-    --grey-200: #E5E5E3;
-    --grey-400: #9CA3AF;
-    --grey-600: #6B7280;
-    --serif: 'Noto Serif SC', 'Songti SC', serif;
-    --sans: 'Noto Sans SC', 'Inter', system-ui, sans-serif;
-    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  }
+/* ═══════════════════════════════════════════════════════
+   ROOT & DYNAMIC EMOTIONAL PALETTE
+   Each scene overrides these variables via JS on scroll
+   ═══════════════════════════════════════════════════════ */
+:root {
+  /* Default: Hero palette */
+  --bg: #F5F0E8;
+  --bg-secondary: #EDE7DA;
+  --fg: #1A1A1A;
+  --fg-secondary: #5C5546;
+  --accent: #B8860B;
+  --accent-dim: rgba(184, 134, 11, 0.12);
+  --accent-mid: rgba(184, 134, 11, 0.35);
+  --accent-glow: rgba(184, 134, 11, 0.06);
+  --border: rgba(0,0,0,0.06);
+  --glass-bg: rgba(245, 240, 232, 0.72);
+  --glass-border: rgba(255,255,255,0.3);
 
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  --serif: 'Noto Serif SC', 'Songti SC', Georgia, serif;
+  --sans: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
-  html {
-    scroll-behavior: smooth;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body {
-    font-family: var(--sans);
-    background-color: var(--paper);
-    color: var(--charcoal);
-    transition: background-color 1.2s var(--ease-smooth), color 1.2s var(--ease-smooth);
-    overflow-x: hidden;
-    line-height: 1.8;
-  }
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
+}
 
-  body.dark-mode {
-    background-color: var(--charcoal);
-    color: var(--paper);
-  }
+body {
+  font-family: var(--sans);
+  background-color: var(--bg);
+  color: var(--fg);
+  overflow-x: hidden;
+  line-height: 1.9;
+  transition: background-color 1.4s var(--ease-smooth),
+              color 1.4s var(--ease-smooth);
+}
 
-  ::selection {
-    background: var(--amber);
-    color: var(--charcoal);
-  }
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
 
-  /* ═══════════════════════════════════════════
-     SCENE NAV (Right-side dots)
-     ═══════════════════════════════════════════ */
-  .scene-nav {
-    position: fixed;
-    right: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    opacity: 0;
-    transition: opacity 0.6s var(--ease-smooth);
-  }
-  .scene-nav.visible { opacity: 1; }
-  .scene-nav a {
-    display: block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--grey-400);
-    transition: all 0.4s var(--ease-out);
-    position: relative;
-  }
-  .scene-nav a.active {
-    background: var(--amber);
-    transform: scale(1.4);
-  }
-  .scene-nav a::after {
-    content: attr(data-label);
-    position: absolute;
-    right: 1.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.3s;
-    color: var(--grey-600);
-  }
-  .scene-nav a:hover::after { opacity: 1; }
-  body.dark-mode .scene-nav a { background: rgba(250,250,248,0.25); }
-  body.dark-mode .scene-nav a.active { background: var(--amber); }
-  body.dark-mode .scene-nav a::after { color: var(--grey-400); }
+/* ═══════════════════════════════════════════════════════
+   PROGRESS BAR
+   ═══════════════════════════════════════════════════════ */
+.progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 9999;
+  width: 0%;
+  transition: width 0.15s linear;
+}
 
-  /* ═══════════════════════════════════════════
-     PROGRESS BAR
-     ═══════════════════════════════════════════ */
-  .progress-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 2px;
-    background: var(--amber);
-    z-index: 1000;
-    width: 0%;
-    transition: width 0.1s linear;
-  }
+/* ═══════════════════════════════════════════════════════
+   SCENE NAV (Right-side dots)
+   ═══════════════════════════════════════════════════════ */
+.scene-nav {
+  position: fixed;
+  right: 2.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-smooth);
+}
+.scene-nav.visible { opacity: 1; }
+.scene-nav a {
+  display: block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--fg);
+  opacity: 0.15;
+  transition: all 0.5s var(--ease-out);
+  position: relative;
+  text-decoration: none;
+}
+.scene-nav a.active {
+  background: var(--accent);
+  opacity: 1;
+  transform: scale(1.6);
+  box-shadow: 0 0 12px var(--accent-mid);
+}
+.scene-nav a::after {
+  content: attr(data-label);
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.3s var(--ease-out);
+  color: var(--fg-secondary);
+  font-family: var(--sans);
+}
+.scene-nav a:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
 
-  /* ═══════════════════════════════════════════
-     HERO SECTION
-     ═══════════════════════════════════════════ */
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 2rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .hero-overline {
-    font-family: var(--sans);
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--amber);
-    margin-bottom: 2rem;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeUp 1s var(--ease-out) 0.3s forwards;
-  }
-  .hero-title {
-    font-family: var(--serif);
-    font-size: clamp(2.5rem, 8vw, 6rem);
-    font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    margin-bottom: 1.5rem;
-    opacity: 0;
-    transform: translateY(30px);
-    animation: fadeUp 1.2s var(--ease-out) 0.6s forwards;
-  }
-  .hero-subtitle {
-    font-family: var(--serif);
-    font-size: clamp(1.1rem, 3vw, 1.6rem);
-    font-weight: 400;
-    color: var(--grey-600);
-    max-width: 600px;
-    margin-bottom: 3rem;
-    opacity: 0;
-    transform: translateY(30px);
-    animation: fadeUp 1.2s var(--ease-out) 0.9s forwards;
-  }
-  .hero-part {
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    color: var(--amber);
-    border: 1px solid var(--amber-mid);
-    padding: 0.5rem 1.5rem;
-    border-radius: 2rem;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeUp 1s var(--ease-out) 1.2s forwards;
-  }
-  .hero-scroll-hint {
-    position: absolute;
-    bottom: 3rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    opacity: 0;
-    animation: fadeUp 1s var(--ease-out) 1.8s forwards;
-  }
-  .hero-scroll-hint span {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    color: var(--grey-400);
-  }
-  .scroll-arrow {
-    width: 1px;
-    height: 40px;
-    background: linear-gradient(to bottom, var(--amber), transparent);
-    animation: scrollPulse 2s ease-in-out infinite;
-  }
+/* ═══════════════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════════════ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  position: relative;
+}
+.hero-overline {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 3rem;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 1s var(--ease-out) 0.3s forwards;
+}
+.hero-title {
+  font-family: var(--serif);
+  font-size: clamp(3.5rem, 12vw, 8rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin-bottom: 2rem;
+  opacity: 0;
+  transform: translateY(40px);
+  animation: fadeUp 1.4s var(--ease-out) 0.6s forwards;
+}
+.hero-subtitle {
+  font-family: var(--serif);
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  font-weight: 300;
+  color: var(--fg-secondary);
+  max-width: 500px;
+  letter-spacing: 0.1em;
+  margin-bottom: 4rem;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeUp 1.2s var(--ease-out) 1s forwards;
+}
+.hero-part {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  border: 1px solid var(--accent-mid);
+  padding: 0.6rem 2rem;
+  border-radius: 100px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 1s var(--ease-out) 1.3s forwards;
+}
+.hero-scroll-hint {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  opacity: 0;
+  animation: fadeUp 1s var(--ease-out) 2s forwards;
+}
+.hero-scroll-hint span {
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  color: var(--fg-secondary);
+  text-transform: uppercase;
+}
+.scroll-line {
+  width: 1px;
+  height: 48px;
+  position: relative;
+  overflow: hidden;
+}
+.scroll-line::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--accent));
+  animation: scrollDrop 2s ease-in-out infinite;
+}
 
-  /* ═══════════════════════════════════════════
-     SCENE SECTIONS
-     ═══════════════════════════════════════════ */
-  .scene {
-    min-height: 100vh;
-    padding: 8rem 1.5rem;
-    position: relative;
-  }
-  .scene-inner {
-    max-width: 720px;
-    margin: 0 auto;
-  }
-  .scene-number {
-    font-family: var(--sans);
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.3em;
-    color: var(--amber);
-    margin-bottom: 1rem;
-  }
-  .scene-title {
-    font-family: var(--serif);
-    font-size: clamp(1.8rem, 5vw, 3rem);
-    font-weight: 700;
-    line-height: 1.25;
-    margin-bottom: 0.75rem;
-  }
-  .scene-subtitle {
-    font-family: var(--sans);
-    font-size: 0.8rem;
-    font-weight: 400;
-    letter-spacing: 0.1em;
-    color: var(--grey-400);
-    margin-bottom: 4rem;
-    text-transform: uppercase;
-  }
+/* ═══════════════════════════════════════════════════════
+   SCENE SECTIONS
+   ═══════════════════════════════════════════════════════ */
+.scene {
+  min-height: 100vh;
+  padding: 12rem 2rem 8rem;
+  position: relative;
+}
+.scene-inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.scene-number {
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  color: var(--accent);
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+}
+.scene-title {
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+.scene-subtitle {
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--fg-secondary);
+  opacity: 0.5;
+  margin-bottom: 6rem;
+  text-transform: uppercase;
+}
 
-  /* Hero Quote */
-  .hero-quote {
-    font-family: var(--serif);
-    font-size: clamp(1.4rem, 3.5vw, 2.2rem);
-    line-height: 1.6;
-    font-weight: 400;
-    margin-bottom: 4rem;
-    padding: 3rem 0;
-    border-top: 1px solid var(--amber-mid);
-    border-bottom: 1px solid var(--amber-mid);
-    position: relative;
-  }
-  .hero-quote::before {
-    content: '"';
-    font-family: var(--serif);
-    font-size: 5rem;
-    color: var(--amber);
-    opacity: 0.3;
-    position: absolute;
-    top: 1rem;
-    left: -0.5rem;
-    line-height: 1;
-  }
+/* Hero Quote — cinematic, massive */
+.hero-quote-wrap {
+  margin: 2rem 0 6rem;
+  padding: 4rem 0;
+  position: relative;
+}
+.hero-quote-wrap::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+}
+.hero-quote-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+}
+.hero-quote {
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 4vw, 2.6rem);
+  line-height: 1.7;
+  font-weight: 300;
+  position: relative;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--accent);
+}
 
-  /* Narrative paragraphs */
-  .narrative p {
-    font-size: 1.05rem;
-    line-height: 2;
-    margin-bottom: 1.8rem;
-    color: inherit;
-    opacity: 0.88;
-  }
-  .narrative p strong,
-  .narrative p b {
-    color: var(--amber);
-    font-weight: 500;
-  }
+/* Narrative paragraphs */
+.narrative { margin-bottom: 2rem; }
+.narrative p {
+  font-size: 1.05rem;
+  line-height: 2.1;
+  margin-bottom: 2.5rem;
+  color: var(--fg);
+  opacity: 0.82;
+}
+.narrative p strong, .narrative p b {
+  color: var(--accent);
+  font-weight: 600;
+}
 
-  /* ═══════════════════════════════════════════
-     REVEAL ANIMATIONS
-     ═══════════════════════════════════════════ */
-  .reveal {
-    opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
-  }
-  .reveal.revealed {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .reveal-delay-1 { transition-delay: 0.12s; }
-  .reveal-delay-2 { transition-delay: 0.24s; }
-  .reveal-delay-3 { transition-delay: 0.36s; }
-  .reveal-delay-4 { transition-delay: 0.48s; }
+/* ═══════════════════════════════════════════════════════
+   REVEAL ANIMATIONS
+   ═══════════════════════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.15s; }
+.reveal-delay-2 { transition-delay: 0.3s; }
+.reveal-delay-3 { transition-delay: 0.45s; }
+.reveal-delay-4 { transition-delay: 0.6s; }
 
-  /* Clip-path wipe for quotes */
-  .reveal-wipe {
-    clip-path: inset(0 100% 0 0);
-    transition: clip-path 1.4s var(--ease-out);
-  }
-  .reveal-wipe.revealed {
-    clip-path: inset(0 0% 0 0);
-  }
+.reveal-wipe {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.6s var(--ease-out);
+}
+.reveal-wipe.revealed {
+  clip-path: inset(0 0% 0 0);
+}
 
-  /* ═══════════════════════════════════════════
-     DEEP DIVE CARDS
-     ═══════════════════════════════════════════ */
-  .deep-dive-section {
-    margin-top: 4rem;
-    padding-top: 3rem;
-    border-top: 1px solid var(--grey-200);
-  }
-  body.dark-mode .deep-dive-section { border-color: rgba(250,250,248,0.1); }
+/* ═══════════════════════════════════════════════════════
+   SVG DATA VIZ — Inline charts that draw on scroll
+   ═══════════════════════════════════════════════════════ */
+.data-viz {
+  margin: 4rem 0;
+  padding: 3rem 0;
+}
+.data-viz-title {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+.svg-container {
+  width: 100%;
+  overflow: visible;
+}
+.svg-container svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+/* SVG path draw animation */
+.draw-path {
+  stroke-dasharray: var(--path-length, 1000);
+  stroke-dashoffset: var(--path-length, 1000);
+  transition: stroke-dashoffset 2.5s var(--ease-out);
+}
+.draw-path.drawn {
+  stroke-dashoffset: 0;
+}
+/* Animated number counter */
+.big-number {
+  font-family: var(--serif);
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 900;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.big-number-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--fg-secondary);
+  margin-top: 0.5rem;
+  letter-spacing: 0.05em;
+}
+.number-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin: 3rem 0;
+  text-align: center;
+}
 
-  .deep-dive-label {
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.25em;
-    color: var(--amber);
-    margin-bottom: 1.5rem;
-  }
-  .deep-dive-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
+/* Dunbar circle visualization */
+.dunbar-viz {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  margin: 3rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dunbar-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 1.5s var(--ease-out);
+  opacity: 0;
+  transform: scale(0.3);
+}
+.dunbar-circle.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+.dunbar-circle .dc-num {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.dunbar-circle .dc-label {
+  font-size: 0.55rem;
+  color: var(--fg-secondary);
+  letter-spacing: 0.05em;
+  position: absolute;
+  bottom: -1.5rem;
+  white-space: nowrap;
+}
+.dunbar-circle.core {
+  width: 80px; height: 80px;
+  background: var(--accent-dim);
+  z-index: 4;
+}
+.dunbar-circle.core .dc-num { font-size: 1.2rem; }
+.dunbar-circle.band {
+  width: 160px; height: 160px;
+  z-index: 3;
+}
+.dunbar-circle.band .dc-num { font-size: 1rem; }
+.dunbar-circle.limit {
+  width: 260px; height: 260px;
+  border-color: var(--accent);
+  border-width: 2px;
+  z-index: 2;
+}
+.dunbar-circle.limit .dc-num { font-size: 1.5rem; }
+.dunbar-circle.beyond {
+  width: 340px; height: 340px;
+  border-style: dashed;
+  border-color: var(--border);
+  z-index: 1;
+}
+.dunbar-circle.beyond .dc-num {
+  font-size: 0.9rem;
+  color: var(--fg-secondary);
+  opacity: 0.5;
+}
 
-  .dd-card {
-    border-left: 3px solid var(--amber);
-    background: var(--amber-dim);
-    border-radius: 0 8px 8px 0;
-    overflow: hidden;
-    transition: background 0.3s;
-    cursor: pointer;
-  }
-  body.dark-mode .dd-card {
-    background: rgba(212, 168, 69, 0.08);
-  }
-  .dd-card:hover {
-    background: rgba(212, 168, 69, 0.22);
-  }
-  body.dark-mode .dd-card:hover {
-    background: rgba(212, 168, 69, 0.15);
-  }
+/* ═══════════════════════════════════════════════════════
+   DEEP DIVE — IMMERSIVE MODAL
+   ═══════════════════════════════════════════════════════ */
+.dd-trigger-section {
+  margin-top: 5rem;
+  padding-top: 3rem;
+  border-top: 1px solid var(--border);
+}
+.dd-trigger-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+}
+.dd-trigger-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 640px) {
+  .dd-trigger-grid { grid-template-columns: 1fr 1fr; }
+}
 
-  .dd-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    user-select: none;
-  }
-  .dd-header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .dd-icon { font-size: 1.3rem; }
-  .dd-title {
-    font-family: var(--serif);
-    font-size: 0.95rem;
-    font-weight: 700;
-  }
-  .dd-chevron {
-    font-size: 0.8rem;
-    color: var(--amber);
-    transition: transform 0.4s var(--ease-out);
-  }
-  .dd-card.open .dd-chevron {
-    transform: rotate(180deg);
-  }
+.dd-trigger {
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: var(--accent-glow);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.4s var(--ease-out);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.dd-trigger::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent-dim), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.dd-trigger:hover {
+  border-color: var(--accent-mid);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--accent-dim);
+}
+.dd-trigger:hover::before { opacity: 1; }
+.dd-trigger-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.dd-trigger-content {
+  position: relative;
+  z-index: 1;
+}
+.dd-trigger-title {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+.dd-trigger-hint {
+  font-size: 0.6rem;
+  color: var(--fg-secondary);
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+}
+.dd-trigger-arrow {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--accent);
+  transition: transform 0.3s var(--ease-out);
+  position: relative;
+  z-index: 1;
+}
+.dd-trigger:hover .dd-trigger-arrow {
+  transform: translateX(4px);
+}
 
-  .dd-body {
-    height: 0;
-    overflow: hidden;
-    transition: height 0.5s var(--ease-out);
-  }
-  .dd-body-inner {
-    padding: 0 1.5rem 1.5rem;
-  }
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-smooth);
+}
+.modal-overlay.open {
+  pointer-events: all;
+  opacity: 1;
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+}
+.modal-drawer {
+  position: relative;
+  width: min(580px, 92vw);
+  height: 100vh;
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(1.4);
+  -webkit-backdrop-filter: blur(40px) saturate(1.4);
+  border-left: 1px solid var(--glass-border);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.6s var(--ease-out);
+  box-shadow: -20px 0 80px rgba(0,0,0,0.1);
+}
+.modal-overlay.open .modal-drawer {
+  transform: translateX(0);
+}
+.modal-close {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: flex-end;
+  padding: 1.5rem 2rem 0;
+}
+.modal-close-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--fg-secondary);
+  transition: all 0.3s;
+}
+.modal-close-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.modal-body {
+  padding: 2rem 2.5rem 4rem;
+}
+@media (max-width: 640px) {
+  .modal-body { padding: 1.5rem 1.5rem 3rem; }
+}
+.modal-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+.modal-title {
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 2.5rem;
+}
+/* Logic chain in modal — magazine layout */
+.logic-chain-modal {
+  position: relative;
+}
+.chain-step-modal {
+  position: relative;
+  padding-left: 2rem;
+  padding-bottom: 2.5rem;
+  border-left: 1.5px solid var(--accent-mid);
+}
+.chain-step-modal:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+.chain-step-modal::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 0.2rem;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--glass-bg), 0 0 0 5px var(--accent-mid);
+}
+.chain-label-modal {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  background: var(--accent-dim);
+  border-radius: 3px;
+}
+.chain-text-modal {
+  font-size: 0.95rem;
+  line-height: 2;
+  color: var(--fg);
+  opacity: 0.88;
+}
 
-  /* Logic Chain */
-  .logic-chain {
-    position: relative;
-    padding-left: 1.5rem;
-  }
-  .logic-chain::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.5rem;
-    bottom: 0.5rem;
-    width: 2px;
-    background: linear-gradient(to bottom, var(--amber), var(--amber-mid), transparent);
-  }
-  .chain-step {
-    margin-bottom: 1.25rem;
-    position: relative;
-  }
-  .chain-step::before {
-    content: '';
-    position: absolute;
-    left: -1.5rem;
-    top: 0.6rem;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--amber);
-    border: 2px solid var(--paper);
-  }
-  body.dark-mode .chain-step::before {
-    border-color: var(--charcoal);
-  }
-  .chain-label {
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    color: var(--amber);
-    background: var(--amber-dim);
-    display: inline-block;
-    padding: 0.15rem 0.6rem;
-    border-radius: 2px;
-    margin-bottom: 0.4rem;
-  }
-  .chain-text {
-    font-size: 0.9rem;
-    line-height: 1.8;
-    opacity: 0.9;
-  }
+/* ═══════════════════════════════════════════════════════
+   COMPARISON MODULE
+   ═══════════════════════════════════════════════════════ */
+.comparison-section {
+  margin: 5rem 0;
+  padding: 3rem 0;
+}
+.comparison-toggle {
+  display: inline-flex;
+  gap: 0;
+  margin-bottom: 3rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  overflow: hidden;
+  background: var(--accent-glow);
+}
+.toggle-btn {
+  padding: 0.65rem 1.5rem;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  border: none;
+  background: transparent;
+  color: var(--fg-secondary);
+  cursor: pointer;
+  transition: all 0.4s var(--ease-out);
+  min-height: 44px;
+  white-space: nowrap;
+}
+.toggle-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 100px;
+  box-shadow: 0 4px 15px var(--accent-mid);
+}
+.comparison-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.comp-row-label {
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+}
+.comp-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+.comp-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.comp-bar-tag {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  width: 2.5rem;
+  text-align: right;
+  color: var(--fg-secondary);
+  opacity: 0.5;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.comp-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.comp-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1.2s var(--ease-out);
+  width: 0%;
+}
+.comp-bar-fill.amber { background: var(--accent); }
+.comp-bar-fill.grey { background: var(--fg-secondary); opacity: 0.3; }
+.comp-bar-value {
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 2rem;
+  color: var(--fg-secondary);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.comp-text {
+  font-size: 0.75rem;
+  line-height: 1.7;
+  color: var(--fg-secondary);
+  margin-top: 0.4rem;
+  opacity: 0.7;
+}
 
-  /* ═══════════════════════════════════════════
-     COMPARISON MODULE
-     ═══════════════════════════════════════════ */
-  .comparison-section {
-    margin-top: 4rem;
-    padding: 3rem 0;
-  }
-  .comparison-toggle {
-    display: flex;
-    justify-content: center;
-    gap: 0;
-    margin-bottom: 3rem;
-    border: 1px solid var(--grey-200);
-    border-radius: 8px;
-    overflow: hidden;
-    max-width: 420px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .toggle-btn {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    font-family: var(--sans);
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    border: none;
-    background: transparent;
-    color: var(--grey-600);
-    cursor: pointer;
-    transition: all 0.3s var(--ease-out);
-    min-height: 44px;
-  }
-  .toggle-btn.active {
-    background: var(--amber);
-    color: var(--charcoal);
-    font-weight: 600;
-  }
+/* ═══════════════════════════════════════════════════════
+   EXTINCTION VISUALIZATION
+   ═══════════════════════════════════════════════════════ */
+.extinction-section { margin-top: 5rem; }
+.extinction-region {
+  margin-bottom: 3.5rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.extinction-region:last-child { border-bottom: none; }
+.ext-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.ext-region-name {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.ext-arrival {
+  font-size: 0.65rem;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+.ext-species {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.2rem 0;
+}
+.ext-species-icon {
+  font-size: 1.5rem;
+  position: relative;
+  transition: all 0.6s var(--ease-out);
+  opacity: 0.9;
+}
+.ext-species-icon.extinct::after {
+  content: '';
+  position: absolute;
+  left: -3px; right: -3px;
+  top: 50%;
+  height: 2px;
+  background: #DC2626;
+  transform: rotate(-45deg);
+  box-shadow: 0 0 6px rgba(220,38,38,0.5);
+}
+.ext-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.ext-bar-label {
+  font-size: 0.6rem;
+  color: var(--fg-secondary);
+  opacity: 0.5;
+  width: 3.5rem;
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+.ext-bar-track {
+  flex: 1;
+  height: 10px;
+  background: var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.ext-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #DC2626);
+  border-radius: 5px;
+  width: 0%;
+  transition: width 1.8s var(--ease-out);
+}
+.ext-percent {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #DC2626;
+  width: 3.5rem;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.ext-note {
+  font-size: 0.72rem;
+  color: var(--fg-secondary);
+  margin-top: 0.6rem;
+  line-height: 1.7;
+  opacity: 0.6;
+}
 
-  .comparison-rows {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-  .comp-row-label {
-    font-family: var(--serif);
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-  .comp-bars {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-  .comp-bar-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .comp-bar-tag {
-    font-size: 0.6rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    width: 2.5rem;
-    text-align: right;
-    color: var(--grey-400);
-    flex-shrink: 0;
-  }
-  .comp-bar-track {
-    flex: 1;
-    height: 8px;
-    background: var(--grey-200);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  body.dark-mode .comp-bar-track { background: rgba(250,250,248,0.08); }
-  .comp-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    transition: width 1s var(--ease-out);
-    width: 0%;
-  }
-  .comp-bar-fill.amber { background: var(--amber); }
-  .comp-bar-fill.grey { background: var(--grey-400); }
-  .comp-bar-value {
-    font-size: 0.7rem;
-    font-weight: 600;
-    width: 2rem;
-    color: var(--grey-600);
-    flex-shrink: 0;
-  }
-  .comp-text {
-    font-size: 0.78rem;
-    line-height: 1.7;
-    color: var(--grey-600);
-    margin-top: 0.35rem;
-  }
-  body.dark-mode .comp-text { color: var(--grey-400); }
+/* ═══════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════ */
+.footer {
+  text-align: center;
+  padding: 10rem 2rem 6rem;
+}
+.footer-title {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 900;
+  margin-bottom: 1.5rem;
+}
+.footer-text {
+  font-size: 0.85rem;
+  color: var(--fg-secondary);
+  max-width: 460px;
+  margin: 0 auto;
+  line-height: 2;
+  opacity: 0.7;
+}
+.footer-next {
+  margin-top: 3rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+}
 
-  /* ═══════════════════════════════════════════
-     EXTINCTION VISUALIZATION
-     ═══════════════════════════════════════════ */
-  .extinction-section {
-    margin-top: 4rem;
-  }
-  .extinction-region {
-    margin-bottom: 3rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid rgba(250,250,248,0.08);
-  }
-  .extinction-region:last-child { border-bottom: none; }
-  .ext-header {
-    display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-  }
-  .ext-region-name {
-    font-family: var(--serif);
-    font-size: 1.1rem;
-    font-weight: 700;
-  }
-  .ext-arrival {
-    font-size: 0.7rem;
-    color: var(--amber);
-    font-weight: 500;
-    letter-spacing: 0.1em;
-  }
-  .ext-species {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 1rem 0;
-  }
-  .ext-species-icon {
-    font-size: 1.5rem;
-    position: relative;
-    transition: all 0.5s var(--ease-out);
-  }
-  .ext-species-icon.extinct::after {
-    content: '';
-    position: absolute;
-    left: -2px;
-    right: -2px;
-    top: 50%;
-    height: 2px;
-    background: #E53E3E;
-    transform: rotate(-45deg);
-  }
-  .ext-bar-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 0.75rem;
-  }
-  .ext-bar-label {
-    font-size: 0.7rem;
-    color: var(--grey-400);
-    width: 4rem;
-    flex-shrink: 0;
-  }
-  .ext-bar-track {
-    flex: 1;
-    height: 12px;
-    background: rgba(250,250,248,0.06);
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .ext-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--amber), #E53E3E);
-    border-radius: 6px;
-    width: 0%;
-    transition: width 1.5s var(--ease-out);
-  }
-  .ext-percent {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #E53E3E;
-    width: 3.5rem;
-    text-align: right;
-    flex-shrink: 0;
-  }
-  .ext-percent .counter { font-variant-numeric: tabular-nums; }
-  .ext-note {
-    font-size: 0.78rem;
-    color: var(--grey-400);
-    margin-top: 0.5rem;
-    line-height: 1.6;
-  }
+/* ═══════════════════════════════════════════════════════
+   KEYFRAMES
+   ═══════════════════════════════════════════════════════ */
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scrollDrop {
+  0% { top: -100%; }
+  100% { top: 100%; }
+}
 
-  /* ═══════════════════════════════════════════
-     SECTION DIVIDER
-     ═══════════════════════════════════════════ */
-  .scene-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4rem 0;
+/* ═══════════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
-  .scene-divider span {
-    display: block;
-    width: 60px;
-    height: 1px;
-    background: var(--amber-mid);
-  }
+  .reveal { opacity: 1; transform: none; }
+  .draw-path { stroke-dashoffset: 0 !important; }
+}
 
-  /* ═══════════════════════════════════════════
-     FOOTER
-     ═══════════════════════════════════════════ */
-  .footer {
-    text-align: center;
-    padding: 6rem 2rem;
-    border-top: 1px solid var(--grey-200);
-  }
-  body.dark-mode .footer { border-color: rgba(250,250,248,0.08); }
-  .footer-title {
-    font-family: var(--serif);
-    font-size: clamp(1.4rem, 3vw, 2rem);
-    font-weight: 700;
-    margin-bottom: 1rem;
-  }
-  .footer-text {
-    font-size: 0.85rem;
-    color: var(--grey-400);
-    max-width: 480px;
-    margin: 0 auto;
-    line-height: 1.8;
-  }
-
-  /* ═══════════════════════════════════════════
-     KEYFRAMES
-     ═══════════════════════════════════════════ */
-  @keyframes fadeUp {
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes scrollPulse {
-    0%, 100% { opacity: 0.3; transform: scaleY(1); }
-    50% { opacity: 1; transform: scaleY(1.3); }
-  }
-
-  /* ═══════════════════════════════════════════
-     REDUCED MOTION
-     ═══════════════════════════════════════════ */
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
-    .reveal { opacity: 1; transform: none; }
-  }
-
-  /* ═══════════════════════════════════════════
-     RESPONSIVE
-     ═══════════════════════════════════════════ */
-  @media (max-width: 768px) {
-    .scene { padding: 5rem 1.25rem; }
-    .scene-nav { display: none; }
-    .hero-quote { font-size: 1.2rem; padding: 2rem 0; }
-    .hero-quote::before { font-size: 3rem; }
-    .dd-header { padding: 1rem 1.25rem; }
-    .dd-body-inner { padding: 0 1.25rem 1.25rem; }
-    .comparison-toggle { max-width: 100%; }
-  }
-
-  @media (min-width: 1024px) {
-    .deep-dive-grid { grid-template-columns: 1fr 1fr; }
-  }
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .scene { padding: 7rem 1.5rem 5rem; }
+  .scene-nav { display: none; }
+  .hero-quote { font-size: 1.2rem; }
+  .number-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .dunbar-viz { height: 240px; }
+  .dunbar-circle.beyond { width: 240px; height: 240px; }
+  .dunbar-circle.limit { width: 190px; height: 190px; }
+  .dunbar-circle.band { width: 120px; height: 120px; }
+  .dunbar-circle.core { width: 60px; height: 60px; }
+}
 </style>
 </head>
 <body>
 
-<!-- Progress bar -->
 <div class="progress-bar" id="progressBar"></div>
-
-<!-- Scene navigation dots -->
 <nav class="scene-nav" id="sceneNav"></nav>
-
-<!-- Content rendered by JS engine -->
 <div id="app"></div>
+
+<!-- MODAL (single instance, content swapped by JS) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-drawer" id="modalDrawer">
+    <div class="modal-close">
+      <button class="modal-close-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-// CONTENT_DATA — The single source of truth for all content.
-// Swap this object to power a different book/part.
+// DYNAMIC EMOTIONAL PALETTE — per-scene color schemes
+// ═══════════════════════════════════════════════════════════════
+const PALETTES = {
+  hero: {
+    bg: '#F5F0E8', bgSecondary: '#EDE7DA', fg: '#1A1A1A', fgSecondary: '#5C5546',
+    accent: '#B8860B', accentDim: 'rgba(184,134,11,0.12)', accentMid: 'rgba(184,134,11,0.35)',
+    accentGlow: 'rgba(184,134,11,0.06)', border: 'rgba(0,0,0,0.06)',
+    glassBg: 'rgba(245,240,232,0.82)', glassBorder: 'rgba(255,255,255,0.3)'
+  },
+  scene1: {
+    bg: '#F7F3EC', bgSecondary: '#EDE8DE', fg: '#2C2416', fgSecondary: '#6B5D4A',
+    accent: '#A0522D', accentDim: 'rgba(160,82,45,0.1)', accentMid: 'rgba(160,82,45,0.3)',
+    accentGlow: 'rgba(160,82,45,0.05)', border: 'rgba(44,36,22,0.06)',
+    glassBg: 'rgba(247,243,236,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene2: {
+    bg: '#F4F1EA', bgSecondary: '#E8E3D8', fg: '#1F1A12', fgSecondary: '#6E6350',
+    accent: '#8B6914', accentDim: 'rgba(139,105,20,0.1)', accentMid: 'rgba(139,105,20,0.3)',
+    accentGlow: 'rgba(139,105,20,0.05)', border: 'rgba(31,26,18,0.06)',
+    glassBg: 'rgba(244,241,234,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene3: {
+    bg: '#F0F2EC', bgSecondary: '#E4E8DD', fg: '#1C2418', fgSecondary: '#566148',
+    accent: '#5E7A3A', accentDim: 'rgba(94,122,58,0.1)', accentMid: 'rgba(94,122,58,0.3)',
+    accentGlow: 'rgba(94,122,58,0.05)', border: 'rgba(28,36,24,0.06)',
+    glassBg: 'rgba(240,242,236,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene4: {
+    bg: '#141414', bgSecondary: '#1C1C1C', fg: '#E8E4DC', fgSecondary: '#8A8478',
+    accent: '#D4A845', accentDim: 'rgba(212,168,69,0.1)', accentMid: 'rgba(212,168,69,0.3)',
+    accentGlow: 'rgba(212,168,69,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(30,30,30,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  }
+};
+
+function applyPalette(name) {
+  const p = PALETTES[name];
+  if (!p) return;
+  const s = document.documentElement.style;
+  s.setProperty('--bg', p.bg);
+  s.setProperty('--bg-secondary', p.bgSecondary);
+  s.setProperty('--fg', p.fg);
+  s.setProperty('--fg-secondary', p.fgSecondary);
+  s.setProperty('--accent', p.accent);
+  s.setProperty('--accent-dim', p.accentDim);
+  s.setProperty('--accent-mid', p.accentMid);
+  s.setProperty('--accent-glow', p.accentGlow);
+  s.setProperty('--border', p.border);
+  s.setProperty('--glass-bg', p.glassBg);
+  s.setProperty('--glass-border', p.glassBorder);
+  document.body.style.backgroundColor = p.bg;
+  document.body.style.color = p.fg;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONTENT_DATA
 // ═══════════════════════════════════════════════════════════════
 const CONTENT_DATA = {
   meta: {
@@ -720,20 +1008,13 @@ const CONTENT_DATA = {
     part: '第一部分',
     partTitle: '认知革命',
     partSub: 'THE COGNITIVE REVOLUTION',
-    author: '尤瓦尔·赫拉利',
-    colors: { paper: '#FAFAF8', charcoal: '#1A1A1A', amber: '#D4A845' }
+    author: '尤瓦尔·赫拉利'
   },
-
   scenes: [
-    // ─────────────────────────────────────────
-    // SCENE 1
-    // ─────────────────────────────────────────
     {
-      id: 'scene-1',
-      number: '场景 01',
+      id: 'scene-1', number: '场景 01', palette: 'scene1',
       title: '一种也没什么特别的动物',
       subtitle: 'AN ANIMAL OF NO SIGNIFICANCE',
-      dark: false,
       heroQuote: '在距今约七万年前，智人不过是一种微不足道的动物，在非洲的一个小角落里过着自己的日子。',
       narrative: [
         '让我们从一个令人不安的事实开始：<b>在大约两百万年的时间里，人类不过是一种普通的中等体型动物</b>。我们的祖先在东非大草原上四处张望，采集果实，捕捉昆虫，同时小心翼翼地躲避更大的捕食者。没有任何迹象表明他们将会主宰世界。',
@@ -742,10 +1023,13 @@ const CONTENT_DATA = {
         '火的驯化才是真正的转折点。当智人学会控制火之后，他们获得了一种可靠且无限的力量来源。<b>烹饪使食物变得更容易消化，缩短了进食时间，更关键的是——为大脑的进一步膨胀提供了能量基础。</b>一小时的烹饪完成了过去需要五小时咀嚼才能完成的能量摄入。',
         '然而，尽管拥有了火和工具，智人仍然花了几十万年的时间在食物链的中间层苟且偷生。<b>他们最常干的事不是狩猎大型动物，而是挖掘根茎、采摘浆果、以及——偷吃其他猛兽留下的腐肉。</b>别被博物馆里那些英勇猎人的画像骗了。'
       ],
+      dataViz: {
+        type: 'brain-energy',
+        title: '大脑的能量账本'
+      },
       deepDives: [
         {
-          title: '大脑的能量悖论',
-          icon: '🧠',
+          title: '大脑的能量悖论', icon: '🧠',
           chain: {
             premise: '自然选择通常倾向于节约能量。一个消耗大量能量的器官，除非能带来同等甚至更大的生存优势，否则不会在进化中被保留。',
             evidence: '人类大脑占体重2%，消耗25%能量。为维持大脑运转，人类牺牲了肌肉力量（与黑猩猩相比，人类显著更弱），并缩短了消化系统（肠道变短），这要求食物必须是高质量、易消化的。',
@@ -753,8 +1037,7 @@ const CONTENT_DATA = {
           }
         },
         {
-          title: '火与烹饪：沉默的革命',
-          icon: '🔥',
+          title: '火与烹饪：沉默的革命', icon: '🔥',
           chain: {
             premise: '食物的能量不仅取决于其化学成分，更取决于身体消化吸收的效率。生食需要消耗大量能量来咀嚼和消化。',
             evidence: '烹饪使蛋白质变性、淀粉糊化，大幅提高了消化效率。黑猩猩每天花约5小时咀嚼生食，而人类烹饪后仅需约1小时进食。这释放出的时间和能量可以"投资"到其他活动——社交、思考、制造工具。',
@@ -763,16 +1046,10 @@ const CONTENT_DATA = {
         }
       ]
     },
-
-    // ─────────────────────────────────────────
-    // SCENE 2
-    // ─────────────────────────────────────────
     {
-      id: 'scene-2',
-      number: '场景 02',
+      id: 'scene-2', number: '场景 02', palette: 'scene2',
       title: '虚构的力量',
       subtitle: 'THE POWER OF FICTION',
-      dark: false,
       heroQuote: '大量的陌生人之所以能够成功合作，是因为他们相信共同的虚构故事。',
       narrative: [
         '大约七万年前，智人的大脑发生了一次关键突变。我们无法确定具体原因——可能是基因的偶然重组——但结果是革命性的：<b>智人获得了讨论"不存在之物"的能力</b>。这听起来微不足道，但它改变了一切。',
@@ -781,10 +1058,13 @@ const CONTENT_DATA = {
         '什么是邓巴数字？灵长类动物学家罗宾·邓巴发现，任何灵长类群体的规模，都受限于大脑新皮质的信息处理能力。对智人而言，<b>这个天然上限大约是150人</b>——这是一个人能够真正了解、信任并维持稳定社会关系的最大人数。',
         '但看看今天的世界：城市容纳数百万人，帝国统治数亿人，跨国公司在全球运作。这些都超越了150人的上限。<b>秘密就在于虚构故事——法律、宗教、国家、公司、金钱——这些都是智人发明的共同神话</b>，让数百万互不相识的陌生人得以协作。蜜蜂靠基因合作，黑猩猩靠熟人社交，而智人靠想象中的秩序。'
       ],
+      dataViz: {
+        type: 'dunbar',
+        title: '邓巴数字：合作规模的天花板'
+      },
       deepDives: [
         {
-          title: '标致汽车：一个法律虚构的解剖',
-          icon: '🚗',
+          title: '标致汽车：一个法律虚构的解剖', icon: '🚗',
           chain: {
             premise: '公司作为一个"实体"，在物理世界中不存在对应物。它不等于任何有形资产或具体的人。',
             evidence: '标致公司成立于1896年。阿尔芒·标致到地方法院找了一位律师，走完一套固定仪式（签署文件、宣读条款），于是"标致公司"就诞生了。这与原始部落的巫师通过仪式创造"部落守护灵"在本质上完全相同——都是通过集体想象赋予一个虚构实体以"现实"的力量。',
@@ -792,76 +1072,47 @@ const CONTENT_DATA = {
           }
         },
         {
-          title: '150人天花板：邓巴数字',
-          icon: '👥',
+          title: '150人天花板：邓巴数字', icon: '👥',
           chain: {
             premise: '社会关系的维护需要大量认知资源。记住每个人的性格、关系网络、信用记录，都会消耗脑力。灵长类大脑的新皮质大小，决定了它能处理的社会关系上限。',
-            evidence: '邓巴通过对比不同灵长类的新皮质比例与群体规模，推算出智人的社会关系上限约为150人。这个数字在历史中反复出现：罗马军团的基本战术单位（连队）约120人，胡特尔派（Hutterite）的社区严格控制在150人以下，现代军队的连级单位通常在100-200人之间。',
-            conclusion: '150人是生物学对社会规模施加的硬性限制。任何超越这一限制的人类组织——城市、教会、帝国、公司——都必须依赖某种"虚构秩序"（法律、信仰、制度）来维系凝聚力。认知革命的真正意义不在于智人变得更聪明，而在于他们学会了编造故事。'
+            evidence: '邓巴通过对比不同灵长类的新皮质比例与群体规模，推算出智人的社会关系上限约为150人。这个数字在历史中反复出现：罗马军团的基本战术单位（连队）约120人，胡特尔派社区严格控制在150人以下，现代军队的连级单位通常在100-200人之间。',
+            conclusion: '150人是生物学对社会规模施加的硬性限制。任何超越这一限制的人类组织——城市、教会、帝国、公司——都必须依赖某种"虚构秩序"来维系凝聚力。认知革命的真正意义不在于智人变得更聪明，而在于他们学会了编造故事。'
           }
         },
         {
-          title: '认知革命：语言的质变',
-          icon: '💬',
+          title: '认知革命：语言的质变', icon: '💬',
           chain: {
-            premise: '许多动物（包括其他人种）都拥有语言能力，可以传递关于环境的事实信息（"那边有食物""这里有危险"）。智人语言的独特之处不在于词汇量或语法复杂度。',
+            premise: '许多动物都拥有语言能力，可以传递关于环境的事实信息。智人语言的独特之处不在于词汇量或语法复杂度。',
             evidence: '智人语言的决定性特征是"虚构能力"——描述从未见过、不存在、或纯粹想象之物的能力。这使得三种新型沟通成为可能：①八卦（讨论第三方，建立信任网络）；②计划（讨论未来的假设情境）；③虚构叙事（创造共同信仰体系）。',
-            conclusion: '认知革命的本质是：智人的语言从"描述现实"升级为"创造现实"。一旦你能让一千个人相信同一个虚构故事，他们就能协同行动——即使彼此从未谋面。这是智人超越所有其他人种（尼安德特人、直立人等）的根本原因，与体力、脑容量无关。'
+            conclusion: '认知革命的本质是：智人的语言从"描述现实"升级为"创造现实"。一旦你能让一千个人相信同一个虚构故事，他们就能协同行动——即使彼此从未谋面。这是智人超越所有其他人种的根本原因，与体力、脑容量无关。'
           }
         }
       ]
     },
-
-    // ─────────────────────────────────────────
-    // SCENE 3
-    // ─────────────────────────────────────────
     {
-      id: 'scene-3',
-      number: '场景 03',
+      id: 'scene-3', number: '场景 03', palette: 'scene3',
       title: '采集者的全能生活',
       subtitle: 'A DAY IN THE LIFE OF ADAM AND EVE',
-      dark: false,
       heroQuote: '采集社会的"原始人"可能比历史上绝大多数农民和工人过得更好——工作更少、饮食更丰富、社交更平等。',
       narrative: [
         '提到"原始人"，你脑海中浮现的画面是什么？衣不蔽体、食不果腹、朝不保夕？<b>这是农业社会和工业社会灌输给你的偏见。</b>事实可能恰恰相反。',
-        '采集者的食谱异常丰富。一个典型的采集部落可能食用数十种不同的植物、昆虫、菌类和动物。<b>相比之下，现代农民的食谱极其单调</b>——古代农民可能90%的热量来自单一作物（小麦、稻米或玉米）。营养学告诉我们：多样性几乎总是优于单一性。',
-        '工作时间呢？人类学家对现存采集社会（如卡拉哈里沙漠的桑人）的研究表明，<b>采集者平均每天只需"工作"3-6个小时</b>。其余时间用于闲聊、讲故事、玩耍和睡觉。中世纪农民的工作时间远超于此，更不用说现代工厂工人了。',
+        '采集者的食谱异常丰富。一个典型的采集部落可能食用数十种不同的植物、昆虫、菌类和动物。<b>相比之下，现代农民的食谱极其单调</b>——古代农民可能90%的热量来自单一作物。营养学告诉我们：多样性几乎总是优于单一性。',
+        '工作时间呢？人类学家对现存采集社会的研究表明，<b>采集者平均每天只需"工作"3-6个小时</b>。其余时间用于闲聊、讲故事、玩耍和睡觉。中世纪农民的工作时间远超于此，更不用说现代工厂工人了。',
         '健康状况同样出人意料。农业社会带来了定居、人口密集和家畜驯化，这成为了传染病的温床。<b>天花、麻疹、结核——这些"文明病"几乎都源于人畜共处的农耕村落</b>。采集者分散居住、频繁迁徙，反而有效避免了瘟疫。',
-        '最具颠覆性的一点或许是社会平等。<b>采集社会几乎没有私有财产的概念</b>（你能带着走的东西有限），因此也就没有贫富分化。没有国王、没有贵族、没有地主。如果用"平等"作为衡量标准，人类社会在"进步"了一万年之后，反而大幅倒退了。'
+        '最具颠覆性的一点或许是社会平等。<b>采集社会几乎没有私有财产的概念</b>，因此也就没有贫富分化。没有国王、没有贵族、没有地主。如果用"平等"作为衡量标准，人类社会在"进步"了一万年之后，反而大幅倒退了。'
       ],
       comparison: {
         dimensions: [
-          {
-            label: '饮食多样性',
-            foraging: { score: 9, text: '数十种植物、动物、昆虫、菌类，营养全面均衡' },
-            farming: { score: 3, text: '严重依赖1-3种谷物，营养单一，维生素缺乏常见' }
-          },
-          {
-            label: '每日闲暇时间',
-            foraging: { score: 8, text: '每天工作3-6小时，大量时间用于社交、休息和娱乐' },
-            farming: { score: 3, text: '日出而作日落而息，农忙季节几乎没有休息时间' }
-          },
-          {
-            label: '身体健康',
-            foraging: { score: 8, text: '骨骼强健，身材高大，传染病罕见，牙齿状况良好' },
-            farming: { score: 4, text: '身高下降，传染病频发，营养不良，椎间盘病变普遍' }
-          },
-          {
-            label: '社会平等',
-            foraging: { score: 9, text: '无私有财产积累，无阶级分化，决策相对民主' },
-            farming: { score: 2, text: '土地私有化导致阶层固化，国王、贵族与农奴的鸿沟' }
-          },
-          {
-            label: '技能多样性',
-            foraging: { score: 9, text: '每个人都是通才：追踪、采集、制造工具、导航、急救' },
-            farming: { score: 4, text: '高度专业化分工，个体技能窄化，依赖他人生存' }
-          }
+          { label: '饮食多样性', foraging: { score: 9, text: '数十种植物、动物、昆虫、菌类，营养全面均衡' }, farming: { score: 3, text: '严重依赖1-3种谷物，营养单一，维生素缺乏常见' } },
+          { label: '每日闲暇时间', foraging: { score: 8, text: '每天工作3-6小时，大量时间用于社交、休息和娱乐' }, farming: { score: 3, text: '日出而作日落而息，农忙季节几乎没有休息时间' } },
+          { label: '身体健康', foraging: { score: 8, text: '骨骼强健，身材高大，传染病罕见，牙齿状况良好' }, farming: { score: 4, text: '身高下降，传染病频发，营养不良，椎间盘病变普遍' } },
+          { label: '社会平等', foraging: { score: 9, text: '无私有财产积累，无阶级分化，决策相对民主' }, farming: { score: 2, text: '土地私有化导致阶层固化，国王、贵族与农奴的鸿沟' } },
+          { label: '技能多样性', foraging: { score: 9, text: '每个人都是通才：追踪、采集、制造工具、导航、急救' }, farming: { score: 4, text: '高度专业化分工，个体技能窄化，依赖他人生存' } }
         ]
       },
       deepDives: [
         {
-          title: '"最初的富裕社会"假说',
-          icon: '🌿',
+          title: '"最初的富裕社会"假说', icon: '🌿',
           chain: {
             premise: '"贫穷"不是物质匮乏的绝对状态，而是欲望与获取能力之间的差距。如果一个社会的欲望有限且容易满足，那么即使物质简朴，其成员也可以被视为"富裕"的。',
             evidence: '人类学家马歇尔·萨林斯在1966年提出"原初丰裕社会"理论。他对桑人、澳大利亚原住民等采集社会的研究表明：①他们的物质需求极少且容易满足；②他们不"储蓄"因为环境本身就是仓库；③他们拥有大量自由支配时间；④他们不认为自己是"贫穷"的。',
@@ -870,98 +1121,49 @@ const CONTENT_DATA = {
         }
       ]
     },
-
-    // ─────────────────────────────────────────
-    // SCENE 4
-    // ─────────────────────────────────────────
     {
-      id: 'scene-4',
-      number: '场景 04',
+      id: 'scene-4', number: '场景 04', palette: 'scene4',
       title: '毁天灭地的洪水',
       subtitle: 'THE FLOOD',
-      dark: true,
       heroQuote: '智人是有史以来最致命的物种。早在工业革命之前，我们就已经是动物界的连环杀手。',
       narrative: [
         '让我们追踪一条血迹斑斑的路线。<b>大约45,000年前，智人首次登陆澳大利亚。</b>在此之前，这片大陆拥有一套独立演化了数百万年的壮观巨型动物群——体重超过200公斤的双门齿兽、巨型袋狮、身长7米的巨蜥。智人到达后的几千年内，这些动物全部灭绝。',
-        '巧合？让我们继续。<b>大约14,000年前，智人跨过白令陆桥进入美洲。</b>美洲拥有比非洲更壮观的巨型动物群：猛犸象、乳齿象、剑齿虎、巨型地懒（身高可达6米）。在智人到达后的短短两千年内，北美47个大型哺乳动物属中有34个消失，南美损失更为惨重。',
+        '巧合？让我们继续。<b>大约14,000年前，智人跨过白令陆桥进入美洲。</b>美洲拥有比非洲更壮观的巨型动物群：猛犸象、乳齿象、剑齿虎、巨型地懒。在智人到达后的短短两千年内，北美47个大型哺乳动物属中有34个消失，南美损失更为惨重。',
         '模式清晰得令人不安：<b>每当智人踏上一片新大陆，该大陆的大型动物就会在地质学意义上的"瞬间"灭绝。</b>这不是巧合，不是气候变化，而是系统性的生态屠杀。',
-        '为什么大型动物如此脆弱？因为它们繁殖缓慢（大象的孕期长达22个月），数量本就稀少，而且——关键的一点——<b>它们从未见过人类，完全不知道该如何应对这种新型捕食者</b>。非洲和亚洲的大型动物之所以幸存，恰恰是因为它们与人类共同进化了数百万年，学会了恐惧和回避。',
+        '为什么大型动物如此脆弱？因为它们繁殖缓慢，数量本就稀少，而且——关键的一点——<b>它们从未见过人类，完全不知道该如何应对这种新型捕食者</b>。非洲和亚洲的大型动物之所以幸存，恰恰是因为它们与人类共同进化了数百万年，学会了恐惧和回避。',
         '这段历史的意义远超学术考古。<b>它粉碎了"与自然和谐共处的原始人"这一浪漫神话。</b>智人从来就不是"自然之子"——我们从走出非洲的第一天起，就是一台毁灭性的生态机器。工业革命不过是将这台机器的效率提升了几个数量级而已。'
       ],
       extinction: {
         regions: [
-          {
-            name: '澳大利亚',
-            arrival: '约45,000年前',
-            percentLost: 95,
-            species: [
-              { name: '双门齿兽', icon: '🦛', weight: '2.8吨' },
-              { name: '巨型短面袋鼠', icon: '🦘', weight: '230公斤' },
-              { name: '袋狮', icon: '🦁', weight: '130公斤' },
-              { name: '古巨蜥', icon: '🦎', weight: '600公斤' },
-              { name: '牛顿巨鸟', icon: '🦅', weight: '250公斤' },
-              { name: '巨型陆龟', icon: '🐢', weight: '200公斤' }
-            ],
-            note: '24种体重超过50公斤的动物中，23种在智人到达后灭绝'
-          },
-          {
-            name: '北美洲',
-            arrival: '约14,000年前',
-            percentLost: 73,
-            species: [
-              { name: '猛犸象', icon: '🦣', weight: '6吨' },
-              { name: '乳齿象', icon: '🐘', weight: '5吨' },
-              { name: '剑齿虎', icon: '🐅', weight: '400公斤' },
-              { name: '巨型地懒', icon: '🦥', weight: '4吨' },
-              { name: '美洲拟狮', icon: '🦁', weight: '350公斤' },
-              { name: '恐狼', icon: '🐺', weight: '68公斤' }
-            ],
-            note: '47个大型哺乳动物属中34个灭绝，速度之快在地质史上前所未有'
-          },
-          {
-            name: '南美洲',
-            arrival: '约12,000年前',
-            percentLost: 83,
-            species: [
-              { name: '大地懒', icon: '🦥', weight: '4吨' },
-              { name: '箭齿兽', icon: '🦛', weight: '1.5吨' },
-              { name: '居维叶马', icon: '🐴', weight: '500公斤' },
-              { name: '雕齿兽', icon: '🐢', weight: '2吨' },
-              { name: '恐鹤', icon: '🦅', weight: '130公斤' }
-            ],
-            note: '南美60个大型哺乳动物属中约50个消失'
-          },
-          {
-            name: '马达加斯加 & 新西兰',
-            arrival: '约1,500 / 800年前',
-            percentLost: 100,
-            species: [
-              { name: '象鸟', icon: '🦤', weight: '500公斤' },
-              { name: '巨型狐猴', icon: '🐒', weight: '200公斤' },
-              { name: '恐鸟', icon: '🦅', weight: '230公斤' },
-              { name: '哈斯特鹰', icon: '🦅', weight: '15公斤' }
-            ],
-            note: '最晚被发现的岛屿——灭绝也最晚发生，但模式完全一致'
-          }
+          { name: '澳大利亚', arrival: '约45,000年前', percentLost: 95,
+            species: [ {name:'双门齿兽',icon:'🦛',weight:'2.8吨'},{name:'巨型短面袋鼠',icon:'🦘',weight:'230公斤'},{name:'袋狮',icon:'🦁',weight:'130公斤'},{name:'古巨蜥',icon:'🦎',weight:'600公斤'},{name:'牛顿巨鸟',icon:'🦅',weight:'250公斤'},{name:'巨型陆龟',icon:'🐢',weight:'200公斤'} ],
+            note: '24种体重超过50公斤的动物中，23种在智人到达后灭绝' },
+          { name: '北美洲', arrival: '约14,000年前', percentLost: 73,
+            species: [ {name:'猛犸象',icon:'🦣',weight:'6吨'},{name:'乳齿象',icon:'🐘',weight:'5吨'},{name:'剑齿虎',icon:'🐅',weight:'400公斤'},{name:'巨型地懒',icon:'🦥',weight:'4吨'},{name:'美洲拟狮',icon:'🦁',weight:'350公斤'},{name:'恐狼',icon:'🐺',weight:'68公斤'} ],
+            note: '47个大型哺乳动物属中34个灭绝，速度之快在地质史上前所未有' },
+          { name: '南美洲', arrival: '约12,000年前', percentLost: 83,
+            species: [ {name:'大地懒',icon:'🦥',weight:'4吨'},{name:'箭齿兽',icon:'🦛',weight:'1.5吨'},{name:'居维叶马',icon:'🐴',weight:'500公斤'},{name:'雕齿兽',icon:'🐢',weight:'2吨'},{name:'恐鹤',icon:'🦅',weight:'130公斤'} ],
+            note: '南美60个大型哺乳动物属中约50个消失' },
+          { name: '马达加斯加 & 新西兰', arrival: '约1,500 / 800年前', percentLost: 100,
+            species: [ {name:'象鸟',icon:'🦤',weight:'500公斤'},{name:'巨型狐猴',icon:'🐒',weight:'200公斤'},{name:'恐鸟',icon:'🦅',weight:'230公斤'},{name:'哈斯特鹰',icon:'🦅',weight:'15公斤'} ],
+            note: '最晚被发现的岛屿——灭绝也最晚发生，但模式完全一致' }
         ]
       },
       deepDives: [
         {
-          title: '"过度捕杀"假说 vs 气候变化假说',
-          icon: '⚔️',
+          title: '"过度捕杀"假说 vs 气候变化假说', icon: '⚔️',
           chain: {
-            premise: '大型动物灭绝有两种主流解释：①气候变化（冰期结束导致栖息地变化）；②人类过度捕杀。如果气候是主因，灭绝应与气候事件同步；如果人类是主因，灭绝应与人类到达时间同步。',
-            evidence: '关键证据：①澳大利亚的灭绝发生在45,000年前，当时并无重大气候事件；②美洲的灭绝集中在14,000-12,000年前，恰好与克洛维斯人（最早的美洲智人）扩散路线吻合；③马达加斯加和新西兰的灭绝分别发生在1,500年前和800年前——远在冰期之后——而恰好与波利尼西亚人和毛利人到达的时间一致。',
-            conclusion: '时间线是不会说谎的。四次独立的灭绝事件，发生在四个不同时代、四种不同气候条件下，唯一的共同变量是：智人的到达。气候可能是帮凶，但主犯无疑是人类。这不是一次意外，而是一种物种级别的行为模式。'
+            premise: '大型动物灭绝有两种主流解释：①气候变化；②人类过度捕杀。如果气候是主因，灭绝应与气候事件同步；如果人类是主因，灭绝应与人类到达时间同步。',
+            evidence: '关键证据：①澳大利亚的灭绝发生在45,000年前，当时并无重大气候事件；②美洲的灭绝恰好与克洛维斯人扩散路线吻合；③马达加斯加和新西兰的灭绝分别发生在1,500年前和800年前——远在冰期之后——而恰好与人类到达的时间一致。',
+            conclusion: '时间线是不会说谎的。四次独立的灭绝事件，发生在四个不同时代、四种不同气候条件下，唯一的共同变量是：智人的到达。气候可能是帮凶，但主犯无疑是人类。'
           }
         },
         {
-          title: '生态天真：为什么大型动物毫无防备',
-          icon: '🦤',
+          title: '生态天真：为什么大型动物毫无防备', icon: '🦤',
           chain: {
             premise: '恐惧是进化习得的。一种动物必须经历足够多代与捕食者的共存，才能进化出对该捕食者的回避本能。',
-            evidence: '非洲和亚洲的动物与人属物种共存了超过200万年，逐渐学会了恐惧人类。但澳大利亚、美洲、马达加斯加、新西兰的动物从未见过人类。当代研究人员在加拉帕戈斯群岛和南极洲观察到相似现象：那里的动物对人类毫无恐惧，可以被轻易接近。',
-            conclusion: '"生态天真"（ecological naivety）解释了为什么非洲仍有大象和犀牛，而其他大陆的巨兽却几乎全部灭绝。这不是因为非洲人更"和谐"，而是因为非洲的动物有足够的时间学会逃跑。历史的残酷教训是：与人类的第一次接触，往往就是最后一次。'
+            evidence: '非洲和亚洲的动物与人属物种共存了超过200万年，逐渐学会了恐惧人类。但澳大利亚、美洲的动物从未见过人类。当代研究人员在加拉帕戈斯群岛和南极洲观察到相似现象：那里的动物对人类毫无恐惧。',
+            conclusion: '"生态天真"解释了为什么非洲仍有大象和犀牛，而其他大陆的巨兽却几乎全部灭绝。历史的残酷教训是：与人类的第一次接触，往往就是最后一次。'
           }
         }
       ]
@@ -980,7 +1182,7 @@ function renderApp() {
   const { meta, scenes } = CONTENT_DATA;
   let html = '';
 
-  // ── Hero ──
+  // Hero
   html += `
     <section class="hero" id="hero">
       <div class="hero-overline">${meta.author} · ${meta.bookSub}</div>
@@ -989,197 +1191,210 @@ function renderApp() {
       <div class="hero-part">${meta.part} · ${meta.partSub}</div>
       <div class="hero-scroll-hint">
         <span>向下滚动</span>
-        <div class="scroll-arrow"></div>
+        <div class="scroll-line"></div>
       </div>
-    </section>
-  `;
+    </section>`;
 
-  // ── Scenes ──
   scenes.forEach((scene, idx) => {
-    html += `<section class="scene ${scene.dark ? 'scene-dark' : ''}" id="${scene.id}" data-dark="${scene.dark}">`;
-    html += `<div class="scene-inner">`;
-
-    // Number + Title
+    html += `<section class="scene" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner">`;
     html += `
       <div class="reveal scene-number">${scene.number}</div>
       <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
       <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle}</div>
-    `;
-
-    // Hero Quote
-    html += `
-      <blockquote class="hero-quote reveal-wipe">${scene.heroQuote}</blockquote>
-    `;
-
-    // Narrative
-    html += `<div class="narrative">`;
-    scene.narrative.forEach(p => {
-      html += `<p class="reveal">${p}</p>`;
-    });
+      <div class="hero-quote-wrap reveal-wipe">
+        <blockquote class="hero-quote">${scene.heroQuote}</blockquote>
+      </div>
+      <div class="narrative">`;
+    scene.narrative.forEach(p => { html += `<p class="reveal">${p}</p>`; });
     html += `</div>`;
 
-    // Comparison Module (Scene 3)
-    if (scene.comparison) {
-      html += renderComparison(scene.comparison);
-    }
+    // Data Viz
+    if (scene.dataViz) html += renderDataViz(scene.dataViz);
 
-    // Extinction Visualization (Scene 4)
-    if (scene.extinction) {
-      html += renderExtinction(scene.extinction);
-    }
+    // Comparison
+    if (scene.comparison) html += renderComparison(scene.comparison);
+
+    // Extinction
+    if (scene.extinction) html += renderExtinction(scene.extinction);
 
     // Deep Dives
-    if (scene.deepDives && scene.deepDives.length > 0) {
-      html += `
-        <div class="deep-dive-section reveal">
-          <div class="deep-dive-label">深度解析 · DEEP DIVE</div>
-          <div class="deep-dive-grid">
-      `;
+    if (scene.deepDives?.length) {
+      html += `<div class="dd-trigger-section reveal"><div class="dd-trigger-label">深度解析 · Deep Dive</div><div class="dd-trigger-grid">`;
       scene.deepDives.forEach((dd, i) => {
         html += `
-          <div class="dd-card reveal reveal-delay-${i + 1}" data-dd>
-            <div class="dd-header">
-              <div class="dd-header-left">
-                <span class="dd-icon">${dd.icon}</span>
-                <span class="dd-title">${dd.title}</span>
-              </div>
-              <span class="dd-chevron">▾</span>
+          <div class="dd-trigger reveal reveal-delay-${i+1}" data-dd-idx="${idx}-${i}">
+            <span class="dd-trigger-icon">${dd.icon}</span>
+            <div class="dd-trigger-content">
+              <div class="dd-trigger-title">${dd.title}</div>
+              <div class="dd-trigger-hint">点击展开完整论证链</div>
             </div>
-            <div class="dd-body">
-              <div class="dd-body-inner">
-                <div class="logic-chain">
-                  <div class="chain-step">
-                    <div class="chain-label">前 提</div>
-                    <div class="chain-text">${dd.chain.premise}</div>
-                  </div>
-                  <div class="chain-step">
-                    <div class="chain-label">证 据</div>
-                    <div class="chain-text">${dd.chain.evidence}</div>
-                  </div>
-                  <div class="chain-step">
-                    <div class="chain-label">结 论</div>
-                    <div class="chain-text">${dd.chain.conclusion}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+            <span class="dd-trigger-arrow">→</span>
+          </div>`;
       });
       html += `</div></div>`;
     }
-
-    // Divider between scenes
-    if (idx < scenes.length - 1) {
-      html += `<div class="scene-divider"><span></span></div>`;
-    }
-
     html += `</div></section>`;
   });
 
-  // ── Footer ──
+  // Footer
   html += `
-    <footer class="footer">
-      <div class="footer-title">第一部分 · 终</div>
-      <p class="footer-text">
-        认知革命使智人从一种普通的动物变成了世界的主宰。
-        但真正的问题是：我们用这种力量创造的世界，是否让我们更加幸福？
-      </p>
-      <p class="footer-text" style="margin-top:1.5rem; color: var(--amber); font-size: 0.75rem; letter-spacing: 0.15em;">
-        第二部分 · 农业革命 · 即将到来
-      </p>
-    </footer>
-  `;
+    <footer class="footer" data-palette="hero">
+      <div class="reveal footer-title">第一部分 · 终</div>
+      <p class="reveal footer-text reveal-delay-1">认知革命使智人从一种普通的动物变成了世界的主宰。<br>但真正的问题是：我们用这种力量创造的世界，是否让我们更加幸福？</p>
+      <div class="reveal footer-next reveal-delay-2">第二部分 · 农业革命 · 即将到来</div>
+    </footer>`;
 
   app.innerHTML = html;
 
-  // ── Scene Nav ──
+  // Nav
   let navHtml = '';
-  scenes.forEach(scene => {
-    navHtml += `<a href="#${scene.id}" data-scene="${scene.id}" data-label="${scene.title}"></a>`;
-  });
+  scenes.forEach(s => { navHtml += `<a href="#${s.id}" data-scene="${s.id}" data-label="${s.title}"></a>`; });
   sceneNav.innerHTML = navHtml;
 
-  // Initialize interactions after render
   initScrollSystem();
-  initDeepDiveCards();
+  initDeepDiveModal();
   initComparison();
 }
 
-// ── Comparison Module Renderer ──
+// ── Data Viz Renderers ──
+function renderDataViz(viz) {
+  if (viz.type === 'brain-energy') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div class="svg-container" data-viz="brain-energy">
+          <svg viewBox="0 0 600 200" fill="none">
+            <!-- Body mass bar -->
+            <text x="0" y="28" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">体重占比</text>
+            <rect x="80" y="16" width="500" height="20" rx="4" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="10" x="80" y="16" width="0" height="20" rx="4" fill="var(--accent)" opacity="0.4"/>
+            <text class="bar-label" x="95" y="30" font-family="var(--serif)" font-size="12" font-weight="700" fill="#fff" opacity="0">2%</text>
+            <!-- Energy bar -->
+            <text x="0" y="78" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">能量消耗</text>
+            <rect x="80" y="66" width="500" height="20" rx="4" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="125" x="80" y="66" width="0" height="20" rx="4" fill="var(--accent)"/>
+            <text class="bar-label" x="210" y="80" font-family="var(--serif)" font-size="12" font-weight="700" fill="#fff" opacity="0">25%</text>
+            <!-- Divider annotation -->
+            <line x1="80" y1="110" x2="580" y2="110" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="0" y="150" font-family="var(--sans)" font-size="10" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.05em">咀嚼时间</text>
+            <!-- Chewing time comparison -->
+            <rect x="80" y="136" width="500" height="10" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="416" x="80" y="136" width="0" height="10" rx="3" fill="var(--fg-secondary)" opacity="0.15"/>
+            <text class="bar-label" x="500" y="146" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0">黑猩猩 ~5小时/天</text>
+            <rect x="80" y="156" width="500" height="10" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="83" x="80" y="156" width="0" height="10" rx="3" fill="var(--accent)" opacity="0.6"/>
+            <text class="bar-label" x="168" y="166" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0">人类 ~1小时/天</text>
+          </svg>
+        </div>
+        <div class="number-grid reveal">
+          <div>
+            <div class="big-number" data-count-to="2">0</div>
+            <div class="big-number-label">% 体重占比</div>
+          </div>
+          <div>
+            <div class="big-number" data-count-to="25">0</div>
+            <div class="big-number-label">% 能量消耗</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  if (viz.type === 'dunbar') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div class="dunbar-viz" data-viz="dunbar">
+          <div class="dunbar-circle beyond" data-delay="1200">
+            <span class="dc-num">∞</span>
+            <span class="dc-label">虚构故事 → 无上限</span>
+          </div>
+          <div class="dunbar-circle limit" data-delay="800">
+            <span class="dc-num">150</span>
+            <span class="dc-label">邓巴数字 · 生物极限</span>
+          </div>
+          <div class="dunbar-circle band" data-delay="400">
+            <span class="dc-num">50</span>
+            <span class="dc-label">亲密朋友</span>
+          </div>
+          <div class="dunbar-circle core" data-delay="0">
+            <span class="dc-num">5</span>
+            <span class="dc-label">至亲</span>
+          </div>
+        </div>
+        <div class="number-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
+          <div>
+            <div class="big-number" data-count-to="150">0</div>
+            <div class="big-number-label">人 · 邓巴数字</div>
+          </div>
+          <div>
+            <div class="big-number" data-count-to="120">0</div>
+            <div class="big-number-label">人 · 罗马连队</div>
+          </div>
+          <div>
+            <div class="big-number" style="font-size:clamp(2rem,5vw,3.5rem);" data-count-to="1000000" data-suffix="+">0</div>
+            <div class="big-number-label">人 · 虚构合作上限</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  return '';
+}
+
+// ── Comparison Module ──
 function renderComparison(comp) {
   let html = `
     <div class="comparison-section reveal">
-      <div class="deep-dive-label">生活质量对比 · QUALITY OF LIFE</div>
+      <div class="dd-trigger-label">生活质量对比 · Quality of Life</div>
       <div class="comparison-toggle" id="compToggle">
         <button class="toggle-btn active" data-mode="foraging">采集生活</button>
         <button class="toggle-btn" data-mode="farming">农耕生活</button>
         <button class="toggle-btn" data-mode="compare">对比</button>
       </div>
-      <div class="comparison-rows" id="compRows">
-  `;
-
+      <div class="comparison-rows" id="compRows">`;
   comp.dimensions.forEach((dim, i) => {
     html += `
-      <div class="comp-row reveal reveal-delay-${Math.min(i + 1, 4)}" data-comp-row>
+      <div class="comp-row reveal reveal-delay-${Math.min(i+1,4)}" data-comp-row>
         <div class="comp-row-label">${dim.label}</div>
         <div class="comp-bars">
           <div class="comp-bar-wrapper" data-bar="foraging">
             <span class="comp-bar-tag">采集</span>
-            <div class="comp-bar-track">
-              <div class="comp-bar-fill amber" data-score="${dim.foraging.score}"></div>
-            </div>
+            <div class="comp-bar-track"><div class="comp-bar-fill amber" data-score="${dim.foraging.score}"></div></div>
             <span class="comp-bar-value">${dim.foraging.score}/10</span>
           </div>
           <div class="comp-bar-wrapper" data-bar="farming" style="display:none;">
             <span class="comp-bar-tag">农耕</span>
-            <div class="comp-bar-track">
-              <div class="comp-bar-fill grey" data-score="${dim.farming.score}"></div>
-            </div>
+            <div class="comp-bar-track"><div class="comp-bar-fill grey" data-score="${dim.farming.score}"></div></div>
             <span class="comp-bar-value">${dim.farming.score}/10</span>
           </div>
         </div>
         <div class="comp-text" data-text-foraging>${dim.foraging.text}</div>
         <div class="comp-text" data-text-farming style="display:none;">${dim.farming.text}</div>
-      </div>
-    `;
+      </div>`;
   });
-
   html += `</div></div>`;
   return html;
 }
 
-// ── Extinction Visualization Renderer ──
+// ── Extinction Viz ──
 function renderExtinction(ext) {
-  let html = `
-    <div class="extinction-section">
-      <div class="deep-dive-label reveal">灭绝档案 · EXTINCTION RECORD</div>
-  `;
-
+  let html = `<div class="extinction-section"><div class="dd-trigger-label reveal">灭绝档案 · Extinction Record</div>`;
   ext.regions.forEach((region, i) => {
     html += `
-      <div class="extinction-region reveal" data-ext-region data-delay="${i * 600}" data-percent="${region.percentLost}">
+      <div class="extinction-region reveal" data-ext-region data-delay="${i*600}" data-percent="${region.percentLost}">
         <div class="ext-header">
           <span class="ext-region-name">${region.name}</span>
           <span class="ext-arrival">智人到达：${region.arrival}</span>
         </div>
         <div class="ext-species">
-          ${region.species.map((s, j) => `
-            <span class="ext-species-icon" data-ext-species data-delay="${j * 120}" title="${s.name} · ${s.weight}">${s.icon}</span>
-          `).join('')}
+          ${region.species.map((s,j) => `<span class="ext-species-icon" data-ext-species data-delay="${j*120}" title="${s.name} · ${s.weight}">${s.icon}</span>`).join('')}
         </div>
         <div class="ext-bar-wrapper">
           <span class="ext-bar-label">灭绝率</span>
-          <div class="ext-bar-track">
-            <div class="ext-bar-fill" data-ext-fill data-target="${region.percentLost}"></div>
-          </div>
+          <div class="ext-bar-track"><div class="ext-bar-fill" data-ext-fill data-target="${region.percentLost}"></div></div>
           <span class="ext-percent"><span class="counter" data-ext-counter data-target="${region.percentLost}">0</span>%</span>
         </div>
         <div class="ext-note">${region.note}</div>
-      </div>
-    `;
+      </div>`;
   });
-
   html += `</div>`;
   return html;
 }
@@ -1194,258 +1409,239 @@ function initScrollSystem() {
   const progressBar = document.getElementById('progressBar');
   const nav = document.getElementById('sceneNav');
 
-  // ── Tier 1: Scene Observer (background + nav) ──
-  const sceneObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const isDark = entry.target.dataset.dark === 'true';
-        document.body.classList.toggle('dark-mode', isDark);
+  // Reveal observer
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); revealObs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => revealObs.observe(el));
 
-        // Update nav
-        navLinks.forEach(link => {
-          link.classList.toggle('active', link.dataset.scene === entry.target.id);
-        });
-      }
-    });
+  // Extinction observer
+  const extObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateExtRegion(e.target); extObs.unobserve(e.target); } });
   }, { threshold: 0.15 });
+  document.querySelectorAll('[data-ext-region]').forEach(el => extObs.observe(el));
 
-  scenes.forEach(s => sceneObserver.observe(s));
+  // Comparison observer
+  const compObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateCompBars(); compObs.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  const compSec = document.querySelector('.comparison-section');
+  if (compSec) compObs.observe(compSec);
 
-  // ── Fallback: scroll-based dark mode check ──
-  // Handles edge cases where IntersectionObserver doesn't fire (e.g., instant scrollTo)
-  function checkDarkMode() {
-    const viewMid = window.scrollY + window.innerHeight / 2;
-    let activeDark = false;
-    scenes.forEach(s => {
-      const top = s.offsetTop;
-      const bottom = top + s.offsetHeight;
-      if (viewMid >= top && viewMid <= bottom) {
-        activeDark = s.dataset.dark === 'true';
-        navLinks.forEach(link => {
-          link.classList.toggle('active', link.dataset.scene === s.id);
-        });
-      }
-    });
-    document.body.classList.toggle('dark-mode', activeDark);
-  }
-
-  // ── Tier 2: Reveal Observer (one-shot animations) ──
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('revealed');
-        revealObserver.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.12 });
-
-  document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => {
-    revealObserver.observe(el);
-  });
-
-  // ── Tier 2b: Extinction region observer ──
-  const extObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        animateExtinctionRegion(entry.target);
-        extObserver.unobserve(entry.target);
-      }
-    });
+  // Data viz observers
+  const vizObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateDataViz(e.target); vizObs.unobserve(e.target); } });
   }, { threshold: 0.2 });
+  document.querySelectorAll('[data-viz]').forEach(el => vizObs.observe(el));
 
-  document.querySelectorAll('[data-ext-region]').forEach(el => {
-    extObserver.observe(el);
-  });
+  // Dunbar circles observer
+  const dunbarObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateDunbar(e.target); dunbarObs.unobserve(e.target); } });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.dunbar-viz').forEach(el => dunbarObs.observe(el));
 
-  // ── Tier 2c: Comparison bars observer ──
-  const compObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        animateCompBars();
-        compObserver.unobserve(entry.target);
+  // Big number counter observer
+  const countObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const target = parseInt(e.target.dataset.countTo);
+        const suffix = e.target.dataset.suffix || '';
+        animateCounter(e.target, 0, target, 2000, suffix);
+        countObs.unobserve(e.target);
       }
     });
-  }, { threshold: 0.2 });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-count-to]').forEach(el => countObs.observe(el));
 
-  const compSection = document.querySelector('.comparison-section');
-  if (compSection) compObserver.observe(compSection);
-
-  // ── Tier 3: Scroll progress + nav visibility ──
+  // Scroll handler — palette + progress + nav
+  let currentPalette = 'hero';
   let ticking = false;
-  window.addEventListener('scroll', () => {
-    if (!ticking) {
-      requestAnimationFrame(() => {
-        const scrollTop = window.scrollY;
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = (scrollTop / docHeight) * 100;
-        progressBar.style.width = progress + '%';
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+      nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
 
-        // Show nav after scrolling past hero
-        nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
-
-        // Dark mode fallback check
-        checkDarkMode();
-
-        ticking = false;
+      // Determine active scene
+      const viewMid = scrollTop + window.innerHeight * 0.45;
+      let newPalette = 'hero';
+      scenes.forEach(s => {
+        if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+          newPalette = s.dataset.palette;
+          navLinks.forEach(l => l.classList.toggle('active', l.dataset.scene === s.id));
+        }
       });
-      ticking = true;
-    }
-  });
+      // Footer
+      const footer = document.querySelector('.footer');
+      if (footer && viewMid >= footer.offsetTop) newPalette = 'hero';
+
+      if (newPalette !== currentPalette) {
+        currentPalette = newPalette;
+        applyPalette(newPalette);
+      }
+      ticking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 }
 
 
 // ═══════════════════════════════════════════════════════════════
-// DEEP DIVE CARDS
+// DATA VIZ ANIMATIONS
 // ═══════════════════════════════════════════════════════════════
-function initDeepDiveCards() {
-  document.querySelectorAll('[data-dd]').forEach(card => {
-    const header = card.querySelector('.dd-header');
-    const body = card.querySelector('.dd-body');
-
-    header.addEventListener('click', () => {
-      const isOpen = card.classList.contains('open');
-
-      if (isOpen) {
-        // Collapse
-        body.style.height = body.scrollHeight + 'px';
-        requestAnimationFrame(() => {
-          body.style.height = '0px';
-        });
-        card.classList.remove('open');
-      } else {
-        // Expand
-        body.style.height = body.scrollHeight + 'px';
-        card.classList.add('open');
-
-        const onEnd = () => {
-          body.style.height = 'auto';
-          body.removeEventListener('transitionend', onEnd);
-        };
-        body.addEventListener('transitionend', onEnd);
-      }
-    });
+function animateDataViz(container) {
+  // Animate SVG bars
+  const bars = container.querySelectorAll('.draw-bar');
+  bars.forEach((bar, i) => {
+    const targetW = parseFloat(bar.dataset.targetW);
+    setTimeout(() => {
+      bar.style.transition = 'width 1.5s var(--ease-out)';
+      bar.style.width = targetW + 'px';
+    }, i * 300);
   });
+  // Show labels
+  const labels = container.querySelectorAll('.bar-label');
+  labels.forEach((lbl, i) => {
+    setTimeout(() => {
+      lbl.style.transition = 'opacity 0.6s';
+      lbl.style.opacity = '1';
+    }, 800 + i * 300);
+  });
+}
+
+function animateDunbar(container) {
+  const circles = container.querySelectorAll('.dunbar-circle');
+  circles.forEach(c => {
+    const delay = parseInt(c.dataset.delay) || 0;
+    setTimeout(() => c.classList.add('visible'), delay);
+  });
+}
+
+function animateCounter(el, from, to, duration, suffix) {
+  const start = performance.now();
+  function tick(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const val = Math.round(from + (to - from) * eased);
+    el.textContent = val >= 1000000 ? (val / 1000000).toFixed(0) + 'M' : val >= 1000 ? Math.round(val/1000) + 'K' : val;
+    if (suffix && p >= 1) el.textContent += suffix;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// DEEP DIVE MODAL
+// ═══════════════════════════════════════════════════════════════
+function initDeepDiveModal() {
+  const overlay = document.getElementById('modalOverlay');
+  const backdrop = document.getElementById('modalBackdrop');
+  const closeBtn = document.getElementById('modalClose');
+  const body = document.getElementById('modalBody');
+
+  function openModal(sceneIdx, ddIdx) {
+    const dd = CONTENT_DATA.scenes[sceneIdx].deepDives[ddIdx];
+    body.innerHTML = `
+      <div class="modal-icon">${dd.icon}</div>
+      <h3 class="modal-title">${dd.title}</h3>
+      <div class="logic-chain-modal">
+        <div class="chain-step-modal">
+          <div class="chain-label-modal">前 提</div>
+          <div class="chain-text-modal">${dd.chain.premise}</div>
+        </div>
+        <div class="chain-step-modal">
+          <div class="chain-label-modal">证 据</div>
+          <div class="chain-text-modal">${dd.chain.evidence}</div>
+        </div>
+        <div class="chain-step-modal">
+          <div class="chain-label-modal">结 论</div>
+          <div class="chain-text-modal">${dd.chain.conclusion}</div>
+        </div>
+      </div>`;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('click', e => {
+    const trigger = e.target.closest('[data-dd-idx]');
+    if (trigger) {
+      const [sIdx, dIdx] = trigger.dataset.ddIdx.split('-').map(Number);
+      openModal(sIdx, dIdx);
+    }
+  });
+  backdrop.addEventListener('click', closeModal);
+  closeBtn.addEventListener('click', closeModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 }
 
 
 // ═══════════════════════════════════════════════════════════════
 // COMPARISON MODULE
 // ═══════════════════════════════════════════════════════════════
-let currentCompMode = 'foraging';
-
 function initComparison() {
   const toggle = document.getElementById('compToggle');
   if (!toggle) return;
-
-  toggle.addEventListener('click', (e) => {
+  toggle.addEventListener('click', e => {
     const btn = e.target.closest('.toggle-btn');
     if (!btn) return;
-
-    const mode = btn.dataset.mode;
-    currentCompMode = mode;
-
-    // Update active button
     toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-
-    updateCompBars(mode);
+    updateCompBars(btn.dataset.mode);
   });
 }
-
 function updateCompBars(mode) {
   document.querySelectorAll('[data-comp-row]').forEach(row => {
-    const foragingBar = row.querySelector('[data-bar="foraging"]');
-    const farmingBar = row.querySelector('[data-bar="farming"]');
-    const foragingText = row.querySelector('[data-text-foraging]');
-    const farmingText = row.querySelector('[data-text-farming]');
-
-    if (mode === 'foraging') {
-      foragingBar.style.display = 'flex';
-      farmingBar.style.display = 'none';
-      foragingText.style.display = 'block';
-      farmingText.style.display = 'none';
-    } else if (mode === 'farming') {
-      foragingBar.style.display = 'none';
-      farmingBar.style.display = 'flex';
-      foragingText.style.display = 'none';
-      farmingText.style.display = 'block';
-    } else {
-      foragingBar.style.display = 'flex';
-      farmingBar.style.display = 'flex';
-      foragingText.style.display = 'block';
-      farmingText.style.display = 'block';
-    }
+    const fb = row.querySelector('[data-bar="foraging"]');
+    const ab = row.querySelector('[data-bar="farming"]');
+    const ft = row.querySelector('[data-text-foraging]');
+    const at = row.querySelector('[data-text-farming]');
+    fb.style.display = mode === 'farming' ? 'none' : 'flex';
+    ab.style.display = mode === 'foraging' ? 'none' : 'flex';
+    ft.style.display = mode === 'farming' ? 'none' : 'block';
+    at.style.display = mode === 'foraging' ? 'none' : 'block';
   });
-
   animateCompBars();
 }
-
 function animateCompBars() {
   document.querySelectorAll('.comp-bar-fill').forEach(bar => {
-    const score = parseInt(bar.dataset.score);
-    const wrapper = bar.closest('.comp-bar-wrapper');
-    if (wrapper.style.display === 'none') return;
-
+    if (bar.closest('.comp-bar-wrapper').style.display === 'none') return;
     bar.style.width = '0%';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        bar.style.width = (score / 10 * 100) + '%';
-      });
-    });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      bar.style.width = (parseInt(bar.dataset.score) / 10 * 100) + '%';
+    }));
   });
 }
 
 
 // ═══════════════════════════════════════════════════════════════
-// EXTINCTION ANIMATION
+// EXTINCTION ANIMATIONS
 // ═══════════════════════════════════════════════════════════════
-function animateExtinctionRegion(region) {
+function animateExtRegion(region) {
   const delay = parseInt(region.dataset.delay) || 0;
-
   setTimeout(() => {
-    // Animate bar fill
     const fill = region.querySelector('[data-ext-fill]');
-    const target = parseInt(fill.dataset.target);
-    fill.style.width = target + '%';
-
-    // Animate counter
+    fill.style.width = fill.dataset.target + '%';
     const counter = region.querySelector('[data-ext-counter]');
-    const counterTarget = parseInt(counter.dataset.target);
-    animateCounter(counter, 0, counterTarget, 1500);
-
-    // Animate species icons
-    const icons = region.querySelectorAll('[data-ext-species]');
-    icons.forEach((icon, i) => {
-      const iconDelay = parseInt(icon.dataset.delay) || 0;
-      setTimeout(() => {
-        icon.classList.add('extinct');
-      }, 800 + iconDelay);
+    animateCounter(counter, 0, parseInt(counter.dataset.target), 1500, '');
+    region.querySelectorAll('[data-ext-species]').forEach((icon, i) => {
+      setTimeout(() => icon.classList.add('extinct'), 800 + (parseInt(icon.dataset.delay) || 0));
     });
   }, delay);
 }
 
-function animateCounter(el, from, to, duration) {
-  const startTime = performance.now();
-
-  function tick(now) {
-    const elapsed = now - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    // Ease out
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const current = Math.round(from + (to - from) * eased);
-    el.textContent = current;
-
-    if (progress < 1) {
-      requestAnimationFrame(tick);
-    }
-  }
-
-  requestAnimationFrame(tick);
-}
-
 
 // ═══════════════════════════════════════════════════════════════
-// INITIALIZE
+// INIT
 // ═══════════════════════════════════════════════════════════════
 renderApp();
 </script>
