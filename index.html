@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人类简史 · 认知革命 — 沉浸式学习引擎</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ═══════════════════════════════════════════
+     CSS FOUNDATION
+     ═══════════════════════════════════════════ */
+  :root {
+    --paper: #FAFAF8;
+    --charcoal: #1A1A1A;
+    --amber: #D4A845;
+    --amber-dim: rgba(212, 168, 69, 0.15);
+    --amber-mid: rgba(212, 168, 69, 0.4);
+    --grey-200: #E5E5E3;
+    --grey-400: #9CA3AF;
+    --grey-600: #6B7280;
+    --serif: 'Noto Serif SC', 'Songti SC', serif;
+    --sans: 'Noto Sans SC', 'Inter', system-ui, sans-serif;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--sans);
+    background-color: var(--paper);
+    color: var(--charcoal);
+    transition: background-color 1.2s var(--ease-smooth), color 1.2s var(--ease-smooth);
+    overflow-x: hidden;
+    line-height: 1.8;
+  }
+
+  body.dark-mode {
+    background-color: var(--charcoal);
+    color: var(--paper);
+  }
+
+  ::selection {
+    background: var(--amber);
+    color: var(--charcoal);
+  }
+
+  /* ═══════════════════════════════════════════
+     SCENE NAV (Right-side dots)
+     ═══════════════════════════════════════════ */
+  .scene-nav {
+    position: fixed;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    opacity: 0;
+    transition: opacity 0.6s var(--ease-smooth);
+  }
+  .scene-nav.visible { opacity: 1; }
+  .scene-nav a {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--grey-400);
+    transition: all 0.4s var(--ease-out);
+    position: relative;
+  }
+  .scene-nav a.active {
+    background: var(--amber);
+    transform: scale(1.4);
+  }
+  .scene-nav a::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+    color: var(--grey-600);
+  }
+  .scene-nav a:hover::after { opacity: 1; }
+  body.dark-mode .scene-nav a { background: rgba(250,250,248,0.25); }
+  body.dark-mode .scene-nav a.active { background: var(--amber); }
+  body.dark-mode .scene-nav a::after { color: var(--grey-400); }
+
+  /* ═══════════════════════════════════════════
+     PROGRESS BAR
+     ═══════════════════════════════════════════ */
+  .progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: var(--amber);
+    z-index: 1000;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  /* ═══════════════════════════════════════════
+     HERO SECTION
+     ═══════════════════════════════════════════ */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-overline {
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 0.3s forwards;
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(2.5rem, 8vw, 6rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 1.2s var(--ease-out) 0.6s forwards;
+  }
+  .hero-subtitle {
+    font-family: var(--serif);
+    font-size: clamp(1.1rem, 3vw, 1.6rem);
+    font-weight: 400;
+    color: var(--grey-600);
+    max-width: 600px;
+    margin-bottom: 3rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 1.2s var(--ease-out) 0.9s forwards;
+  }
+  .hero-part {
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: var(--amber);
+    border: 1px solid var(--amber-mid);
+    padding: 0.5rem 1.5rem;
+    border-radius: 2rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 1.2s forwards;
+  }
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    animation: fadeUp 1s var(--ease-out) 1.8s forwards;
+  }
+  .hero-scroll-hint span {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--grey-400);
+  }
+  .scroll-arrow {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--amber), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+
+  /* ═══════════════════════════════════════════
+     SCENE SECTIONS
+     ═══════════════════════════════════════════ */
+  .scene {
+    min-height: 100vh;
+    padding: 8rem 1.5rem;
+    position: relative;
+  }
+  .scene-inner {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .scene-number {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    color: var(--amber);
+    margin-bottom: 1rem;
+  }
+  .scene-title {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 0.75rem;
+  }
+  .scene-subtitle {
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    color: var(--grey-400);
+    margin-bottom: 4rem;
+    text-transform: uppercase;
+  }
+
+  /* Hero Quote */
+  .hero-quote {
+    font-family: var(--serif);
+    font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+    line-height: 1.6;
+    font-weight: 400;
+    margin-bottom: 4rem;
+    padding: 3rem 0;
+    border-top: 1px solid var(--amber-mid);
+    border-bottom: 1px solid var(--amber-mid);
+    position: relative;
+  }
+  .hero-quote::before {
+    content: '"';
+    font-family: var(--serif);
+    font-size: 5rem;
+    color: var(--amber);
+    opacity: 0.3;
+    position: absolute;
+    top: 1rem;
+    left: -0.5rem;
+    line-height: 1;
+  }
+
+  /* Narrative paragraphs */
+  .narrative p {
+    font-size: 1.05rem;
+    line-height: 2;
+    margin-bottom: 1.8rem;
+    color: inherit;
+    opacity: 0.88;
+  }
+  .narrative p strong,
+  .narrative p b {
+    color: var(--amber);
+    font-weight: 500;
+  }
+
+  /* ═══════════════════════════════════════════
+     REVEAL ANIMATIONS
+     ═══════════════════════════════════════════ */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.12s; }
+  .reveal-delay-2 { transition-delay: 0.24s; }
+  .reveal-delay-3 { transition-delay: 0.36s; }
+  .reveal-delay-4 { transition-delay: 0.48s; }
+
+  /* Clip-path wipe for quotes */
+  .reveal-wipe {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.4s var(--ease-out);
+  }
+  .reveal-wipe.revealed {
+    clip-path: inset(0 0% 0 0);
+  }
+
+  /* ═══════════════════════════════════════════
+     DEEP DIVE CARDS
+     ═══════════════════════════════════════════ */
+  .deep-dive-section {
+    margin-top: 4rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--grey-200);
+  }
+  body.dark-mode .deep-dive-section { border-color: rgba(250,250,248,0.1); }
+
+  .deep-dive-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    color: var(--amber);
+    margin-bottom: 1.5rem;
+  }
+  .deep-dive-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .dd-card {
+    border-left: 3px solid var(--amber);
+    background: var(--amber-dim);
+    border-radius: 0 8px 8px 0;
+    overflow: hidden;
+    transition: background 0.3s;
+    cursor: pointer;
+  }
+  body.dark-mode .dd-card {
+    background: rgba(212, 168, 69, 0.08);
+  }
+  .dd-card:hover {
+    background: rgba(212, 168, 69, 0.22);
+  }
+  body.dark-mode .dd-card:hover {
+    background: rgba(212, 168, 69, 0.15);
+  }
+
+  .dd-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    user-select: none;
+  }
+  .dd-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .dd-icon { font-size: 1.3rem; }
+  .dd-title {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+  .dd-chevron {
+    font-size: 0.8rem;
+    color: var(--amber);
+    transition: transform 0.4s var(--ease-out);
+  }
+  .dd-card.open .dd-chevron {
+    transform: rotate(180deg);
+  }
+
+  .dd-body {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.5s var(--ease-out);
+  }
+  .dd-body-inner {
+    padding: 0 1.5rem 1.5rem;
+  }
+
+  /* Logic Chain */
+  .logic-chain {
+    position: relative;
+    padding-left: 1.5rem;
+  }
+  .logic-chain::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--amber), var(--amber-mid), transparent);
+  }
+  .chain-step {
+    margin-bottom: 1.25rem;
+    position: relative;
+  }
+  .chain-step::before {
+    content: '';
+    position: absolute;
+    left: -1.5rem;
+    top: 0.6rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--amber);
+    border: 2px solid var(--paper);
+  }
+  body.dark-mode .chain-step::before {
+    border-color: var(--charcoal);
+  }
+  .chain-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--amber);
+    background: var(--amber-dim);
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 2px;
+    margin-bottom: 0.4rem;
+  }
+  .chain-text {
+    font-size: 0.9rem;
+    line-height: 1.8;
+    opacity: 0.9;
+  }
+
+  /* ═══════════════════════════════════════════
+     COMPARISON MODULE
+     ═══════════════════════════════════════════ */
+  .comparison-section {
+    margin-top: 4rem;
+    padding: 3rem 0;
+  }
+  .comparison-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 3rem;
+    border: 1px solid var(--grey-200);
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .toggle-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    border: none;
+    background: transparent;
+    color: var(--grey-600);
+    cursor: pointer;
+    transition: all 0.3s var(--ease-out);
+    min-height: 44px;
+  }
+  .toggle-btn.active {
+    background: var(--amber);
+    color: var(--charcoal);
+    font-weight: 600;
+  }
+
+  .comparison-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .comp-row-label {
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .comp-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .comp-bar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .comp-bar-tag {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    width: 2.5rem;
+    text-align: right;
+    color: var(--grey-400);
+    flex-shrink: 0;
+  }
+  .comp-bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--grey-200);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  body.dark-mode .comp-bar-track { background: rgba(250,250,248,0.08); }
+  .comp-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s var(--ease-out);
+    width: 0%;
+  }
+  .comp-bar-fill.amber { background: var(--amber); }
+  .comp-bar-fill.grey { background: var(--grey-400); }
+  .comp-bar-value {
+    font-size: 0.7rem;
+    font-weight: 600;
+    width: 2rem;
+    color: var(--grey-600);
+    flex-shrink: 0;
+  }
+  .comp-text {
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--grey-600);
+    margin-top: 0.35rem;
+  }
+  body.dark-mode .comp-text { color: var(--grey-400); }
+
+  /* ═══════════════════════════════════════════
+     EXTINCTION VISUALIZATION
+     ═══════════════════════════════════════════ */
+  .extinction-section {
+    margin-top: 4rem;
+  }
+  .extinction-region {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(250,250,248,0.08);
+  }
+  .extinction-region:last-child { border-bottom: none; }
+  .ext-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  .ext-region-name {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .ext-arrival {
+    font-size: 0.7rem;
+    color: var(--amber);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+  }
+  .ext-species {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+  .ext-species-icon {
+    font-size: 1.5rem;
+    position: relative;
+    transition: all 0.5s var(--ease-out);
+  }
+  .ext-species-icon.extinct::after {
+    content: '';
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    top: 50%;
+    height: 2px;
+    background: #E53E3E;
+    transform: rotate(-45deg);
+  }
+  .ext-bar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+  .ext-bar-label {
+    font-size: 0.7rem;
+    color: var(--grey-400);
+    width: 4rem;
+    flex-shrink: 0;
+  }
+  .ext-bar-track {
+    flex: 1;
+    height: 12px;
+    background: rgba(250,250,248,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .ext-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), #E53E3E);
+    border-radius: 6px;
+    width: 0%;
+    transition: width 1.5s var(--ease-out);
+  }
+  .ext-percent {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #E53E3E;
+    width: 3.5rem;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .ext-percent .counter { font-variant-numeric: tabular-nums; }
+  .ext-note {
+    font-size: 0.78rem;
+    color: var(--grey-400);
+    margin-top: 0.5rem;
+    line-height: 1.6;
+  }
+
+  /* ═══════════════════════════════════════════
+     SECTION DIVIDER
+     ═══════════════════════════════════════════ */
+  .scene-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 0;
+  }
+  .scene-divider span {
+    display: block;
+    width: 60px;
+    height: 1px;
+    background: var(--amber-mid);
+  }
+
+  /* ═══════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════ */
+  .footer {
+    text-align: center;
+    padding: 6rem 2rem;
+    border-top: 1px solid var(--grey-200);
+  }
+  body.dark-mode .footer { border-color: rgba(250,250,248,0.08); }
+  .footer-title {
+    font-family: var(--serif);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+  .footer-text {
+    font-size: 0.85rem;
+    color: var(--grey-400);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.8;
+  }
+
+  /* ═══════════════════════════════════════════
+     KEYFRAMES
+     ═══════════════════════════════════════════ */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.3); }
+  }
+
+  /* ═══════════════════════════════════════════
+     REDUCED MOTION
+     ═══════════════════════════════════════════ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal { opacity: 1; transform: none; }
+  }
+
+  /* ═══════════════════════════════════════════
+     RESPONSIVE
+     ═══════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    .scene { padding: 5rem 1.25rem; }
+    .scene-nav { display: none; }
+    .hero-quote { font-size: 1.2rem; padding: 2rem 0; }
+    .hero-quote::before { font-size: 3rem; }
+    .dd-header { padding: 1rem 1.25rem; }
+    .dd-body-inner { padding: 0 1.25rem 1.25rem; }
+    .comparison-toggle { max-width: 100%; }
+  }
+
+  @media (min-width: 1024px) {
+    .deep-dive-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Scene navigation dots -->
+<nav class="scene-nav" id="sceneNav"></nav>
+
+<!-- Content rendered by JS engine -->
+<div id="app"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONTENT_DATA — The single source of truth for all content.
+// Swap this object to power a different book/part.
+// ═══════════════════════════════════════════════════════════════
+const CONTENT_DATA = {
+  meta: {
+    book: '人类简史',
+    bookSub: 'SAPIENS: A Brief History of Humankind',
+    part: '第一部分',
+    partTitle: '认知革命',
+    partSub: 'THE COGNITIVE REVOLUTION',
+    author: '尤瓦尔·赫拉利',
+    colors: { paper: '#FAFAF8', charcoal: '#1A1A1A', amber: '#D4A845' }
+  },
+
+  scenes: [
+    // ─────────────────────────────────────────
+    // SCENE 1
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-1',
+      number: '场景 01',
+      title: '一种也没什么特别的动物',
+      subtitle: 'AN ANIMAL OF NO SIGNIFICANCE',
+      dark: false,
+      heroQuote: '在距今约七万年前，智人不过是一种微不足道的动物，在非洲的一个小角落里过着自己的日子。',
+      narrative: [
+        '让我们从一个令人不安的事实开始：<b>在大约两百万年的时间里，人类不过是一种普通的中等体型动物</b>。我们的祖先在东非大草原上四处张望，采集果实，捕捉昆虫，同时小心翼翼地躲避更大的捕食者。没有任何迹象表明他们将会主宰世界。',
+        '人类大脑是一台极其昂贵的设备。它只占身体总重量的约2%，<b>却在静息状态下消耗全身25%的能量</b>。相比之下，其他类人猿的大脑仅消耗约8%的能量。这种"投资"的代价是巨大的——为了供养这个贪婪的器官，智人不得不花更多时间寻找食物，同时肌肉逐渐萎缩。',
+        '直立行走是另一个关键转折。当我们的祖先站起来时，手得到了解放，可以制造工具、投掷石块、发出信号。<b>但代价同样惨重：为了支撑直立的姿态，骨盆变窄了</b>。这意味着人类女性分娩变得异常危险——产道缩窄的同时，婴儿的脑袋却在进化中越变越大。',
+        '火的驯化才是真正的转折点。当智人学会控制火之后，他们获得了一种可靠且无限的力量来源。<b>烹饪使食物变得更容易消化，缩短了进食时间，更关键的是——为大脑的进一步膨胀提供了能量基础。</b>一小时的烹饪完成了过去需要五小时咀嚼才能完成的能量摄入。',
+        '然而，尽管拥有了火和工具，智人仍然花了几十万年的时间在食物链的中间层苟且偷生。<b>他们最常干的事不是狩猎大型动物，而是挖掘根茎、采摘浆果、以及——偷吃其他猛兽留下的腐肉。</b>别被博物馆里那些英勇猎人的画像骗了。'
+      ],
+      deepDives: [
+        {
+          title: '大脑的能量悖论',
+          icon: '🧠',
+          chain: {
+            premise: '自然选择通常倾向于节约能量。一个消耗大量能量的器官，除非能带来同等甚至更大的生存优势，否则不会在进化中被保留。',
+            evidence: '人类大脑占体重2%，消耗25%能量。为维持大脑运转，人类牺牲了肌肉力量（与黑猩猩相比，人类显著更弱），并缩短了消化系统（肠道变短），这要求食物必须是高质量、易消化的。',
+            conclusion: '大脑的"昂贵"迫使人类走上了一条独特的进化道路：必须寻找更高质量的食物（最终导向烹饪），同时放弃了体力上的竞争优势。这是一场豪赌——数百万年间，这个大脑并未带来明显回报，直到认知革命才真正"回本"。'
+          }
+        },
+        {
+          title: '火与烹饪：沉默的革命',
+          icon: '🔥',
+          chain: {
+            premise: '食物的能量不仅取决于其化学成分，更取决于身体消化吸收的效率。生食需要消耗大量能量来咀嚼和消化。',
+            evidence: '烹饪使蛋白质变性、淀粉糊化，大幅提高了消化效率。黑猩猩每天花约5小时咀嚼生食，而人类烹饪后仅需约1小时进食。这释放出的时间和能量可以"投资"到其他活动——社交、思考、制造工具。',
+            conclusion: '烹饪不是一项"生活技能"，而是一次生物学革命。它本质上是一种"体外消化"，使人类得以突破哺乳动物大脑尺寸的能量天花板。没有火，就不会有后来的认知革命。可以说，厨师比画家更早地改变了人类历史。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 2
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-2',
+      number: '场景 02',
+      title: '虚构的力量',
+      subtitle: 'THE POWER OF FICTION',
+      dark: false,
+      heroQuote: '大量的陌生人之所以能够成功合作，是因为他们相信共同的虚构故事。',
+      narrative: [
+        '大约七万年前，智人的大脑发生了一次关键突变。我们无法确定具体原因——可能是基因的偶然重组——但结果是革命性的：<b>智人获得了讨论"不存在之物"的能力</b>。这听起来微不足道，但它改变了一切。',
+        '让我们想象一个问题：<b>标致汽车公司"是"什么？</b>它不是工厂——工厂可以被炸毁，标致依然存在。它不是工人——所有员工可以被解雇，标致依然存在。它不是股东、不是管理层、不是品牌商标。标致是一个故事，一个数亿人共同相信的虚构故事。只要人们继续相信这个故事，标致就"存在"。',
+        '这就是虚构的力量。<b>黑猩猩可以说"河边有一头狮子"，但它无法说"狮子是我们部落的守护神"。</b>正是后一种表述——关于不存在之物的虚构叙事——使得智人能够突破邓巴数字的限制。',
+        '什么是邓巴数字？灵长类动物学家罗宾·邓巴发现，任何灵长类群体的规模，都受限于大脑新皮质的信息处理能力。对智人而言，<b>这个天然上限大约是150人</b>——这是一个人能够真正了解、信任并维持稳定社会关系的最大人数。',
+        '但看看今天的世界：城市容纳数百万人，帝国统治数亿人，跨国公司在全球运作。这些都超越了150人的上限。<b>秘密就在于虚构故事——法律、宗教、国家、公司、金钱——这些都是智人发明的共同神话</b>，让数百万互不相识的陌生人得以协作。蜜蜂靠基因合作，黑猩猩靠熟人社交，而智人靠想象中的秩序。'
+      ],
+      deepDives: [
+        {
+          title: '标致汽车：一个法律虚构的解剖',
+          icon: '🚗',
+          chain: {
+            premise: '公司作为一个"实体"，在物理世界中不存在对应物。它不等于任何有形资产或具体的人。',
+            evidence: '标致公司成立于1896年。阿尔芒·标致到地方法院找了一位律师，走完一套固定仪式（签署文件、宣读条款），于是"标致公司"就诞生了。这与原始部落的巫师通过仪式创造"部落守护灵"在本质上完全相同——都是通过集体想象赋予一个虚构实体以"现实"的力量。',
+            conclusion: '公司是人类有史以来最成功的虚构故事之一。它将"有限责任"这一概念注入法律体系，使个人可以冒险而不必承担全部后果。正是这种"虚构"释放了巨大的经济能量。在法律意义上，标致公司与古埃及的众神没有本质区别——都是由集体信念支撑的想象现实。'
+          }
+        },
+        {
+          title: '150人天花板：邓巴数字',
+          icon: '👥',
+          chain: {
+            premise: '社会关系的维护需要大量认知资源。记住每个人的性格、关系网络、信用记录，都会消耗脑力。灵长类大脑的新皮质大小，决定了它能处理的社会关系上限。',
+            evidence: '邓巴通过对比不同灵长类的新皮质比例与群体规模，推算出智人的社会关系上限约为150人。这个数字在历史中反复出现：罗马军团的基本战术单位（连队）约120人，胡特尔派（Hutterite）的社区严格控制在150人以下，现代军队的连级单位通常在100-200人之间。',
+            conclusion: '150人是生物学对社会规模施加的硬性限制。任何超越这一限制的人类组织——城市、教会、帝国、公司——都必须依赖某种"虚构秩序"（法律、信仰、制度）来维系凝聚力。认知革命的真正意义不在于智人变得更聪明，而在于他们学会了编造故事。'
+          }
+        },
+        {
+          title: '认知革命：语言的质变',
+          icon: '💬',
+          chain: {
+            premise: '许多动物（包括其他人种）都拥有语言能力，可以传递关于环境的事实信息（"那边有食物""这里有危险"）。智人语言的独特之处不在于词汇量或语法复杂度。',
+            evidence: '智人语言的决定性特征是"虚构能力"——描述从未见过、不存在、或纯粹想象之物的能力。这使得三种新型沟通成为可能：①八卦（讨论第三方，建立信任网络）；②计划（讨论未来的假设情境）；③虚构叙事（创造共同信仰体系）。',
+            conclusion: '认知革命的本质是：智人的语言从"描述现实"升级为"创造现实"。一旦你能让一千个人相信同一个虚构故事，他们就能协同行动——即使彼此从未谋面。这是智人超越所有其他人种（尼安德特人、直立人等）的根本原因，与体力、脑容量无关。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 3
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-3',
+      number: '场景 03',
+      title: '采集者的全能生活',
+      subtitle: 'A DAY IN THE LIFE OF ADAM AND EVE',
+      dark: false,
+      heroQuote: '采集社会的"原始人"可能比历史上绝大多数农民和工人过得更好——工作更少、饮食更丰富、社交更平等。',
+      narrative: [
+        '提到"原始人"，你脑海中浮现的画面是什么？衣不蔽体、食不果腹、朝不保夕？<b>这是农业社会和工业社会灌输给你的偏见。</b>事实可能恰恰相反。',
+        '采集者的食谱异常丰富。一个典型的采集部落可能食用数十种不同的植物、昆虫、菌类和动物。<b>相比之下，现代农民的食谱极其单调</b>——古代农民可能90%的热量来自单一作物（小麦、稻米或玉米）。营养学告诉我们：多样性几乎总是优于单一性。',
+        '工作时间呢？人类学家对现存采集社会（如卡拉哈里沙漠的桑人）的研究表明，<b>采集者平均每天只需"工作"3-6个小时</b>。其余时间用于闲聊、讲故事、玩耍和睡觉。中世纪农民的工作时间远超于此，更不用说现代工厂工人了。',
+        '健康状况同样出人意料。农业社会带来了定居、人口密集和家畜驯化，这成为了传染病的温床。<b>天花、麻疹、结核——这些"文明病"几乎都源于人畜共处的农耕村落</b>。采集者分散居住、频繁迁徙，反而有效避免了瘟疫。',
+        '最具颠覆性的一点或许是社会平等。<b>采集社会几乎没有私有财产的概念</b>（你能带着走的东西有限），因此也就没有贫富分化。没有国王、没有贵族、没有地主。如果用"平等"作为衡量标准，人类社会在"进步"了一万年之后，反而大幅倒退了。'
+      ],
+      comparison: {
+        dimensions: [
+          {
+            label: '饮食多样性',
+            foraging: { score: 9, text: '数十种植物、动物、昆虫、菌类，营养全面均衡' },
+            farming: { score: 3, text: '严重依赖1-3种谷物，营养单一，维生素缺乏常见' }
+          },
+          {
+            label: '每日闲暇时间',
+            foraging: { score: 8, text: '每天工作3-6小时，大量时间用于社交、休息和娱乐' },
+            farming: { score: 3, text: '日出而作日落而息，农忙季节几乎没有休息时间' }
+          },
+          {
+            label: '身体健康',
+            foraging: { score: 8, text: '骨骼强健，身材高大，传染病罕见，牙齿状况良好' },
+            farming: { score: 4, text: '身高下降，传染病频发，营养不良，椎间盘病变普遍' }
+          },
+          {
+            label: '社会平等',
+            foraging: { score: 9, text: '无私有财产积累，无阶级分化，决策相对民主' },
+            farming: { score: 2, text: '土地私有化导致阶层固化，国王、贵族与农奴的鸿沟' }
+          },
+          {
+            label: '技能多样性',
+            foraging: { score: 9, text: '每个人都是通才：追踪、采集、制造工具、导航、急救' },
+            farming: { score: 4, text: '高度专业化分工，个体技能窄化，依赖他人生存' }
+          }
+        ]
+      },
+      deepDives: [
+        {
+          title: '"最初的富裕社会"假说',
+          icon: '🌿',
+          chain: {
+            premise: '"贫穷"不是物质匮乏的绝对状态，而是欲望与获取能力之间的差距。如果一个社会的欲望有限且容易满足，那么即使物质简朴，其成员也可以被视为"富裕"的。',
+            evidence: '人类学家马歇尔·萨林斯在1966年提出"原初丰裕社会"理论。他对桑人、澳大利亚原住民等采集社会的研究表明：①他们的物质需求极少且容易满足；②他们不"储蓄"因为环境本身就是仓库；③他们拥有大量自由支配时间；④他们不认为自己是"贫穷"的。',
+            conclusion: '真正的"贫穷"是农业革命的发明。定居生活创造了私有财产的概念，私有财产创造了"多"与"少"的比较，比较创造了匮乏感。采集者不是"还没变富的穷人"，而是"还没发明贫穷的富人"。这从根本上挑战了"历史即进步"的线性叙事。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 4
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-4',
+      number: '场景 04',
+      title: '毁天灭地的洪水',
+      subtitle: 'THE FLOOD',
+      dark: true,
+      heroQuote: '智人是有史以来最致命的物种。早在工业革命之前，我们就已经是动物界的连环杀手。',
+      narrative: [
+        '让我们追踪一条血迹斑斑的路线。<b>大约45,000年前，智人首次登陆澳大利亚。</b>在此之前，这片大陆拥有一套独立演化了数百万年的壮观巨型动物群——体重超过200公斤的双门齿兽、巨型袋狮、身长7米的巨蜥。智人到达后的几千年内，这些动物全部灭绝。',
+        '巧合？让我们继续。<b>大约14,000年前，智人跨过白令陆桥进入美洲。</b>美洲拥有比非洲更壮观的巨型动物群：猛犸象、乳齿象、剑齿虎、巨型地懒（身高可达6米）。在智人到达后的短短两千年内，北美47个大型哺乳动物属中有34个消失，南美损失更为惨重。',
+        '模式清晰得令人不安：<b>每当智人踏上一片新大陆，该大陆的大型动物就会在地质学意义上的"瞬间"灭绝。</b>这不是巧合，不是气候变化，而是系统性的生态屠杀。',
+        '为什么大型动物如此脆弱？因为它们繁殖缓慢（大象的孕期长达22个月），数量本就稀少，而且——关键的一点——<b>它们从未见过人类，完全不知道该如何应对这种新型捕食者</b>。非洲和亚洲的大型动物之所以幸存，恰恰是因为它们与人类共同进化了数百万年，学会了恐惧和回避。',
+        '这段历史的意义远超学术考古。<b>它粉碎了"与自然和谐共处的原始人"这一浪漫神话。</b>智人从来就不是"自然之子"——我们从走出非洲的第一天起，就是一台毁灭性的生态机器。工业革命不过是将这台机器的效率提升了几个数量级而已。'
+      ],
+      extinction: {
+        regions: [
+          {
+            name: '澳大利亚',
+            arrival: '约45,000年前',
+            percentLost: 95,
+            species: [
+              { name: '双门齿兽', icon: '🦛', weight: '2.8吨' },
+              { name: '巨型短面袋鼠', icon: '🦘', weight: '230公斤' },
+              { name: '袋狮', icon: '🦁', weight: '130公斤' },
+              { name: '古巨蜥', icon: '🦎', weight: '600公斤' },
+              { name: '牛顿巨鸟', icon: '🦅', weight: '250公斤' },
+              { name: '巨型陆龟', icon: '🐢', weight: '200公斤' }
+            ],
+            note: '24种体重超过50公斤的动物中，23种在智人到达后灭绝'
+          },
+          {
+            name: '北美洲',
+            arrival: '约14,000年前',
+            percentLost: 73,
+            species: [
+              { name: '猛犸象', icon: '🦣', weight: '6吨' },
+              { name: '乳齿象', icon: '🐘', weight: '5吨' },
+              { name: '剑齿虎', icon: '🐅', weight: '400公斤' },
+              { name: '巨型地懒', icon: '🦥', weight: '4吨' },
+              { name: '美洲拟狮', icon: '🦁', weight: '350公斤' },
+              { name: '恐狼', icon: '🐺', weight: '68公斤' }
+            ],
+            note: '47个大型哺乳动物属中34个灭绝，速度之快在地质史上前所未有'
+          },
+          {
+            name: '南美洲',
+            arrival: '约12,000年前',
+            percentLost: 83,
+            species: [
+              { name: '大地懒', icon: '🦥', weight: '4吨' },
+              { name: '箭齿兽', icon: '🦛', weight: '1.5吨' },
+              { name: '居维叶马', icon: '🐴', weight: '500公斤' },
+              { name: '雕齿兽', icon: '🐢', weight: '2吨' },
+              { name: '恐鹤', icon: '🦅', weight: '130公斤' }
+            ],
+            note: '南美60个大型哺乳动物属中约50个消失'
+          },
+          {
+            name: '马达加斯加 & 新西兰',
+            arrival: '约1,500 / 800年前',
+            percentLost: 100,
+            species: [
+              { name: '象鸟', icon: '🦤', weight: '500公斤' },
+              { name: '巨型狐猴', icon: '🐒', weight: '200公斤' },
+              { name: '恐鸟', icon: '🦅', weight: '230公斤' },
+              { name: '哈斯特鹰', icon: '🦅', weight: '15公斤' }
+            ],
+            note: '最晚被发现的岛屿——灭绝也最晚发生，但模式完全一致'
+          }
+        ]
+      },
+      deepDives: [
+        {
+          title: '"过度捕杀"假说 vs 气候变化假说',
+          icon: '⚔️',
+          chain: {
+            premise: '大型动物灭绝有两种主流解释：①气候变化（冰期结束导致栖息地变化）；②人类过度捕杀。如果气候是主因，灭绝应与气候事件同步；如果人类是主因，灭绝应与人类到达时间同步。',
+            evidence: '关键证据：①澳大利亚的灭绝发生在45,000年前，当时并无重大气候事件；②美洲的灭绝集中在14,000-12,000年前，恰好与克洛维斯人（最早的美洲智人）扩散路线吻合；③马达加斯加和新西兰的灭绝分别发生在1,500年前和800年前——远在冰期之后——而恰好与波利尼西亚人和毛利人到达的时间一致。',
+            conclusion: '时间线是不会说谎的。四次独立的灭绝事件，发生在四个不同时代、四种不同气候条件下，唯一的共同变量是：智人的到达。气候可能是帮凶，但主犯无疑是人类。这不是一次意外，而是一种物种级别的行为模式。'
+          }
+        },
+        {
+          title: '生态天真：为什么大型动物毫无防备',
+          icon: '🦤',
+          chain: {
+            premise: '恐惧是进化习得的。一种动物必须经历足够多代与捕食者的共存，才能进化出对该捕食者的回避本能。',
+            evidence: '非洲和亚洲的动物与人属物种共存了超过200万年，逐渐学会了恐惧人类。但澳大利亚、美洲、马达加斯加、新西兰的动物从未见过人类。当代研究人员在加拉帕戈斯群岛和南极洲观察到相似现象：那里的动物对人类毫无恐惧，可以被轻易接近。',
+            conclusion: '"生态天真"（ecological naivety）解释了为什么非洲仍有大象和犀牛，而其他大陆的巨兽却几乎全部灭绝。这不是因为非洲人更"和谐"，而是因为非洲的动物有足够的时间学会逃跑。历史的残酷教训是：与人类的第一次接触，往往就是最后一次。'
+          }
+        }
+      ]
+    }
+  ]
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════════════════
+const app = document.getElementById('app');
+const sceneNav = document.getElementById('sceneNav');
+
+function renderApp() {
+  const { meta, scenes } = CONTENT_DATA;
+  let html = '';
+
+  // ── Hero ──
+  html += `
+    <section class="hero" id="hero">
+      <div class="hero-overline">${meta.author} · ${meta.bookSub}</div>
+      <h1 class="hero-title">${meta.book}</h1>
+      <p class="hero-subtitle">${meta.partTitle}</p>
+      <div class="hero-part">${meta.part} · ${meta.partSub}</div>
+      <div class="hero-scroll-hint">
+        <span>向下滚动</span>
+        <div class="scroll-arrow"></div>
+      </div>
+    </section>
+  `;
+
+  // ── Scenes ──
+  scenes.forEach((scene, idx) => {
+    html += `<section class="scene ${scene.dark ? 'scene-dark' : ''}" id="${scene.id}" data-dark="${scene.dark}">`;
+    html += `<div class="scene-inner">`;
+
+    // Number + Title
+    html += `
+      <div class="reveal scene-number">${scene.number}</div>
+      <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
+      <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle}</div>
+    `;
+
+    // Hero Quote
+    html += `
+      <blockquote class="hero-quote reveal-wipe">${scene.heroQuote}</blockquote>
+    `;
+
+    // Narrative
+    html += `<div class="narrative">`;
+    scene.narrative.forEach(p => {
+      html += `<p class="reveal">${p}</p>`;
+    });
+    html += `</div>`;
+
+    // Comparison Module (Scene 3)
+    if (scene.comparison) {
+      html += renderComparison(scene.comparison);
+    }
+
+    // Extinction Visualization (Scene 4)
+    if (scene.extinction) {
+      html += renderExtinction(scene.extinction);
+    }
+
+    // Deep Dives
+    if (scene.deepDives && scene.deepDives.length > 0) {
+      html += `
+        <div class="deep-dive-section reveal">
+          <div class="deep-dive-label">深度解析 · DEEP DIVE</div>
+          <div class="deep-dive-grid">
+      `;
+      scene.deepDives.forEach((dd, i) => {
+        html += `
+          <div class="dd-card reveal reveal-delay-${i + 1}" data-dd>
+            <div class="dd-header">
+              <div class="dd-header-left">
+                <span class="dd-icon">${dd.icon}</span>
+                <span class="dd-title">${dd.title}</span>
+              </div>
+              <span class="dd-chevron">▾</span>
+            </div>
+            <div class="dd-body">
+              <div class="dd-body-inner">
+                <div class="logic-chain">
+                  <div class="chain-step">
+                    <div class="chain-label">前 提</div>
+                    <div class="chain-text">${dd.chain.premise}</div>
+                  </div>
+                  <div class="chain-step">
+                    <div class="chain-label">证 据</div>
+                    <div class="chain-text">${dd.chain.evidence}</div>
+                  </div>
+                  <div class="chain-step">
+                    <div class="chain-label">结 论</div>
+                    <div class="chain-text">${dd.chain.conclusion}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div></div>`;
+    }
+
+    // Divider between scenes
+    if (idx < scenes.length - 1) {
+      html += `<div class="scene-divider"><span></span></div>`;
+    }
+
+    html += `</div></section>`;
+  });
+
+  // ── Footer ──
+  html += `
+    <footer class="footer">
+      <div class="footer-title">第一部分 · 终</div>
+      <p class="footer-text">
+        认知革命使智人从一种普通的动物变成了世界的主宰。
+        但真正的问题是：我们用这种力量创造的世界，是否让我们更加幸福？
+      </p>
+      <p class="footer-text" style="margin-top:1.5rem; color: var(--amber); font-size: 0.75rem; letter-spacing: 0.15em;">
+        第二部分 · 农业革命 · 即将到来
+      </p>
+    </footer>
+  `;
+
+  app.innerHTML = html;
+
+  // ── Scene Nav ──
+  let navHtml = '';
+  scenes.forEach(scene => {
+    navHtml += `<a href="#${scene.id}" data-scene="${scene.id}" data-label="${scene.title}"></a>`;
+  });
+  sceneNav.innerHTML = navHtml;
+
+  // Initialize interactions after render
+  initScrollSystem();
+  initDeepDiveCards();
+  initComparison();
+}
+
+// ── Comparison Module Renderer ──
+function renderComparison(comp) {
+  let html = `
+    <div class="comparison-section reveal">
+      <div class="deep-dive-label">生活质量对比 · QUALITY OF LIFE</div>
+      <div class="comparison-toggle" id="compToggle">
+        <button class="toggle-btn active" data-mode="foraging">采集生活</button>
+        <button class="toggle-btn" data-mode="farming">农耕生活</button>
+        <button class="toggle-btn" data-mode="compare">对比</button>
+      </div>
+      <div class="comparison-rows" id="compRows">
+  `;
+
+  comp.dimensions.forEach((dim, i) => {
+    html += `
+      <div class="comp-row reveal reveal-delay-${Math.min(i + 1, 4)}" data-comp-row>
+        <div class="comp-row-label">${dim.label}</div>
+        <div class="comp-bars">
+          <div class="comp-bar-wrapper" data-bar="foraging">
+            <span class="comp-bar-tag">采集</span>
+            <div class="comp-bar-track">
+              <div class="comp-bar-fill amber" data-score="${dim.foraging.score}"></div>
+            </div>
+            <span class="comp-bar-value">${dim.foraging.score}/10</span>
+          </div>
+          <div class="comp-bar-wrapper" data-bar="farming" style="display:none;">
+            <span class="comp-bar-tag">农耕</span>
+            <div class="comp-bar-track">
+              <div class="comp-bar-fill grey" data-score="${dim.farming.score}"></div>
+            </div>
+            <span class="comp-bar-value">${dim.farming.score}/10</span>
+          </div>
+        </div>
+        <div class="comp-text" data-text-foraging>${dim.foraging.text}</div>
+        <div class="comp-text" data-text-farming style="display:none;">${dim.farming.text}</div>
+      </div>
+    `;
+  });
+
+  html += `</div></div>`;
+  return html;
+}
+
+// ── Extinction Visualization Renderer ──
+function renderExtinction(ext) {
+  let html = `
+    <div class="extinction-section">
+      <div class="deep-dive-label reveal">灭绝档案 · EXTINCTION RECORD</div>
+  `;
+
+  ext.regions.forEach((region, i) => {
+    html += `
+      <div class="extinction-region reveal" data-ext-region data-delay="${i * 600}" data-percent="${region.percentLost}">
+        <div class="ext-header">
+          <span class="ext-region-name">${region.name}</span>
+          <span class="ext-arrival">智人到达：${region.arrival}</span>
+        </div>
+        <div class="ext-species">
+          ${region.species.map((s, j) => `
+            <span class="ext-species-icon" data-ext-species data-delay="${j * 120}" title="${s.name} · ${s.weight}">${s.icon}</span>
+          `).join('')}
+        </div>
+        <div class="ext-bar-wrapper">
+          <span class="ext-bar-label">灭绝率</span>
+          <div class="ext-bar-track">
+            <div class="ext-bar-fill" data-ext-fill data-target="${region.percentLost}"></div>
+          </div>
+          <span class="ext-percent"><span class="counter" data-ext-counter data-target="${region.percentLost}">0</span>%</span>
+        </div>
+        <div class="ext-note">${region.note}</div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  return html;
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// SCROLL SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function initScrollSystem() {
+  const scenes = document.querySelectorAll('.scene');
+  const navLinks = document.querySelectorAll('.scene-nav a');
+  const progressBar = document.getElementById('progressBar');
+  const nav = document.getElementById('sceneNav');
+
+  // ── Tier 1: Scene Observer (background + nav) ──
+  const sceneObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const isDark = entry.target.dataset.dark === 'true';
+        document.body.classList.toggle('dark-mode', isDark);
+
+        // Update nav
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.dataset.scene === entry.target.id);
+        });
+      }
+    });
+  }, { threshold: 0.15 });
+
+  scenes.forEach(s => sceneObserver.observe(s));
+
+  // ── Fallback: scroll-based dark mode check ──
+  // Handles edge cases where IntersectionObserver doesn't fire (e.g., instant scrollTo)
+  function checkDarkMode() {
+    const viewMid = window.scrollY + window.innerHeight / 2;
+    let activeDark = false;
+    scenes.forEach(s => {
+      const top = s.offsetTop;
+      const bottom = top + s.offsetHeight;
+      if (viewMid >= top && viewMid <= bottom) {
+        activeDark = s.dataset.dark === 'true';
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.dataset.scene === s.id);
+        });
+      }
+    });
+    document.body.classList.toggle('dark-mode', activeDark);
+  }
+
+  // ── Tier 2: Reveal Observer (one-shot animations) ──
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => {
+    revealObserver.observe(el);
+  });
+
+  // ── Tier 2b: Extinction region observer ──
+  const extObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateExtinctionRegion(entry.target);
+        extObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelectorAll('[data-ext-region]').forEach(el => {
+    extObserver.observe(el);
+  });
+
+  // ── Tier 2c: Comparison bars observer ──
+  const compObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCompBars();
+        compObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  const compSection = document.querySelector('.comparison-section');
+  if (compSection) compObserver.observe(compSection);
+
+  // ── Tier 3: Scroll progress + nav visibility ──
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = (scrollTop / docHeight) * 100;
+        progressBar.style.width = progress + '%';
+
+        // Show nav after scrolling past hero
+        nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
+
+        // Dark mode fallback check
+        checkDarkMode();
+
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// DEEP DIVE CARDS
+// ═══════════════════════════════════════════════════════════════
+function initDeepDiveCards() {
+  document.querySelectorAll('[data-dd]').forEach(card => {
+    const header = card.querySelector('.dd-header');
+    const body = card.querySelector('.dd-body');
+
+    header.addEventListener('click', () => {
+      const isOpen = card.classList.contains('open');
+
+      if (isOpen) {
+        // Collapse
+        body.style.height = body.scrollHeight + 'px';
+        requestAnimationFrame(() => {
+          body.style.height = '0px';
+        });
+        card.classList.remove('open');
+      } else {
+        // Expand
+        body.style.height = body.scrollHeight + 'px';
+        card.classList.add('open');
+
+        const onEnd = () => {
+          body.style.height = 'auto';
+          body.removeEventListener('transitionend', onEnd);
+        };
+        body.addEventListener('transitionend', onEnd);
+      }
+    });
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// COMPARISON MODULE
+// ═══════════════════════════════════════════════════════════════
+let currentCompMode = 'foraging';
+
+function initComparison() {
+  const toggle = document.getElementById('compToggle');
+  if (!toggle) return;
+
+  toggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
+
+    const mode = btn.dataset.mode;
+    currentCompMode = mode;
+
+    // Update active button
+    toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    updateCompBars(mode);
+  });
+}
+
+function updateCompBars(mode) {
+  document.querySelectorAll('[data-comp-row]').forEach(row => {
+    const foragingBar = row.querySelector('[data-bar="foraging"]');
+    const farmingBar = row.querySelector('[data-bar="farming"]');
+    const foragingText = row.querySelector('[data-text-foraging]');
+    const farmingText = row.querySelector('[data-text-farming]');
+
+    if (mode === 'foraging') {
+      foragingBar.style.display = 'flex';
+      farmingBar.style.display = 'none';
+      foragingText.style.display = 'block';
+      farmingText.style.display = 'none';
+    } else if (mode === 'farming') {
+      foragingBar.style.display = 'none';
+      farmingBar.style.display = 'flex';
+      foragingText.style.display = 'none';
+      farmingText.style.display = 'block';
+    } else {
+      foragingBar.style.display = 'flex';
+      farmingBar.style.display = 'flex';
+      foragingText.style.display = 'block';
+      farmingText.style.display = 'block';
+    }
+  });
+
+  animateCompBars();
+}
+
+function animateCompBars() {
+  document.querySelectorAll('.comp-bar-fill').forEach(bar => {
+    const score = parseInt(bar.dataset.score);
+    const wrapper = bar.closest('.comp-bar-wrapper');
+    if (wrapper.style.display === 'none') return;
+
+    bar.style.width = '0%';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        bar.style.width = (score / 10 * 100) + '%';
+      });
+    });
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// EXTINCTION ANIMATION
+// ═══════════════════════════════════════════════════════════════
+function animateExtinctionRegion(region) {
+  const delay = parseInt(region.dataset.delay) || 0;
+
+  setTimeout(() => {
+    // Animate bar fill
+    const fill = region.querySelector('[data-ext-fill]');
+    const target = parseInt(fill.dataset.target);
+    fill.style.width = target + '%';
+
+    // Animate counter
+    const counter = region.querySelector('[data-ext-counter]');
+    const counterTarget = parseInt(counter.dataset.target);
+    animateCounter(counter, 0, counterTarget, 1500);
+
+    // Animate species icons
+    const icons = region.querySelectorAll('[data-ext-species]');
+    icons.forEach((icon, i) => {
+      const iconDelay = parseInt(icon.dataset.delay) || 0;
+      setTimeout(() => {
+        icon.classList.add('extinct');
+      }, 800 + iconDelay);
+    });
+  }, delay);
+}
+
+function animateCounter(el, from, to, duration) {
+  const startTime = performance.now();
+
+  function tick(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease out
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(from + (to - from) * eased);
+    el.textContent = current;
+
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    }
+  }
+
+  requestAnimationFrame(tick);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// INITIALIZE
+// ═══════════════════════════════════════════════════════════════
+renderApp();
+</script>
+</body>
+</html>
