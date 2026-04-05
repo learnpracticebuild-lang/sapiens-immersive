@@ -131,14 +131,36 @@
         </div>`;
       }
 
-      // Narrative
+      // Narrative (with keyTerm highlighting)
       if (scene.narrative?.length) {
+        const kt = CONTENT_DATA.meta.keyTerms || [];
         html += `<div class="narrative">`;
         scene.narrative.forEach((p, pi) => {
+          let text = p;
+          if (kt.length) {
+            kt.forEach(k => {
+              const escaped = k.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              text = text.replace(new RegExp(`(?:<[^>]*>.*?<\\/[^>]*>)|(?:${escaped})`, 'g'), match => {
+                if (match.startsWith('<')) return match; // inside HTML tag, skip
+                return `<span class="key-term" title="${k.definition}">${match}</span>`;
+              });
+            });
+          }
           const cls = pi === 0 ? ' drop-cap-p' : '';
-          html += `<p class="reveal${cls}">${p}</p>`;
+          html += `<p class="reveal${cls}">${text}</p>`;
         });
         html += `</div>`;
+      }
+
+      // Extended Reading (collapsible background panel)
+      if (scene.extendedReading?.length) {
+        html += `
+          <details class="extended-reading reveal">
+            <summary class="extended-reading-toggle">📖 展开深度背景</summary>
+            <div class="extended-reading-content">
+              ${scene.extendedReading.map(p => `<p>${p}</p>`).join('')}
+            </div>
+          </details>`;
       }
 
       // Data Viz — dispatch to registry
@@ -217,6 +239,11 @@
             </div>
           </div>
         </section>`;
+    }
+
+    // Glossary floating button (only if keyTerms exist)
+    if (CONTENT_DATA.meta.keyTerms?.length) {
+      html += `<button class="glossary-fab" id="glossaryFab" title="术语表">📖 术语表</button>`;
     }
 
     // Footer
@@ -367,19 +394,29 @@
       const dd = CONTENT_DATA.scenes[sceneIdx].deepDives[ddIdx];
       if (!dd) return;
 
+      const hasQ = !!dd.triggerQuestion;
+      const s = (n) => `modal-stagger modal-stagger-${n}`;
+      const chainOffset = hasQ ? 1 : 0;
+
       body.innerHTML = `
-        <div class="modal-icon modal-stagger modal-stagger-1">${dd.icon}</div>
-        <h3 class="modal-title modal-stagger modal-stagger-2">${dd.title}</h3>
-        <div class="logic-chain-modal">
-          <div class="chain-step-modal modal-stagger modal-stagger-3">
+        <div class="modal-icon ${s(1)}">${dd.icon}</div>
+        <h3 class="modal-title ${s(2)}">${dd.title}</h3>
+        ${hasQ ? `
+        <div class="trigger-question ${s(3)}">
+          <div class="trigger-question-label">主动回忆 · Active Recall</div>
+          <p class="trigger-question-text">${dd.triggerQuestion}</p>
+          <button class="recall-reveal-btn" id="recallReveal">💡 揭晓作者逻辑</button>
+        </div>` : ''}
+        <div class="logic-chain-modal${hasQ ? ' chain-masked' : ''}">
+          <div class="chain-step-modal ${s(3 + chainOffset)}">
             <div class="chain-label-modal">前 提</div>
             <div class="chain-text-modal">${dd.chain.premise}</div>
           </div>
-          <div class="chain-step-modal modal-stagger modal-stagger-4">
+          <div class="chain-step-modal ${s(4 + chainOffset)}">
             <div class="chain-label-modal">证 据</div>
             <div class="chain-text-modal">${dd.chain.evidence}</div>
           </div>
-          <div class="chain-step-modal modal-stagger modal-stagger-5">
+          <div class="chain-step-modal ${s(5 + chainOffset)}">
             <div class="chain-label-modal">结 论</div>
             <div class="chain-text-modal">${dd.chain.conclusion}</div>
           </div>
@@ -387,7 +424,39 @@
       body.offsetHeight; // force reflow
       overlay.classList.add('open');
       document.body.style.overflow = 'hidden';
+
+      if (hasQ) {
+        const revealBtn = document.getElementById('recallReveal');
+        if (revealBtn) {
+          revealBtn.addEventListener('click', () => {
+            body.querySelector('.logic-chain-modal').classList.remove('chain-masked');
+            revealBtn.style.display = 'none';
+          });
+        }
+      }
       BookEngine.triggerHook('onModalOpen', { sceneIdx, ddIdx, dd });
+    }
+
+    function openGlossary() {
+      const keyTerms = CONTENT_DATA.meta.keyTerms;
+      if (!keyTerms?.length) return;
+      body.innerHTML = `
+        <div class="glossary-header modal-stagger modal-stagger-1">
+          <div class="glossary-label">术语表 · Glossary</div>
+          <h3 class="modal-title">${CONTENT_DATA.meta.title} · 关键术语</h3>
+          <p style="font-size:0.8rem;color:var(--fg-secondary);margin-top:0.5rem;line-height:1.6;">以下术语按作者在书中的<strong>特定定义</strong>整理，可能与日常含义不同。</p>
+        </div>
+        <div class="glossary-list">
+          ${keyTerms.map((kt, i) => `
+            <div class="glossary-item modal-stagger modal-stagger-${Math.min(i + 2, 5)}">
+              <div class="glossary-term">${kt.term}</div>
+              <div class="glossary-definition">${kt.definition}</div>
+            </div>
+          `).join('')}
+        </div>`;
+      body.offsetHeight;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
     }
 
     function closeModal() {
@@ -401,7 +470,10 @@
       if (trigger) {
         const [sIdx, dIdx] = trigger.dataset.ddIdx.split('-').map(Number);
         openModal(sIdx, dIdx);
-        trigger.classList.add('clicked'); // stop pulse animation
+        trigger.classList.add('clicked');
+      }
+      if (e.target.closest('#glossaryFab')) {
+        openGlossary();
       }
     });
     backdrop.addEventListener('click', closeModal);
