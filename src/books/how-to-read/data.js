@@ -90,6 +90,13 @@ const CONTENT_DATA = {
     subtitle: '沉浸式深度导读',
     badge: '沉浸式深度导读 · HOW TO READ A BOOK · COMPLETE',
     author: '莫提默·J. 艾德勒 / 查尔斯·范多伦',
+    authorEn: 'Mortimer J. Adler & Charles Van Doren',
+    shelf: {
+      emoji: '📖',
+      gradient: 'linear-gradient(135deg, #2C2418 0%, #8B6914 50%, #D4A017 100%)',
+      description: '阅读的元技能——四个层次、十五条规则、与作者达成共识的艺术。从被动消费者变为主动思想家的完整方法论。',
+      stats: ['11 场景', '4 部分', '方法论入口']
+    },
     parts: [
       { number: 1, title: '阅读的层次', titleEn: 'THE DIMENSIONS OF READING', beforeScene: 'scene-1' },
       { number: 2, title: '分析阅读', titleEn: 'ANALYTICAL READING', beforeScene: 'scene-4' },

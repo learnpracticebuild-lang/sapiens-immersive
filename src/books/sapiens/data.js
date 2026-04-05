@@ -132,7 +132,14 @@ const CONTENT_DATA = {
     subtitle: '从动物到上帝',
     badge: '沉浸式深度导读 · FROM ANIMALS TO GODS · COMPLETE',
     author: '尤瓦尔·赫拉利',
+    authorEn: 'Yuval Noah Harari',
     type: 'history',
+    shelf: {
+      emoji: '🧬',
+      gradient: 'linear-gradient(135deg, #2C2416 0%, #8B6914 50%, #D4A845 100%)',
+      description: '从认知革命到AI时代，18个场景完整拆解智人七万年的旅程。每一个"虚构的秩序"、每一次"奢侈品陷阱"，都在今天的世界中精确重演。',
+      stats: ['18 场景', '4 部分', '36 深度解析']
+    },
     coreThesis: '智人之所以能主宰地球，不是因为更强壮或更聪明，而是因为我们是唯一能进行大规模灵活合作的物种——而合作的基础是虚构故事。',
     keyTerms: [
       { term: '认知革命', definition: '约七万年前，智人大脑发生的一次突变，使人类获得了讨论"虚构事物"的能力。这不是智力的提升，而是一种全新的语言功能——能够描述从未见过的、不存在的事物。' },

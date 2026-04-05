@@ -101,6 +101,13 @@ const CONTENT_DATA = {
     subtitle: '直觉与理性的博弈',
     badge: '沉浸式深度导读 · THE MACHINERY OF THOUGHT · COMPLETE',
     author: '丹尼尔·卡尼曼',
+    authorEn: 'Daniel Kahneman',
+    shelf: {
+      emoji: '🧠',
+      gradient: 'linear-gradient(135deg, #1A2A3A 0%, #2E7D8C 50%, #4ABCD0 100%)',
+      description: '系统1与系统2的认知对决。从锚定效应到前景理论，从过度自信到峰终定律——一场关于人类判断与决策的深度解剖。',
+      stats: ['12 场景', '5 部分', '24 深度解析']
+    },
     parts: [
       { number: 1, title: '两个系统', titleEn: 'TWO SYSTEMS', beforeScene: 'scene-1' },
       { number: 2, title: '启发法与偏见', titleEn: 'HEURISTICS AND BIASES', beforeScene: 'scene-4' },
