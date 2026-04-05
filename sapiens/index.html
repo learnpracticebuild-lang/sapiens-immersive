@@ -1,0 +1,2727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人类简史 · 沉浸式深度导读 — 全四部分</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   ROOT & DYNAMIC EMOTIONAL PALETTE
+   Each scene overrides these variables via JS on scroll
+   ═══════════════════════════════════════════════════════ */
+:root {
+  /* Default: Hero palette */
+  --bg: #F5F0E8;
+  --bg-secondary: #EDE7DA;
+  --fg: #1A1A1A;
+  --fg-secondary: #5C5546;
+  --accent: #B8860B;
+  --accent-dim: rgba(184, 134, 11, 0.12);
+  --accent-mid: rgba(184, 134, 11, 0.35);
+  --accent-glow: rgba(184, 134, 11, 0.06);
+  --border: rgba(0,0,0,0.06);
+  --glass-bg: rgba(245, 240, 232, 0.72);
+  --glass-border: rgba(255,255,255,0.3);
+
+  --serif: 'Noto Serif SC', 'Songti SC', Georgia, serif;
+  --sans: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--sans);
+  background-color: var(--bg);
+  color: var(--fg);
+  overflow-x: hidden;
+  line-height: 1.9;
+  transition: background-color 1.4s var(--ease-smooth),
+              color 1.4s var(--ease-smooth);
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PROGRESS BAR
+   ═══════════════════════════════════════════════════════ */
+.progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 9999;
+  width: 0%;
+  transition: width 0.15s linear;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE NAV (Right-side dots)
+   ═══════════════════════════════════════════════════════ */
+.scene-nav {
+  position: fixed;
+  right: 2.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-smooth);
+}
+.scene-nav.visible { opacity: 1; }
+.scene-nav a {
+  display: block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--fg);
+  opacity: 0.15;
+  transition: all 0.5s var(--ease-out);
+  position: relative;
+  text-decoration: none;
+}
+.scene-nav a.active {
+  background: var(--accent);
+  opacity: 1;
+  transform: scale(1.6);
+  box-shadow: 0 0 12px var(--accent-mid);
+}
+.scene-nav a::after {
+  content: attr(data-label);
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.3s var(--ease-out);
+  color: var(--fg-secondary);
+  font-family: var(--sans);
+}
+.scene-nav a:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ═══════════════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════════════ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  position: relative;
+}
+.hero-overline {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 3rem;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 1s var(--ease-out) 0.3s forwards;
+}
+.hero-title {
+  font-family: var(--serif);
+  font-size: clamp(3.5rem, 12vw, 8rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin-bottom: 2rem;
+  opacity: 0;
+  transform: translateY(40px);
+  animation: fadeUp 1.4s var(--ease-out) 0.6s forwards;
+}
+.hero-subtitle {
+  font-family: var(--serif);
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  font-weight: 300;
+  color: var(--fg-secondary);
+  max-width: 500px;
+  letter-spacing: 0.1em;
+  margin-bottom: 4rem;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeUp 1.2s var(--ease-out) 1s forwards;
+}
+.hero-part {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  border: 1px solid var(--accent-mid);
+  padding: 0.6rem 2rem;
+  border-radius: 100px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 1s var(--ease-out) 1.3s forwards;
+}
+.hero-scroll-hint {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  opacity: 0;
+  animation: fadeUp 1s var(--ease-out) 2s forwards;
+}
+.hero-scroll-hint span {
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  color: var(--fg-secondary);
+  text-transform: uppercase;
+}
+.scroll-line {
+  width: 1px;
+  height: 48px;
+  position: relative;
+  overflow: hidden;
+}
+.scroll-line::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--accent));
+  animation: scrollDrop 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCENE SECTIONS
+   ═══════════════════════════════════════════════════════ */
+.scene {
+  min-height: 100vh;
+  padding: 12rem 2rem 8rem;
+  position: relative;
+}
+.scene-inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.scene-number {
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  color: var(--accent);
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+}
+.scene-title {
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+.scene-subtitle {
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--fg-secondary);
+  opacity: 0.5;
+  margin-bottom: 6rem;
+  text-transform: uppercase;
+}
+
+/* Hero Quote — cinematic, massive */
+.hero-quote-wrap {
+  margin: 2rem 0 6rem;
+  padding: 4rem 0;
+  position: relative;
+}
+.hero-quote-wrap::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+}
+.hero-quote-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+}
+.hero-quote {
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 4vw, 2.6rem);
+  line-height: 1.7;
+  font-weight: 300;
+  position: relative;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--accent);
+}
+
+/* Narrative paragraphs */
+.narrative { margin-bottom: 2rem; }
+.narrative p {
+  font-size: 1.05rem;
+  line-height: 2.1;
+  margin-bottom: 2.5rem;
+  color: var(--fg);
+  opacity: 0.82;
+}
+.narrative p strong, .narrative p b {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════
+   REVEAL ANIMATIONS
+   ═══════════════════════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.15s; }
+.reveal-delay-2 { transition-delay: 0.3s; }
+.reveal-delay-3 { transition-delay: 0.45s; }
+.reveal-delay-4 { transition-delay: 0.6s; }
+
+.reveal-wipe {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.6s var(--ease-out);
+}
+.reveal-wipe.revealed {
+  clip-path: inset(0 0% 0 0);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SVG DATA VIZ — Inline charts that draw on scroll
+   ═══════════════════════════════════════════════════════ */
+.data-viz {
+  margin: 4rem 0;
+  padding: 3rem 0;
+}
+.data-viz-title {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+.svg-container {
+  width: 100%;
+  overflow: visible;
+}
+.svg-container svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+/* SVG path draw animation */
+.draw-path {
+  stroke-dasharray: var(--path-length, 1000);
+  stroke-dashoffset: var(--path-length, 1000);
+  transition: stroke-dashoffset 2.5s var(--ease-out);
+}
+.draw-path.drawn {
+  stroke-dashoffset: 0;
+}
+/* Animated number counter */
+.big-number {
+  font-family: var(--serif);
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 900;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.big-number-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--fg-secondary);
+  margin-top: 0.5rem;
+  letter-spacing: 0.05em;
+}
+.number-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin: 3rem 0;
+  text-align: center;
+}
+
+/* Dunbar circle visualization */
+.dunbar-viz {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  margin: 3rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dunbar-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 1.5s var(--ease-out);
+  opacity: 0;
+  transform: scale(0.3);
+}
+.dunbar-circle.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+.dunbar-circle .dc-num {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.dunbar-circle .dc-label {
+  font-size: 0.55rem;
+  color: var(--fg-secondary);
+  letter-spacing: 0.05em;
+  position: absolute;
+  bottom: -1.5rem;
+  white-space: nowrap;
+}
+.dunbar-circle.core {
+  width: 80px; height: 80px;
+  background: var(--accent-dim);
+  z-index: 4;
+}
+.dunbar-circle.core .dc-num { font-size: 1.2rem; }
+.dunbar-circle.band {
+  width: 160px; height: 160px;
+  z-index: 3;
+}
+.dunbar-circle.band .dc-num { font-size: 1rem; }
+.dunbar-circle.limit {
+  width: 260px; height: 260px;
+  border-color: var(--accent);
+  border-width: 2px;
+  z-index: 2;
+}
+.dunbar-circle.limit .dc-num { font-size: 1.5rem; }
+.dunbar-circle.beyond {
+  width: 340px; height: 340px;
+  border-style: dashed;
+  border-color: var(--border);
+  z-index: 1;
+}
+.dunbar-circle.beyond .dc-num {
+  font-size: 0.9rem;
+  color: var(--fg-secondary);
+  opacity: 0.5;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DEEP DIVE — IMMERSIVE MODAL
+   ═══════════════════════════════════════════════════════ */
+.dd-trigger-section {
+  margin-top: 5rem;
+  padding-top: 3rem;
+  border-top: 1px solid var(--border);
+}
+.dd-trigger-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+}
+.dd-trigger-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 640px) {
+  .dd-trigger-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.dd-trigger {
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: var(--accent-glow);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.4s var(--ease-out);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.dd-trigger::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent-dim), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.dd-trigger:hover {
+  border-color: var(--accent-mid);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--accent-dim);
+}
+.dd-trigger:hover::before { opacity: 1; }
+.dd-trigger-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.dd-trigger-content {
+  position: relative;
+  z-index: 1;
+}
+.dd-trigger-title {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+.dd-trigger-hint {
+  font-size: 0.6rem;
+  color: var(--fg-secondary);
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+}
+.dd-trigger-arrow {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--accent);
+  transition: transform 0.3s var(--ease-out);
+  position: relative;
+  z-index: 1;
+}
+.dd-trigger:hover .dd-trigger-arrow {
+  transform: translateX(4px);
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-smooth);
+}
+.modal-overlay.open {
+  pointer-events: all;
+  opacity: 1;
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+}
+.modal-drawer {
+  position: relative;
+  width: min(580px, 92vw);
+  height: 100vh;
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(1.4);
+  -webkit-backdrop-filter: blur(40px) saturate(1.4);
+  border-left: 1px solid var(--glass-border);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.6s var(--ease-out);
+  box-shadow: -20px 0 80px rgba(0,0,0,0.1);
+}
+.modal-overlay.open .modal-drawer {
+  transform: translateX(0);
+}
+.modal-close {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: flex-end;
+  padding: 1.5rem 2rem 0;
+}
+.modal-close-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--fg-secondary);
+  transition: all 0.3s;
+}
+.modal-close-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.modal-body {
+  padding: 2rem 2.5rem 4rem;
+}
+@media (max-width: 640px) {
+  .modal-body { padding: 1.5rem 1.5rem 3rem; }
+}
+.modal-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+.modal-title {
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 2.5rem;
+}
+/* Logic chain in modal — magazine layout */
+.logic-chain-modal {
+  position: relative;
+}
+.chain-step-modal {
+  position: relative;
+  padding-left: 2rem;
+  padding-bottom: 2.5rem;
+  border-left: 1.5px solid var(--accent-mid);
+}
+.chain-step-modal:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+.chain-step-modal::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 0.2rem;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--glass-bg), 0 0 0 5px var(--accent-mid);
+}
+.chain-label-modal {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  background: var(--accent-dim);
+  border-radius: 3px;
+}
+.chain-text-modal {
+  font-size: 0.95rem;
+  line-height: 2;
+  color: var(--fg);
+  opacity: 0.88;
+}
+
+/* ═══════════════════════════════════════════════════════
+   COMPARISON MODULE
+   ═══════════════════════════════════════════════════════ */
+.comparison-section {
+  margin: 5rem 0;
+  padding: 3rem 0;
+}
+.comparison-toggle {
+  display: inline-flex;
+  gap: 0;
+  margin-bottom: 3rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  overflow: hidden;
+  background: var(--accent-glow);
+}
+.toggle-btn {
+  padding: 0.65rem 1.5rem;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  border: none;
+  background: transparent;
+  color: var(--fg-secondary);
+  cursor: pointer;
+  transition: all 0.4s var(--ease-out);
+  min-height: 44px;
+  white-space: nowrap;
+}
+.toggle-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 100px;
+  box-shadow: 0 4px 15px var(--accent-mid);
+}
+.comparison-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.comp-row-label {
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+}
+.comp-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+.comp-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.comp-bar-tag {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  width: 2.5rem;
+  text-align: right;
+  color: var(--fg-secondary);
+  opacity: 0.5;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.comp-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.comp-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1.2s var(--ease-out);
+  width: 0%;
+}
+.comp-bar-fill.amber { background: var(--accent); }
+.comp-bar-fill.grey { background: var(--fg-secondary); opacity: 0.3; }
+.comp-bar-value {
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 2rem;
+  color: var(--fg-secondary);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.comp-text {
+  font-size: 0.75rem;
+  line-height: 1.7;
+  color: var(--fg-secondary);
+  margin-top: 0.4rem;
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════
+   EXTINCTION VISUALIZATION
+   ═══════════════════════════════════════════════════════ */
+.extinction-section { margin-top: 5rem; }
+.extinction-region {
+  margin-bottom: 3.5rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.extinction-region:last-child { border-bottom: none; }
+.ext-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.ext-region-name {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.ext-arrival {
+  font-size: 0.65rem;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+.ext-species {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.2rem 0;
+}
+.ext-species-icon {
+  font-size: 1.5rem;
+  position: relative;
+  transition: all 0.6s var(--ease-out);
+  opacity: 0.9;
+}
+.ext-species-icon.extinct::after {
+  content: '';
+  position: absolute;
+  left: -3px; right: -3px;
+  top: 50%;
+  height: 2px;
+  background: #DC2626;
+  transform: rotate(-45deg);
+  box-shadow: 0 0 6px rgba(220,38,38,0.5);
+}
+.ext-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.ext-bar-label {
+  font-size: 0.6rem;
+  color: var(--fg-secondary);
+  opacity: 0.5;
+  width: 3.5rem;
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+.ext-bar-track {
+  flex: 1;
+  height: 10px;
+  background: var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.ext-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #DC2626);
+  border-radius: 5px;
+  width: 0%;
+  transition: width 2s var(--ease-out);
+}
+/* Extinction region — hidden until animated (not using .reveal to avoid conflict) */
+.extinction-region {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
+}
+.extinction-region.ext-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.ext-percent {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #DC2626;
+  width: 3.5rem;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.ext-note {
+  font-size: 0.72rem;
+  color: var(--fg-secondary);
+  margin-top: 0.6rem;
+  line-height: 1.7;
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════════════════
+   KEYBOARD NAV HINT
+   ═══════════════════════════════════════════════════════ */
+.kb-hint {
+  position: fixed;
+  bottom: 2rem;
+  right: 2.5rem;
+  z-index: 400;
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--fg-secondary);
+  opacity: 0.4;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: opacity 0.8s var(--ease-smooth);
+  pointer-events: none;
+}
+.kb-hint.hidden { opacity: 0; }
+.kb-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--accent-glow);
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MODAL STAGGERED ANIMATION (Breathing)
+   ═══════════════════════════════════════════════════════ */
+.modal-stagger {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+}
+.modal-overlay.open .modal-stagger {
+  opacity: 1;
+  transform: translateY(0);
+}
+.modal-stagger-1 { transition-delay: 0.15s; }
+.modal-stagger-2 { transition-delay: 0.35s; }
+.modal-stagger-3 { transition-delay: 0.55s; }
+.modal-stagger-4 { transition-delay: 0.75s; }
+.modal-stagger-5 { transition-delay: 0.95s; }
+
+/* ═══════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════ */
+.footer {
+  text-align: center;
+  padding: 10rem 2rem 6rem;
+}
+.footer-title {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 900;
+  margin-bottom: 1.5rem;
+}
+.footer-text {
+  font-size: 0.85rem;
+  color: var(--fg-secondary);
+  max-width: 460px;
+  margin: 0 auto;
+  line-height: 2;
+  opacity: 0.7;
+}
+.footer-next {
+  margin-top: 3rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════
+   KEYFRAMES
+   ═══════════════════════════════════════════════════════ */
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scrollDrop {
+  0% { top: -100%; }
+  100% { top: 100%; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+  .draw-path { stroke-dashoffset: 0 !important; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .scene { padding: 7rem 1.5rem 5rem; }
+  .scene-nav { display: none; }
+  .hero-quote { font-size: 1.2rem; }
+  .number-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .dunbar-viz { height: 240px; }
+  .dunbar-circle.beyond { width: 240px; height: 240px; }
+  .dunbar-circle.limit { width: 190px; height: 190px; }
+  .dunbar-circle.band { width: 120px; height: 120px; }
+  .dunbar-circle.core { width: 60px; height: 60px; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="scene-nav" id="sceneNav"></nav>
+<div id="app"></div>
+
+<!-- Keyboard nav hint -->
+<div class="kb-hint" id="kbHint">
+  <kbd>Space</kbd> / <kbd>↓</kbd> 下一场景 &nbsp; <kbd>↑</kbd> 上一场景
+</div>
+
+<!-- MODAL (single instance, content swapped by JS) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-drawer" id="modalDrawer">
+    <div class="modal-close">
+      <button class="modal-close-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DYNAMIC EMOTIONAL PALETTE — per-scene color schemes
+// ═══════════════════════════════════════════════════════════════
+const PALETTES = {
+  hero: {
+    bg: '#F5F0E8', bgSecondary: '#EDE7DA', fg: '#1A1A1A', fgSecondary: '#5C5546',
+    accent: '#B8860B', accentDim: 'rgba(184,134,11,0.12)', accentMid: 'rgba(184,134,11,0.35)',
+    accentGlow: 'rgba(184,134,11,0.06)', border: 'rgba(0,0,0,0.06)',
+    glassBg: 'rgba(245,240,232,0.82)', glassBorder: 'rgba(255,255,255,0.3)'
+  },
+  scene1: {
+    bg: '#F7F3EC', bgSecondary: '#EDE8DE', fg: '#2C2416', fgSecondary: '#6B5D4A',
+    accent: '#A0522D', accentDim: 'rgba(160,82,45,0.1)', accentMid: 'rgba(160,82,45,0.3)',
+    accentGlow: 'rgba(160,82,45,0.05)', border: 'rgba(44,36,22,0.06)',
+    glassBg: 'rgba(247,243,236,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene2: {
+    bg: '#F4F1EA', bgSecondary: '#E8E3D8', fg: '#1F1A12', fgSecondary: '#6E6350',
+    accent: '#8B6914', accentDim: 'rgba(139,105,20,0.1)', accentMid: 'rgba(139,105,20,0.3)',
+    accentGlow: 'rgba(139,105,20,0.05)', border: 'rgba(31,26,18,0.06)',
+    glassBg: 'rgba(244,241,234,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene3: {
+    bg: '#F0F2EC', bgSecondary: '#E4E8DD', fg: '#1C2418', fgSecondary: '#566148',
+    accent: '#5E7A3A', accentDim: 'rgba(94,122,58,0.1)', accentMid: 'rgba(94,122,58,0.3)',
+    accentGlow: 'rgba(94,122,58,0.05)', border: 'rgba(28,36,24,0.06)',
+    glassBg: 'rgba(240,242,236,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene4: {
+    bg: '#141414', bgSecondary: '#1C1C1C', fg: '#E8E4DC', fgSecondary: '#8A8478',
+    accent: '#D4A845', accentDim: 'rgba(212,168,69,0.1)', accentMid: 'rgba(212,168,69,0.3)',
+    accentGlow: 'rgba(212,168,69,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(30,30,30,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // ── Part II: 农业革命 ──
+  scene5: {
+    bg: '#F5F0E0', bgSecondary: '#EBE4CE', fg: '#2A2011', fgSecondary: '#7A6C4E',
+    accent: '#B8860B', accentDim: 'rgba(184,134,11,0.1)', accentMid: 'rgba(184,134,11,0.3)',
+    accentGlow: 'rgba(184,134,11,0.05)', border: 'rgba(42,32,17,0.07)',
+    glassBg: 'rgba(245,240,224,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene6: {
+    bg: '#F2EDE4', bgSecondary: '#E6DFD2', fg: '#1E1914', fgSecondary: '#6D6050',
+    accent: '#8B4513', accentDim: 'rgba(139,69,19,0.1)', accentMid: 'rgba(139,69,19,0.3)',
+    accentGlow: 'rgba(139,69,19,0.05)', border: 'rgba(30,25,20,0.07)',
+    glassBg: 'rgba(242,237,228,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // ── Part II continued ──
+  scene7: {
+    bg: '#EDE8DC', bgSecondary: '#E2DBCB', fg: '#221C12', fgSecondary: '#6A5C46',
+    accent: '#7B6327', accentDim: 'rgba(123,99,39,0.1)', accentMid: 'rgba(123,99,39,0.3)',
+    accentGlow: 'rgba(123,99,39,0.05)', border: 'rgba(34,28,18,0.07)',
+    glassBg: 'rgba(237,232,220,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene8: {
+    bg: '#1A1520', bgSecondary: '#221C2A', fg: '#E4DED6', fgSecondary: '#9A8F82',
+    accent: '#C47A5A', accentDim: 'rgba(196,122,90,0.1)', accentMid: 'rgba(196,122,90,0.3)',
+    accentGlow: 'rgba(196,122,90,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(30,24,38,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // ── Part III: 人类的融合统一 ──
+  scene9: {
+    bg: '#F5F0E0', bgSecondary: '#ECE5CF', fg: '#2A2011', fgSecondary: '#7A6C4E',
+    accent: '#C49B2A', accentDim: 'rgba(196,155,42,0.1)', accentMid: 'rgba(196,155,42,0.35)',
+    accentGlow: 'rgba(196,155,42,0.05)', border: 'rgba(42,32,17,0.06)',
+    glassBg: 'rgba(245,240,224,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene10: {
+    bg: '#F0EAF0', bgSecondary: '#E4DBE6', fg: '#1E1420', fgSecondary: '#6A5670',
+    accent: '#7B4B8A', accentDim: 'rgba(123,75,138,0.1)', accentMid: 'rgba(123,75,138,0.3)',
+    accentGlow: 'rgba(123,75,138,0.05)', border: 'rgba(30,20,32,0.06)',
+    glassBg: 'rgba(240,234,240,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene11: {
+    bg: '#181820', bgSecondary: '#1E1E2E', fg: '#E0DCD4', fgSecondary: '#908880',
+    accent: '#6A8EC0', accentDim: 'rgba(106,142,192,0.1)', accentMid: 'rgba(106,142,192,0.3)',
+    accentGlow: 'rgba(106,142,192,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(28,28,40,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene12: {
+    bg: '#F2F0EC', bgSecondary: '#E6E2DA', fg: '#1C1A16', fgSecondary: '#6B6658',
+    accent: '#8B7355', accentDim: 'rgba(139,115,85,0.1)', accentMid: 'rgba(139,115,85,0.3)',
+    accentGlow: 'rgba(139,115,85,0.05)', border: 'rgba(28,26,22,0.06)',
+    glassBg: 'rgba(242,240,236,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // ── Part IV: 科学革命 ──
+  scene13: {
+    bg: '#EEF2F5', bgSecondary: '#E0E8EE', fg: '#141C24', fgSecondary: '#4A5A6A',
+    accent: '#2E7D8C', accentDim: 'rgba(46,125,140,0.1)', accentMid: 'rgba(46,125,140,0.3)',
+    accentGlow: 'rgba(46,125,140,0.05)', border: 'rgba(20,28,36,0.06)',
+    glassBg: 'rgba(238,242,245,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene14: {
+    bg: '#F5F2EC', bgSecondary: '#EBE6DC', fg: '#1A1814', fgSecondary: '#60584A',
+    accent: '#8C6B2E', accentDim: 'rgba(140,107,46,0.1)', accentMid: 'rgba(140,107,46,0.3)',
+    accentGlow: 'rgba(140,107,46,0.05)', border: 'rgba(26,24,20,0.06)',
+    glassBg: 'rgba(245,242,236,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene15: {
+    bg: '#F0F4F0', bgSecondary: '#E0E8E0', fg: '#141C14', fgSecondary: '#4A5A4A',
+    accent: '#2E8C5A', accentDim: 'rgba(46,140,90,0.1)', accentMid: 'rgba(46,140,90,0.3)',
+    accentGlow: 'rgba(46,140,90,0.05)', border: 'rgba(20,28,20,0.06)',
+    glassBg: 'rgba(240,244,240,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene16: {
+    bg: '#1C1418', bgSecondary: '#261C22', fg: '#E4DCD8', fgSecondary: '#9A8A84',
+    accent: '#D45A5A', accentDim: 'rgba(212,90,90,0.1)', accentMid: 'rgba(212,90,90,0.3)',
+    accentGlow: 'rgba(212,90,90,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(34,24,30,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene17: {
+    bg: '#F4F0F4', bgSecondary: '#E8E0E8', fg: '#1C161C', fgSecondary: '#6A5A6A',
+    accent: '#8A5AA0', accentDim: 'rgba(138,90,160,0.1)', accentMid: 'rgba(138,90,160,0.3)',
+    accentGlow: 'rgba(138,90,160,0.05)', border: 'rgba(28,22,28,0.06)',
+    glassBg: 'rgba(244,240,244,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene18: {
+    bg: '#0E0E14', bgSecondary: '#16161E', fg: '#D8D4CC', fgSecondary: '#807A70',
+    accent: '#4A9EC0', accentDim: 'rgba(74,158,192,0.1)', accentMid: 'rgba(74,158,192,0.3)',
+    accentGlow: 'rgba(74,158,192,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(20,20,28,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  }
+};
+
+function applyPalette(name) {
+  const p = PALETTES[name];
+  if (!p) return;
+  const s = document.documentElement.style;
+  s.setProperty('--bg', p.bg);
+  s.setProperty('--bg-secondary', p.bgSecondary);
+  s.setProperty('--fg', p.fg);
+  s.setProperty('--fg-secondary', p.fgSecondary);
+  s.setProperty('--accent', p.accent);
+  s.setProperty('--accent-dim', p.accentDim);
+  s.setProperty('--accent-mid', p.accentMid);
+  s.setProperty('--accent-glow', p.accentGlow);
+  s.setProperty('--border', p.border);
+  s.setProperty('--glass-bg', p.glassBg);
+  s.setProperty('--glass-border', p.glassBorder);
+  document.body.style.backgroundColor = p.bg;
+  document.body.style.color = p.fg;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONTENT_DATA
+// ═══════════════════════════════════════════════════════════════
+const CONTENT_DATA = {
+  meta: {
+    book: '人类简史',
+    bookSub: 'SAPIENS: A Brief History of Humankind',
+    part: '沉浸式深度导读',
+    partTitle: '从动物到上帝',
+    partSub: 'FROM ANIMALS TO GODS · COMPLETE',
+    author: '尤瓦尔·赫拉利'
+  },
+  scenes: [
+    {
+      id: 'scene-1', number: '场景 01', palette: 'scene1',
+      title: '一种也没什么特别的动物',
+      subtitle: 'AN ANIMAL OF NO SIGNIFICANCE',
+      heroQuote: '在距今约七万年前，智人不过是一种微不足道的动物，在非洲的一个小角落里过着自己的日子。',
+      narrative: [
+        '让我们从一个令人不安的事实开始：<b>在大约两百万年的时间里，人类不过是一种普通的中等体型动物</b>。我们的祖先在东非大草原上四处张望，采集果实，捕捉昆虫，同时小心翼翼地躲避更大的捕食者。没有任何迹象表明他们将会主宰世界。',
+        '人类大脑是一台极其昂贵的设备。它只占身体总重量的约2%，<b>却在静息状态下消耗全身25%的能量</b>。相比之下，其他类人猿的大脑仅消耗约8%的能量。这种"投资"的代价是巨大的——为了供养这个贪婪的器官，智人不得不花更多时间寻找食物，同时肌肉逐渐萎缩。',
+        '直立行走是另一个关键转折。当我们的祖先站起来时，手得到了解放，可以制造工具、投掷石块、发出信号。<b>但代价同样惨重：为了支撑直立的姿态，骨盆变窄了</b>。这意味着人类女性分娩变得异常危险——产道缩窄的同时，婴儿的脑袋却在进化中越变越大。',
+        '火的驯化才是真正的转折点。当智人学会控制火之后，他们获得了一种可靠且无限的力量来源。<b>烹饪使食物变得更容易消化，缩短了进食时间，更关键的是——为大脑的进一步膨胀提供了能量基础。</b>一小时的烹饪完成了过去需要五小时咀嚼才能完成的能量摄入。',
+        '然而，尽管拥有了火和工具，智人仍然花了几十万年的时间在食物链的中间层苟且偷生。<b>他们最常干的事不是狩猎大型动物，而是挖掘根茎、采摘浆果、以及——偷吃其他猛兽留下的腐肉。</b>别被博物馆里那些英勇猎人的画像骗了。'
+      ],
+      dataViz: {
+        type: 'brain-energy',
+        title: '大脑的能量账本'
+      },
+      deepDives: [
+        {
+          title: '大脑的能量悖论', icon: '🧠',
+          chain: {
+            premise: '自然选择通常倾向于节约能量。一个消耗大量能量的器官，除非能带来同等甚至更大的生存优势，否则不会在进化中被保留。',
+            evidence: '人类大脑占体重2%，消耗25%能量。为维持大脑运转，人类牺牲了肌肉力量（与黑猩猩相比，人类显著更弱），并缩短了消化系统（肠道变短），这要求食物必须是高质量、易消化的。',
+            conclusion: '大脑的"昂贵"迫使人类走上了一条独特的进化道路：必须寻找更高质量的食物（最终导向烹饪），同时放弃了体力上的竞争优势。这是一场豪赌——数百万年间，这个大脑并未带来明显回报，直到认知革命才真正"回本"。'
+          }
+        },
+        {
+          title: '火与烹饪：沉默的革命', icon: '🔥',
+          chain: {
+            premise: '食物的能量不仅取决于其化学成分，更取决于身体消化吸收的效率。生食需要消耗大量能量来咀嚼和消化。',
+            evidence: '烹饪使蛋白质变性、淀粉糊化，大幅提高了消化效率。黑猩猩每天花约5小时咀嚼生食，而人类烹饪后仅需约1小时进食。这释放出的时间和能量可以"投资"到其他活动——社交、思考、制造工具。',
+            conclusion: '烹饪不是一项"生活技能"，而是一次生物学革命。它本质上是一种"体外消化"，使人类得以突破哺乳动物大脑尺寸的能量天花板。没有火，就不会有后来的认知革命。可以说，厨师比画家更早地改变了人类历史。'
+          }
+        }
+      ]
+    },
+    {
+      id: 'scene-2', number: '场景 02', palette: 'scene2',
+      title: '虚构的力量',
+      subtitle: 'THE POWER OF FICTION',
+      heroQuote: '大量的陌生人之所以能够成功合作，是因为他们相信共同的虚构故事。',
+      narrative: [
+        '大约七万年前，智人的大脑发生了一次关键突变。我们无法确定具体原因——可能是基因的偶然重组——但结果是革命性的：<b>智人获得了讨论"不存在之物"的能力</b>。这听起来微不足道，但它改变了一切。',
+        '让我们想象一个问题：<b>标致汽车公司"是"什么？</b>它不是工厂——工厂可以被炸毁，标致依然存在。它不是工人——所有员工可以被解雇，标致依然存在。它不是股东、不是管理层、不是品牌商标。标致是一个故事，一个数亿人共同相信的虚构故事。只要人们继续相信这个故事，标致就"存在"。',
+        '这就是虚构的力量。<b>黑猩猩可以说"河边有一头狮子"，但它无法说"狮子是我们部落的守护神"。</b>正是后一种表述——关于不存在之物的虚构叙事——使得智人能够突破邓巴数字的限制。',
+        '什么是邓巴数字？灵长类动物学家罗宾·邓巴发现，任何灵长类群体的规模，都受限于大脑新皮质的信息处理能力。对智人而言，<b>这个天然上限大约是150人</b>——这是一个人能够真正了解、信任并维持稳定社会关系的最大人数。',
+        '但看看今天的世界：城市容纳数百万人，帝国统治数亿人，跨国公司在全球运作。这些都超越了150人的上限。<b>秘密就在于虚构故事——法律、宗教、国家、公司、金钱——这些都是智人发明的共同神话</b>，让数百万互不相识的陌生人得以协作。蜜蜂靠基因合作，黑猩猩靠熟人社交，而智人靠想象中的秩序。'
+      ],
+      dataViz: {
+        type: 'dunbar',
+        title: '邓巴数字：合作规模的天花板'
+      },
+      deepDives: [
+        {
+          title: '标致汽车：一个法律虚构的解剖', icon: '🚗',
+          chain: {
+            premise: '公司作为一个"实体"，在物理世界中不存在对应物。它不等于任何有形资产或具体的人。',
+            evidence: '标致公司成立于1896年。阿尔芒·标致到地方法院找了一位律师，走完一套固定仪式（签署文件、宣读条款），于是"标致公司"就诞生了。这与原始部落的巫师通过仪式创造"部落守护灵"在本质上完全相同——都是通过集体想象赋予一个虚构实体以"现实"的力量。',
+            conclusion: '公司是人类有史以来最成功的虚构故事之一。它将"有限责任"这一概念注入法律体系，使个人可以冒险而不必承担全部后果。正是这种"虚构"释放了巨大的经济能量。在法律意义上，标致公司与古埃及的众神没有本质区别——都是由集体信念支撑的想象现实。'
+          }
+        },
+        {
+          title: '150人天花板：邓巴数字', icon: '👥',
+          chain: {
+            premise: '社会关系的维护需要大量认知资源。记住每个人的性格、关系网络、信用记录，都会消耗脑力。灵长类大脑的新皮质大小，决定了它能处理的社会关系上限。',
+            evidence: '邓巴通过对比不同灵长类的新皮质比例与群体规模，推算出智人的社会关系上限约为150人。这个数字在历史中反复出现：罗马军团的基本战术单位（连队）约120人，胡特尔派社区严格控制在150人以下，现代军队的连级单位通常在100-200人之间。',
+            conclusion: '150人是生物学对社会规模施加的硬性限制。任何超越这一限制的人类组织——城市、教会、帝国、公司——都必须依赖某种"虚构秩序"来维系凝聚力。认知革命的真正意义不在于智人变得更聪明，而在于他们学会了编造故事。'
+          }
+        },
+        {
+          title: '认知革命：语言的质变', icon: '💬',
+          chain: {
+            premise: '许多动物都拥有语言能力，可以传递关于环境的事实信息。智人语言的独特之处不在于词汇量或语法复杂度。',
+            evidence: '智人语言的决定性特征是"虚构能力"——描述从未见过、不存在、或纯粹想象之物的能力。这使得三种新型沟通成为可能：①八卦（讨论第三方，建立信任网络）；②计划（讨论未来的假设情境）；③虚构叙事（创造共同信仰体系）。',
+            conclusion: '认知革命的本质是：智人的语言从"描述现实"升级为"创造现实"。一旦你能让一千个人相信同一个虚构故事，他们就能协同行动——即使彼此从未谋面。这是智人超越所有其他人种的根本原因，与体力、脑容量无关。'
+          }
+        }
+      ]
+    },
+    {
+      id: 'scene-3', number: '场景 03', palette: 'scene3',
+      title: '采集者的全能生活',
+      subtitle: 'A DAY IN THE LIFE OF ADAM AND EVE',
+      heroQuote: '采集社会的"原始人"可能比历史上绝大多数农民和工人过得更好——工作更少、饮食更丰富、社交更平等。',
+      narrative: [
+        '提到"原始人"，你脑海中浮现的画面是什么？衣不蔽体、食不果腹、朝不保夕？<b>这是农业社会和工业社会灌输给你的偏见。</b>事实可能恰恰相反。',
+        '采集者的食谱异常丰富。一个典型的采集部落可能食用数十种不同的植物、昆虫、菌类和动物。<b>相比之下，现代农民的食谱极其单调</b>——古代农民可能90%的热量来自单一作物。营养学告诉我们：多样性几乎总是优于单一性。',
+        '工作时间呢？人类学家对现存采集社会的研究表明，<b>采集者平均每天只需"工作"3-6个小时</b>。其余时间用于闲聊、讲故事、玩耍和睡觉。中世纪农民的工作时间远超于此，更不用说现代工厂工人了。',
+        '健康状况同样出人意料。农业社会带来了定居、人口密集和家畜驯化，这成为了传染病的温床。<b>天花、麻疹、结核——这些"文明病"几乎都源于人畜共处的农耕村落</b>。采集者分散居住、频繁迁徙，反而有效避免了瘟疫。',
+        '最具颠覆性的一点或许是社会平等。<b>采集社会几乎没有私有财产的概念</b>，因此也就没有贫富分化。没有国王、没有贵族、没有地主。如果用"平等"作为衡量标准，人类社会在"进步"了一万年之后，反而大幅倒退了。'
+      ],
+      comparison: {
+        dimensions: [
+          { label: '饮食多样性', foraging: { score: 9, text: '数十种植物、动物、昆虫、菌类，营养全面均衡' }, farming: { score: 3, text: '严重依赖1-3种谷物，营养单一，维生素缺乏常见' } },
+          { label: '每日闲暇时间', foraging: { score: 8, text: '每天工作3-6小时，大量时间用于社交、休息和娱乐' }, farming: { score: 3, text: '日出而作日落而息，农忙季节几乎没有休息时间' } },
+          { label: '身体健康', foraging: { score: 8, text: '骨骼强健，身材高大，传染病罕见，牙齿状况良好' }, farming: { score: 4, text: '身高下降，传染病频发，营养不良，椎间盘病变普遍' } },
+          { label: '社会平等', foraging: { score: 9, text: '无私有财产积累，无阶级分化，决策相对民主' }, farming: { score: 2, text: '土地私有化导致阶层固化，国王、贵族与农奴的鸿沟' } },
+          { label: '技能多样性', foraging: { score: 9, text: '每个人都是通才：追踪、采集、制造工具、导航、急救' }, farming: { score: 4, text: '高度专业化分工，个体技能窄化，依赖他人生存' } }
+        ]
+      },
+      deepDives: [
+        {
+          title: '"最初的富裕社会"假说', icon: '🌿',
+          chain: {
+            premise: '"贫穷"不是物质匮乏的绝对状态，而是欲望与获取能力之间的差距。如果一个社会的欲望有限且容易满足，那么即使物质简朴，其成员也可以被视为"富裕"的。',
+            evidence: '人类学家马歇尔·萨林斯在1966年提出"原初丰裕社会"理论。他对桑人、澳大利亚原住民等采集社会的研究表明：①他们的物质需求极少且容易满足；②他们不"储蓄"因为环境本身就是仓库；③他们拥有大量自由支配时间；④他们不认为自己是"贫穷"的。',
+            conclusion: '真正的"贫穷"是农业革命的发明。定居生活创造了私有财产的概念，私有财产创造了"多"与"少"的比较，比较创造了匮乏感。采集者不是"还没变富的穷人"，而是"还没发明贫穷的富人"。这从根本上挑战了"历史即进步"的线性叙事。'
+          }
+        }
+      ]
+    },
+    {
+      id: 'scene-4', number: '场景 04', palette: 'scene4',
+      title: '毁天灭地的洪水',
+      subtitle: 'THE FLOOD',
+      heroQuote: '智人是有史以来最致命的物种。早在工业革命之前，我们就已经是动物界的连环杀手。',
+      narrative: [
+        '让我们追踪一条血迹斑斑的路线。<b>大约45,000年前，智人首次登陆澳大利亚。</b>在此之前，这片大陆拥有一套独立演化了数百万年的壮观巨型动物群——体重超过200公斤的双门齿兽、巨型袋狮、身长7米的巨蜥。智人到达后的几千年内，这些动物全部灭绝。',
+        '巧合？让我们继续。<b>大约14,000年前，智人跨过白令陆桥进入美洲。</b>美洲拥有比非洲更壮观的巨型动物群：猛犸象、乳齿象、剑齿虎、巨型地懒。在智人到达后的短短两千年内，北美47个大型哺乳动物属中有34个消失，南美损失更为惨重。',
+        '模式清晰得令人不安：<b>每当智人踏上一片新大陆，该大陆的大型动物就会在地质学意义上的"瞬间"灭绝。</b>这不是巧合，不是气候变化，而是系统性的生态屠杀。',
+        '为什么大型动物如此脆弱？因为它们繁殖缓慢，数量本就稀少，而且——关键的一点——<b>它们从未见过人类，完全不知道该如何应对这种新型捕食者</b>。非洲和亚洲的大型动物之所以幸存，恰恰是因为它们与人类共同进化了数百万年，学会了恐惧和回避。',
+        '这段历史的意义远超学术考古。<b>它粉碎了"与自然和谐共处的原始人"这一浪漫神话。</b>智人从来就不是"自然之子"——我们从走出非洲的第一天起，就是一台毁灭性的生态机器。工业革命不过是将这台机器的效率提升了几个数量级而已。'
+      ],
+      extinction: {
+        regions: [
+          { name: '澳大利亚', arrival: '约45,000年前', percentLost: 95,
+            species: [ {name:'双门齿兽',icon:'🦛',weight:'2.8吨'},{name:'巨型短面袋鼠',icon:'🦘',weight:'230公斤'},{name:'袋狮',icon:'🦁',weight:'130公斤'},{name:'古巨蜥',icon:'🦎',weight:'600公斤'},{name:'牛顿巨鸟',icon:'🦅',weight:'250公斤'},{name:'巨型陆龟',icon:'🐢',weight:'200公斤'} ],
+            note: '24种体重超过50公斤的动物中，23种在智人到达后灭绝' },
+          { name: '北美洲', arrival: '约14,000年前', percentLost: 73,
+            species: [ {name:'猛犸象',icon:'🦣',weight:'6吨'},{name:'乳齿象',icon:'🐘',weight:'5吨'},{name:'剑齿虎',icon:'🐅',weight:'400公斤'},{name:'巨型地懒',icon:'🦥',weight:'4吨'},{name:'美洲拟狮',icon:'🦁',weight:'350公斤'},{name:'恐狼',icon:'🐺',weight:'68公斤'} ],
+            note: '47个大型哺乳动物属中34个灭绝，速度之快在地质史上前所未有' },
+          { name: '南美洲', arrival: '约12,000年前', percentLost: 83,
+            species: [ {name:'大地懒',icon:'🦥',weight:'4吨'},{name:'箭齿兽',icon:'🦛',weight:'1.5吨'},{name:'居维叶马',icon:'🐴',weight:'500公斤'},{name:'雕齿兽',icon:'🐢',weight:'2吨'},{name:'恐鹤',icon:'🦅',weight:'130公斤'} ],
+            note: '南美60个大型哺乳动物属中约50个消失' },
+          { name: '马达加斯加 & 新西兰', arrival: '约1,500 / 800年前', percentLost: 100,
+            species: [ {name:'象鸟',icon:'🦤',weight:'500公斤'},{name:'巨型狐猴',icon:'🐒',weight:'200公斤'},{name:'恐鸟',icon:'🦅',weight:'230公斤'},{name:'哈斯特鹰',icon:'🦅',weight:'15公斤'} ],
+            note: '最晚被发现的岛屿——灭绝也最晚发生，但模式完全一致' }
+        ]
+      },
+      deepDives: [
+        {
+          title: '"过度捕杀"假说 vs 气候变化假说', icon: '⚔️',
+          chain: {
+            premise: '大型动物灭绝有两种主流解释：①气候变化；②人类过度捕杀。如果气候是主因，灭绝应与气候事件同步；如果人类是主因，灭绝应与人类到达时间同步。',
+            evidence: '关键证据：①澳大利亚的灭绝发生在45,000年前，当时并无重大气候事件；②美洲的灭绝恰好与克洛维斯人扩散路线吻合；③马达加斯加和新西兰的灭绝分别发生在1,500年前和800年前——远在冰期之后——而恰好与人类到达的时间一致。',
+            conclusion: '时间线是不会说谎的。四次独立的灭绝事件，发生在四个不同时代、四种不同气候条件下，唯一的共同变量是：智人的到达。气候可能是帮凶，但主犯无疑是人类。'
+          }
+        },
+        {
+          title: '生态天真：为什么大型动物毫无防备', icon: '🦤',
+          chain: {
+            premise: '恐惧是进化习得的。一种动物必须经历足够多代与捕食者的共存，才能进化出对该捕食者的回避本能。',
+            evidence: '非洲和亚洲的动物与人属物种共存了超过200万年，逐渐学会了恐惧人类。但澳大利亚、美洲的动物从未见过人类。当代研究人员在加拉帕戈斯群岛和南极洲观察到相似现象：那里的动物对人类毫无恐惧。',
+            conclusion: '"生态天真"解释了为什么非洲仍有大象和犀牛，而其他大陆的巨兽却几乎全部灭绝。历史的残酷教训是：与人类的第一次接触，往往就是最后一次。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART II · 农业革命 · THE AGRICULTURAL REVOLUTION
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 5: 奢侈品陷阱
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-5', number: '第二部分 · 场景 05', palette: 'scene5',
+      title: '史上最大的骗局',
+      subtitle: "HISTORY'S BIGGEST FRAUD",
+      heroQuote: '我们以为自己驯化了小麦，但其实是小麦驯化了我们。',
+      narrative: [
+        '大约一万年前，智人开始将越来越多的精力投入到少数几种动植物的操控上。从日出到日落，人们播种、浇水、除草、牧羊。他们以为这种新生活方式会带来更好的生活。<b>这是人类历史上最大的一次误判。</b>',
+        '让我们用冷酷的数据来审视"农业革命"的真实面目。一个采集者每天需要工作3-6小时，食谱包含数十种食物来源，营养均衡。而一个早期农民呢？<b>每天从黎明弯腰劳作到天黑，食谱缩减到一两种谷物，营养严重失衡。</b>考古学家发现，农业革命后人类的平均身高下降了约12厘米，骨骼疾病（特别是脊椎和膝关节）激增，龋齿率飙升。',
+        '那为什么人类没有回头？答案是一个残酷的陷阱：<b>人口增长</b>。农业使每单位土地能养活更多的人——虽然每个人的生活质量下降了，但总人口暴增。当一个村庄的人口从50人增长到500人后，他们已经不可能再回到采集生活——周围的土地根本养不活这么多采集者。',
+        '赫拉利将此称为<b>"奢侈品陷阱"</b>——一种看似微小的改善，慢慢变成了不可逆转的必需品。第一代种小麦的人可能只是为了在饮食中"补充"一点谷物。但几代人之后，他们的后代已经完全依赖小麦，再也离不开了。这个模式在人类历史中反复上演：从农业到智能手机，从电子邮件到社交媒体。',
+        '从小麦的角度来看，农业革命是一次巨大的成功。<b>一万年前，小麦只是中东一种不起眼的野草；今天，它覆盖了地球225万平方公里的土地</b>——这是地球表面积的1.5%。如果以基因传播的成功度来衡量，小麦是地球上最成功的植物。而实现这一切的工具，就是智人。',
+        '所以问题来了：到底是谁驯化了谁？是智人驯化了小麦，还是小麦驯化了智人？一种野草成功地让一种灵长类动物放弃了自由自在的生活，转而日复一日地为它浇水、施肥、驱赶害虫。<b>如果用"基因复制的成功率"作为衡量标准，小麦赢了，智人输了。</b>'
+      ],
+      dataViz: {
+        type: 'agri-trap',
+        title: '奢侈品陷阱：人口增长 vs 个体生活质量'
+      },
+      comparison: {
+        dimensions: [
+          { label: '饮食多样性', foraging: { score: 9, text: '数十种植物、动物、昆虫、菌类，营养全面均衡，几乎不存在维生素缺乏' }, farming: { score: 2, text: '严重依赖1-2种谷物（小麦/稻米），蛋白质和维生素匮乏，铁缺乏症普遍' } },
+          { label: '每日劳动时间', foraging: { score: 8, text: '3-6小时采集狩猎，剩余时间社交、休息、游戏、讲故事' }, farming: { score: 2, text: '黎明到黄昏连续劳作10-14小时：播种、除草、灌溉、收割、储存' } },
+          { label: '骨骼与关节健康', foraging: { score: 8, text: '骨密度高，关节灵活，脊椎健康——多样化的运动模式防止了重复性损伤' }, farming: { score: 2, text: '考古遗骨显示：椎间盘突出、膝关节磨损、足弓塌陷普遍——长期弯腰和负重的代价' } },
+          { label: '抗饥荒能力', foraging: { score: 7, text: '食物来源多元化，一种食物歉收可转向其他数十种替代品' }, farming: { score: 2, text: '单一作物极度脆弱——一场旱灾、蝗灾或病害就意味着全村饥荒' } },
+          { label: '传染病风险', foraging: { score: 8, text: '分散居住，频繁迁徙，人畜隔离——传染病难以大规模传播' }, farming: { score: 2, text: '定居密集+人畜共处=瘟疫温床。天花、麻疹、流感、结核均源于农耕社会' } },
+          { label: '社会地位平等', foraging: { score: 9, text: '无土地私有、无粮仓积累、无阶级——你带不走的东西不会变成权力' }, farming: { score: 2, text: '粮食可储存→财富可积累→阶级分化：地主/祭司/国王 vs 农奴/奴隶' } },
+          { label: '人口总量', foraging: { score: 2, text: '全球采集者总人口峰值约500-800万——被土地承载力严格限制' }, farming: { score: 9, text: '人口爆发：公元前5000年约500万→公元1年约2.5亿。更多的人，但更差的生活' } }
+        ]
+      },
+      deepDives: [
+        {
+          title: '奢侈品陷阱：不可逆的棘轮效应', icon: '🪤',
+          chain: {
+            premise: '进化不关心个体的幸福感，只关心基因的复制数量。一种行为即使降低了每个个体的生活质量，只要它能增加群体的总人口（从而增加基因拷贝数），就会被"选择"保留下来。',
+            evidence: '农业革命的全过程完美印证了这一逻辑：①第一代农民只是在采集之余"顺便"种一点小麦，作为补充食物——这是"奢侈品"阶段。②几代人之后，人口因为额外的卡路里而增长，但食谱多样性下降——小麦从奢侈品变成了"日常品"。③当人口增长到原有土地无法养活的程度时，再也没有人能回到采集生活——小麦变成了"必需品"。④为了养活更多的人口，需要开垦更多的土地、投入更多的劳动——一个永无止境的正反馈循环。',
+            conclusion: '"奢侈品陷阱"不是农业时代的独特现象，它是人类行为的底层模式。电子邮件最初是为了"节省时间"的奢侈品，如今每天消耗数小时已成为不可摆脱的必需品。汽车、空调、智能手机——每一种"让生活更轻松"的发明，最终都会变成一种新的束缚。我们永远在用今天的自由换取明天的便利，然后发现便利已变成了枷锁。'
+          }
+        },
+        {
+          title: '小麦的视角：一株野草的全球征服', icon: '🌾',
+          chain: {
+            premise: '评判一个物种的进化"成功"，不看个体的幸福感或智力水平，只看一个指标：该物种DNA拷贝在地球上的总数量和分布范围。',
+            evidence: '一万年前，小麦只是中东"肥沃新月带"的一种普通野草，占地面积微不足道。今天，小麦种植面积达225万平方公里（约等于英国面积的9倍），是地球上分布最广的植物之一。对比之下：智人个体的生活质量在农业革命后显著下降——身高降低、疾病增多、劳动时间激增、社会不平等加剧。但智人的总数量从500万暴增到数亿。',
+            conclusion: '如果我们站在小麦的基因角度，农业革命是一次辉煌的胜利。小麦"说服"了一种聪明的灵长类动物为它清除竞争者（除草）、提供水源（灌溉）、运送养分（施肥）、保护它免受敌害（驱虫）。智人以为自己是主人，但他们的每一天、每一滴汗水，都在为小麦的基因扩张服务。这不是隐喻——这就是从进化论角度看到的事实。'
+          }
+        },
+        {
+          title: '农业革命为何不可逆转', icon: '🔒',
+          chain: {
+            premise: '一种社会变革能否逆转，取决于变革过程中是否产生了结构性锁定（structural lock-in）——即变革创造了某些条件，使得回到原状在物理上或社会上已不可能。',
+            evidence: '农业革命至少产生了三重锁定：①人口锁定——农业提高了每公顷土地的卡路里产出，人口随之膨胀。一旦人口超过了采集模式的承载上限，就不可能回头。②知识锁定——定居数代后，采集技能（识别数百种野生植物、追踪动物、导航）在几代人内失传。③社会结构锁定——农业创造了粮仓、税收、军队、官僚体系，这些制度一旦建立就会自我强化。',
+            conclusion: '这三重锁定解释了为什么农业革命尽管让大多数人变得更悲惨，却从未被推翻。不是因为农民"选择"了这种生活，而是因为他们在一步步微小的"改良"中，把退路彻底封死了。人类从来不是在"采集"和"农耕"之间做了一次理性选择——他们是一步步滑入了一个无法攀出的陷阱。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 6: 想象的秩序
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-6', number: '第二部分 · 场景 06', palette: 'scene6',
+      title: '建设想象的秩序',
+      subtitle: 'BUILDING PYRAMIDS',
+      heroQuote: '人类创造的每一种秩序——从《汉谟拉比法典》到《美国独立宣言》——都是建立在想象之上，而非建立在客观现实之上。',
+      narrative: [
+        '农业革命不仅改变了人类的食物来源，更从根本上重塑了人类社会的组织方式。当数千人开始定居在同一个地区时，一个全新的问题浮现了：<b>如何让互不相识的陌生人和平共处、协同合作？</b>答案是虚构——规模更大、更精密的虚构。',
+        '让我们并排审视两份人类历史上最著名的法律文本。<b>公元前1776年，巴比伦国王汉谟拉比颁布法典</b>，宣称自己受命于众神，将人分为上等人、平民和奴隶，各自有不同的权利和义务。他宣称这是宇宙的自然秩序。',
+        '<b>公元1776年，北美十三殖民地发表《独立宣言》</b>，宣称"人人生而平等，造物主赋予他们若干不可剥夺的权利"。它宣称这是不证自明的真理。',
+        '赫拉利的关键洞察是：<b>这两份文件都在说谎——或者更准确地说，都在讲故事。</b>所谓"上等人/奴隶"的等级划分不存在于生物学中，所谓"人人生而平等"同样不存在于生物学中。没有任何科学实验能检测出"权利"这种分子。两份文件都是"想象的秩序"——一套大多数人选择相信的虚构规则。',
+        '但"想象的秩序"绝非无力的幻觉。它之所以强大到可以主宰数百万人的命运，是因为它做到了三件事：<b>①它被嵌入了物质世界</b>（法典刻在石碑上、等级体现在建筑格局中）；<b>②它塑造了我们的欲望</b>（我们以为出于本能的愿望，其实是文化编程的产物）；<b>③它是主体间的</b>（你一个人不信没用，必须所有人同时停止相信，秩序才会崩塌）。',
+        '最深刻也最令人不安的是第二点。想想看：一个中世纪欧洲贵族的最高理想是参加十字军东征——为上帝收复圣地。一个现代西方人的最高理想可能是环球旅行——追寻自我、体验多元文化。<b>这两种"发自内心"的渴望，没有一种来自生物本能，全部来自各自时代的想象秩序。</b>浪漫主义告诉你要"追随内心"，消费主义告诉你要"购买体验"——你以为是自己在选择，其实是秩序在替你选择。'
+      ],
+      dataViz: {
+        type: 'two-documents',
+        title: '两份"虚构"文本的对照解剖'
+      },
+      deepDives: [
+        {
+          title: '《汉谟拉比法典》vs《独立宣言》：同一种谎言', icon: '⚖️',
+          chain: {
+            premise: '一个社会秩序要被视为"正当"，就必须声称自己反映了某种超越人类意志的客观真理——无论这种真理是"神的旨意"还是"自然法则"。',
+            evidence: '《汉谟拉比法典》声称：恩利尔神命令汉谟拉比"让正义之光照耀大地"。法典将人分为三等：上等自由民的生命价值30银舍客勒，平民的生命价值20银舍客勒，奴隶的生命价值……由其主人的财产损失决定。汉谟拉比称此为"宇宙的公正秩序"。三千多年后，《独立宣言》声称："我们认为这些真理是不证自明的：人人生而平等，造物主赋予他们某些不可剥夺的权利。"——但这里的"平等"最初只适用于白人有产男性，不包括女性、黑人、原住民。杰斐逊本人拥有超过600名奴隶。',
+            conclusion: '两份文件使用了完全相同的修辞策略：将一套虚构的社会规则伪装成超越人类的客观真理。区别不在于哪个"更真"——从纯粹的生物学角度看，两个都是虚构。区别在于哪个虚构故事能让更多人相信，从而更有效地组织大规模合作。当代人觉得"人人平等"是真理而"等级制度"是迷信，只是因为我们恰好生活在前一个故事占据主流的时代。'
+          }
+        },
+        {
+          title: '秩序如何重塑你的欲望', icon: '🧲',
+          chain: {
+            premise: '人类天然的生物欲望极其有限：食物、温暖、安全、性。然而现代人拥有成千上万种"欲望"——旅行、升职、时尚、浪漫爱情、自我实现。这些额外的欲望从何而来？',
+            evidence: '赫拉利追溯了两大"欲望制造机器"：①浪漫主义（约1800年起）——告诉人们"你必须追随内心、尽可能多地体验不同事物，才能发挥全部潜能"。在浪漫主义之前，没有人觉得"环游世界"是人生必做的事。②消费主义（约1900年起）——告诉人们"你必须购买更多产品和体验，才能获得幸福"。在消费主义之前，没有人觉得新鞋子、新手机会让自己更快乐。这两种意识形态结合后产生了现代旅游业——浪漫主义提供动机（"去远方找自己"），消费主义提供方法（"买一张机票"）。',
+            conclusion: '你以为是自己在"选择"去巴黎度假，但这个选择从头到尾都是想象秩序的产物：浪漫主义编程了你的"渴望远方"，消费主义编程了你的"用消费来实现渴望"，旅游业则提供了标准化的实现路径。如果你生在中世纪，你的"内心渴望"会是去耶路撒冷朝圣。这不是比喻——这就是想象秩序运作的方式：它不命令你做什么，它让你"打心底"想做什么。'
+          }
+        },
+        {
+          title: '"主体间现实"：为什么你无法独自逃离', icon: '🕸️',
+          chain: {
+            premise: '世界上存在三种层次的现实：①客观现实（一块石头，无论你信不信它都存在）；②主观现实（我的头疼，只存在于我的意识中）；③主体间现实（金钱、国家、法律——存在于多个意识的共同网络中）。想象的秩序属于第三种。',
+            evidence: '主体间现实有一个极其狡猾的特征：你无法通过个人意志来改变它。你一个人不相信金钱的价值，不会让金钱消失——因为其他70亿人仍然相信。你一个人不承认法律的权威，不会让法律消失——因为警察和法官仍然相信。要推翻一个想象的秩序，你必须让数百万人同时停止相信，并且同时开始相信另一个新的想象秩序。这就是为什么革命如此罕见：它需要用一个新的虚构来替换旧的虚构，而不是用"现实"来替换"虚构"。',
+            conclusion: '这是赫拉利最反直觉的洞察之一：我们永远无法走出想象的秩序，我们只能从一个想象秩序跳到另一个。法国大革命推翻了"国王的神圣权力"这一虚构，代之以"人民主权"这一新的虚构。苏联解体推翻了"共产主义"这一虚构，代之以"自由市场"这一新的虚构。监狱的围墙不在外面——它在我们的大脑里。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 7: 记忆过载
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-7', number: '第二部分 · 场景 07', palette: 'scene7',
+      title: '记忆过载',
+      subtitle: 'MEMORY OVERLOAD',
+      heroQuote: '苏美尔人发明书写，不是为了写诗或记录历史，而是为了记账。人类最伟大的智识工具，诞生于最平庸的官僚需求。',
+      narrative: [
+        '农业革命催生了前所未有的问题：当数千人定居在同一地区，当粮食需要储存和分配，当税收需要征集和记录——<b>人类大脑的信息处理能力开始力不从心。</b>一个部落首领可以记住50个家庭的欠款，但一个王国的财务大臣不可能记住5万笔交易。',
+        '解决方案在大约公元前3500年的苏美尔出现：<b>书写。</b>但最早的文字与我们想象的完全不同——它们不是诗歌、不是故事、不是法律。最早的苏美尔泥板记录的是："29,086单位大麦 / 37个月 / 库辛"。这是一笔交易记录。文字的发明者不是诗人，而是会计。',
+        '书写系统的诞生标志着一种全新的信息处理方式。<b>人类大脑以自由联想和模式识别见长，但数学运算和海量数据存储是它的致命弱点。</b>文字——以及后来的数字系统——本质上是一种"外部记忆设备"，弥补了大脑的先天缺陷。',
+        '但文字的影响远不止于记账。<b>它从根本上改变了人类思维的方式。</b>官僚体系一旦掌握了文字，就可以将整个社会编入档案系统。每个人都有了编号、记录、类别。苏美尔的文字催生了最早的官僚制度，而官僚制度至今仍是人类管理大规模社会的唯一有效工具。',
+        '最具讽刺意味的是：<b>数字系统创造了一种"局部真理"的认知陷阱。</b>当现实被翻译为数字和类别后，不可量化的部分就消失了。一个人的痛苦、尊严、梦想——这些无法被编入档案的东西——在官僚体系的视角中就不存在。现代社会中，我们用GDP衡量国家、用分数衡量学生、用KPI衡量员工——每一次量化都是一次对复杂现实的系统性简化。'
+      ],
+      deepDives: [
+        {
+          title: '书写：一种反人脑的信息技术', icon: '📝',
+          chain: {
+            premise: '人类大脑进化了数百万年，优化了模式识别、社交智能和空间导航等功能。但它从未针对大规模精确数据存储和检索进行优化。',
+            evidence: '苏美尔文字（楔形文字）最初只能记录数量和名称，无法表达完整句子。它是一种"数据库语言"而非"文学语言"。同样，印加帝国的结绳记事（奇普）是一种纯粹的数据存储工具。这些系统都不是为了"表达思想"而设计的，而是为了弥补大脑在数据处理方面的缺陷。',
+            conclusion: '书写不是人类思想的自然延伸，而是对人脑局限性的一种技术补丁。正如眼镜弥补了视力缺陷，文字弥补了记忆和计算的缺陷。但这个"补丁"的副作用是深远的：它使得大规模官僚制度成为可能，而官僚制度则彻底改变了人类社会的运作方式——从个人化、面对面的关系网络，变成了非人化的档案系统。'
+          }
+        },
+        {
+          title: '官僚体系：把人变成数字', icon: '🏛️',
+          chain: {
+            premise: '管理大规模社会需要将复杂的现实简化为标准化的类别和数字。这种简化是必要的，但它不可避免地扭曲现实。',
+            evidence: '古埃及的人口普查将每个家庭简化为一组数据：户主姓名、家庭人口、牲畜数量、土地面积。这使得征税成为可能。但一个家庭的全部真实——成员之间的情感、生活质量、文化传统——在表格中消失了。现代社会更为极端：你的信用评分、教育文凭、医疗记录——这些数字"代表"了你，但它们与真实的你之间有着巨大鸿沟。',
+            conclusion: '每一种书写和记录系统都在执行同一个操作：将不可简化的人类现实强行压缩为可操作的数据。这个压缩过程中丢失的信息——正是人之为人最重要的部分。但没有这种压缩，就没有帝国、没有税收、没有法律——也就没有"文明"。文明的代价，就是把人变成档案中的一行条目。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 8: 历史从无正义
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-8', number: '第二部分 · 场景 08', palette: 'scene8',
+      title: '历史从无正义',
+      subtitle: 'THERE IS NO JUSTICE IN HISTORY',
+      heroQuote: '种姓、种族、性别——人类历史上每一种不平等的根源都不是自然，而是虚构。但虚构一旦制度化，就会变得比自然更加牢不可破。',
+      narrative: [
+        '如果想象的秩序是虚构的，那么为什么有些人被分配到金字塔的顶端，而另一些人被踩在底层？<b>答案不在于自然，而在于一个自我强化的恶性循环。</b>',
+        '让我们以美国种族制度为例。1865年，奴隶制在法律上被废除。但此时，三百年的歧视已经在社会中形成了一个"正反馈循环"：<b>黑人因为长期被剥夺教育机会，所以平均教育水平更低；因为教育水平低，所以只能从事低收入工作；因为收入低，所以后代仍然缺乏教育机会。</b>歧视创造了一种"客观差距"，而这种差距反过来又被用作歧视的"证据"。',
+        '这个模式在所有等级制度中都一模一样。<b>印度的种姓制度始于大约三千年前一次偶然的社会分工</b>，入侵的雅利安人将自己定义为高种姓，将本地人定义为低种姓。三千年后，这种最初的偶然分配已经被编码到宗教教义、法律条文、社会习俗的每一个角落中——以至于许多低种姓的人自己也相信，他们天生就低人一等。',
+        '性别的等级制度更加古老、更加普遍。<b>在已知的所有人类社会中——无论采集部落还是现代民主国家——男性都占据了更高的社会地位。</b>这不可能用文化差异来解释（因为每种文化都一样），但也不能简单地用生物学来解释。',
+        '为什么？因为<b>生物学上的"力量优势"并不能解释社会中的权力分配。</b>奴隶主不是最强壮的人，而是最善于组织和操控虚构故事的人。在历史上，最有权力的人群从来不是体力最强的，而是社交网络最广、叙事能力最强的。性别不平等不是来自肌肉，而是来自故事。',
+        '赫拉利的核心论点令人不安：<b>我们没有任何证据证明历史上的等级制度反映了自然秩序。</b>但我们同样没有办法通过"揭穿虚构"来消除不平等——因为想象秩序的力量恰恰在于，它不会因为被识破而崩塌。即使每个人都知道种族差异是虚构的，制度化的种族歧视仍然会通过经济结构、教育系统和社会网络自我维持。'
+      ],
+      deepDives: [
+        {
+          title: '恶性循环：歧视如何自我证明', icon: '🔄',
+          chain: {
+            premise: '一种偶然的历史事件（征服、分工、基因突变）可以在人群之间制造最初的区分。一旦这种区分被制度化，它就会创造出真实的差距——而这种差距反过来会被用来"证明"最初的区分是合理的。',
+            evidence: '案例：①美国黑人——17世纪的奴隶贸易是一个经济决策（非洲劳动力廉价），而非基于任何"科学"依据。但三百年的奴役制造了教育、财富和健康的真实差距，这些差距至今仍在统计数据中可见。②印度达利特——"不可接触者"的标签最初可能源于某种职业分工（处理尸体、清扫粪便），但经过三千年的制度化，它已经变成了一种几乎不可逃脱的身份牢笼。',
+            conclusion: '所有等级制度的维持都依赖同一个逻辑：用自己制造的后果来证明自己的前提。这是一种完美的循环论证，在逻辑上不成立，但在社会中极其有效。打破这个循环需要的不是"正确的认识"，而是对制度本身的系统性重建。'
+          }
+        },
+        {
+          title: '性别不平等：最持久的想象秩序', icon: '⚤',
+          chain: {
+            premise: '在地球上已知的所有人类社会中——从采集部落到工业国家——男性在政治、经济和宗教领域都占据主导地位。这种普遍性表明它可能有某种生物学根源。但生物学能解释的比我们以为的要少得多。',
+            evidence: '三种常见的生物学解释及其问题：①"力量假说"——男性平均体力更强，但历史上的权力从不属于最强壮的人。军事指挥官不是因为臂力才指挥军队。②"攻击性假说"——睾酮使男性更具攻击性，但最成功的领导者通常是善于合作和操纵的人，而非最暴力的人。③"父权基因假说"——经过数百万年的选择，男性基因可能倾向于统治。但这无法解释为何不同社会中性别权力差距的大小存在巨大差异。',
+            conclusion: '生物学不能完全解释性别不平等，这意味着其中有大量成分来自想象秩序。但与种族和种姓不同，性别不平等至今仍然缺乏令人信服的完整解释——它可能是多种因素（生物学、经济结构、文化编程）交织的结果。赫拉利坦诚承认：这是他书中最重要的未解之谜。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART III · 人类的融合统一 · THE UNIFICATION OF HUMANKIND
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 9: 金钱的味道
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-9', number: '第三部分 · 场景 09', palette: 'scene9',
+      title: '金钱的味道',
+      subtitle: 'THE SCENT OF MONEY',
+      heroQuote: '金钱是有史以来最成功的虚构故事——它是唯一一个所有人都相信的故事，即使是那些彼此仇恨、互不信任的人。',
+      narrative: [
+        '历史有一个清晰的大趋势：<b>从无数分散的小文化，逐渐融合为少数几个大文明，最终走向单一的全球文明。</b>推动这一融合的三大力量是：金钱、帝国和宗教。其中，金钱是最普世的。',
+        '让我们思考一个问题：为什么一个基督徒和一个穆斯林无法就上帝的本质达成一致，一个资本家和一个共产主义者无法就经济制度达成一致——<b>但他们都愿意接受同一张美元钞票？</b>',
+        '金钱的本质不是硬币或纸钞，而是一种<b>互信系统</b>。一枚古罗马金币的价值不在于它含有多少克黄金（虽然这有帮助），而在于数百万人相信用这枚金币可以换取其他商品和服务。金钱之所以有效，不是因为它有内在价值，而是因为每个人都相信其他人也相信它有价值。',
+        '在金钱出现之前，人类依赖物物交换。但物物交换有一个致命缺陷：<b>"需求的双重巧合"问题。</b>如果你是一个苹果农，想要买鞋，你必须找到一个恰好想吃苹果的鞋匠。金钱消除了这个障碍——它是一种可以转换为任何商品的通用媒介。',
+        '但金钱的真正魔力不在于便利性。<b>金钱是人类发明的最强大的信任机制。</b>两个素不相识、语言不通、宗教不同的陌生人，仅凭金钱就可以展开高效合作。正因如此，金钱成为了人类文化融合的第一推动力：丝绸之路上的商队不需要共同信仰——他们只需要共同相信金银的价值。',
+        '<b>但金钱也有阴暗面。</b>当一切都可以被标价时，一切也就可以被交易——包括人的尊严、健康和生命。奴隶贸易之所以可能，正是因为金钱将人变成了可以买卖的商品。金钱创造了前所未有的合作能力，也创造了前所未有的商品化能力。这是同一枚硬币的两面。'
+      ],
+      dataViz: {
+        type: 'money-evolution',
+        title: '货币演化：从大麦到比特币'
+      },
+      deepDives: [
+        {
+          title: '金钱为什么比宗教更普世', icon: '💰',
+          chain: {
+            premise: '一种信念系统要成为"普世的"，它必须满足一个条件：即使互不信任的人也愿意接受它。宗教要求信仰，帝国要求服从，但金钱只要求一件事——相信别人也会接受它。',
+            evidence: '历史上从未出现过一种所有人都接受的宗教或意识形态。但到公元前1世纪，地中海世界已经形成了统一的货币区——罗马帝国的臣民和敌人都使用同一种货币。到19世纪，金本位制创造了人类历史上第一个真正的全球信任系统。今天，即使是朝鲜和美国这样的死对头，在暗地里也接受同一种美元。',
+            conclusion: '金钱之所以比任何宗教和意识形态都更加普世，是因为它的信仰要求最低。你不需要理解量子力学就能使用电脑，你也不需要理解货币理论就能使用金钱。金钱是一种"最低公约数"的信任系统——它把对彼此的信任降低为对一种符号的信任。'
+          }
+        },
+        {
+          title: '金钱的阴暗面：当一切都有价格', icon: '⚖️',
+          chain: {
+            premise: '金钱的本质是一种"通用转换器"——它可以将任何一种价值转换为另一种。这种转换能力是金钱力量的来源，也是它危险的来源。',
+            evidence: '在前货币社会中，许多事物是不可交换的：荣誉不能买卖，忠诚不能标价，健康不能转让。但金钱模糊了所有这些边界。18-19世纪的大西洋奴隶贸易中，超过1200万人被装船跨越大西洋——他们的价格标签从50美元到500美元不等，取决于年龄、性别和健康状况。今天，在发展中国家，人体器官、儿童甚至"公民身份"都有明确的市场价格。',
+            conclusion: '金钱创造了一个冷酷的悖论：它是促进人类合作的最强大工具，同时也是将人异化为商品的最有效工具。每当我们说"这不应该用钱来衡量"时，我们都在抵抗金钱的无边扩张。但这场抵抗在历史上几乎从未成功。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 10: 帝国的愿景
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-10', number: '第三部分 · 场景 10', palette: 'scene10',
+      title: '帝国的愿景',
+      subtitle: 'THE VISION OF EMPIRE',
+      heroQuote: '帝国是人类文化融合最强大的引擎。今天我们所珍视的大多数文化遗产——从哲学到美食——几乎都是帝国的产物。',
+      narrative: [
+        '帝国是一个令现代人感到矛盾的词。我们被教导帝国是邪恶的——殖民压迫、文化灭绝、种族屠杀。<b>但如果我们诚实地审视历史，就必须承认一个令人不适的事实：帝国是人类文化融合最重要的推动力。</b>',
+        '什么是帝国？赫拉利给出了两个定义性特征：<b>①统治大量不同民族和文化；②拥有灵活可扩展的边界和不断膨胀的自我认同。</b>一个国家只统治一种人民，不算帝国；一个征服者如果不吸纳被征服者，也不算帝国。',
+        '帝国的真正力量不在于军事征服——那只是第一步。<b>帝国的力量在于同化：将被征服者变成自己人。</b>罗马帝国征服了高卢、西班牙和北非，然后将当地精英同化为罗马公民。几代人之后，"高卢人"已经不存在了——他们变成了说拉丁语、穿罗马袍的罗马人。',
+        '这种同化过程是单向的、不可逆的，而且——这才是关键——<b>被同化者最终会认为这就是"自己的文化"。</b>今天的印度人以印度文化为傲，但这种"印度文化"在很大程度上是英帝国的产物：英语是其官方语言之一，板球是其国民运动，议会民主是其政治制度。这些都不是"原生"的印度文化，而是帝国留下的遗产。',
+        '赫拉利不是在为帝国辩护。他的观点更加微妙：<b>今天我们所珍视的绝大多数文化成就——包括"人权""自由""民族自决"——本身就是帝国文化的产物。</b>反帝国主义的语言和概念，恰恰来自帝国。这不是虚伪——这是帝国文化融合力量的终极证明。',
+        '21世纪最大的问题或许不是"帝国是否好的"，而是<b>全球化本身是否正在创造一种新形式的帝国——一个没有皇帝的帝国</b>，它通过市场、媒体和技术标准，将全人类纳入同一个文化系统。'
+      ],
+      deepDives: [
+        {
+          title: '帝国的文化炼金术：从征服到同化', icon: '👑',
+          chain: {
+            premise: '军事征服可以控制领土，但只有文化同化才能创造持久的帝国。一个帝国如果只靠暴力维持，将在第一代统治者去世后崩溃。',
+            evidence: '罗马模式：征服→修建道路和城市→推广拉丁语和罗马法→开放公民权→被征服者精英主动罗马化→几代人后"他们"变成"我们"。同一模式在中华帝国中也清晰可见：汉朝征服了南方的百越，推广汉字、儒学和郡县制，几百年后"百越人"消失了——他们变成了"中国人"。阿拉伯帝国征服了埃及、波斯、北非，推广阿拉伯语和伊斯兰教——今天这些地区的人自称"阿拉伯人"。',
+            conclusion: '帝国消灭了无数独特的文化，但也创造了我们今天所说的"世界文化遗产"。希腊哲学由罗马帝国传遍欧洲，佛教由孔雀帝国和贵霜帝国传遍亚洲，伊斯兰文明由阿拉伯帝国传遍半个地球。反帝国主义者面对的尴尬真相是：他们自己的语言、概念和价值观，几乎全部来自帝国。'
+          }
+        },
+        {
+          title: '全球帝国：21世纪的隐形征服', icon: '🌐',
+          chain: {
+            premise: '传统帝国需要军队和官僚来统治。但如果一种文化体系可以通过市场、技术和媒体来扩张，它就不再需要正式的政治控制。',
+            evidence: '今天的世界在文化上比任何历史时期都更加统一：全球通用的时间制度（公历、24小时制）、经济制度（资本主义市场、美元储备）、政治语言（人权、民主、国际法）、科技标准（互联网、智能手机、英语论文）——这些全部源于欧洲帝国的遗产，如今已被全世界"自愿"接受。一个东京商人和一个内罗毕程序员的日常生活差异，远小于他们各自祖先五百年前的差异。',
+            conclusion: '我们生活在人类历史上第一个真正的全球帝国中——只是它没有皇帝、没有首都、没有军队。它的统治工具是市场机制、消费文化和技术标准。这是历史融合的最终阶段。问题不再是"我们是否应该加入"，而是"我们已经在里面了"。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 11: 宗教的法则
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-11', number: '第三部分 · 场景 11', palette: 'scene11',
+      title: '宗教的法则',
+      subtitle: 'THE LAW OF RELIGION',
+      heroQuote: '宗教不是迷信——它是唯一一种能让数百万人在没有面对面接触的情况下遵循同一套行为规范的技术。',
+      narrative: [
+        '金钱创造了物质交换的通用媒介，帝国创造了政治统一，而宗教则提供了第三种——也许是最强大的——融合力量：<b>道德和法律的统一。</b>',
+        '什么是宗教？赫拉利给出了一个冷静到近乎冷血的定义：<b>宗教是一套规范和价值观的系统，建立在对某种超人类秩序的信仰之上。</b>注意两个关键词："超人类"——这些规则不是人定的，而是来自上帝/自然法/宇宙之道；"秩序"——它不仅仅是个人信仰，而是要求所有人遵守的公共规范。',
+        '从这个定义出发，赫拉利做了一个惊人的归类：<b>自由主义、共产主义、民族主义——这些"现代意识形态"与基督教、伊斯兰教在功能上完全相同。</b>它们都声称自己反映了超越个人意志的客观真理，都要求信徒遵循特定的行为规范，都拥有圣典、仪式和传教士。',
+        '宗教的真正演化不是从"原始"到"高级"，而是从"地方性"到"普世性"。<b>泛灵论只关心本地的神灵；多神教开始组织大规模社会；一神教声称拥有绝对真理并积极传教；而现代"宗教"——人文主义的各种变体——则宣称人本身就是神圣的。</b>',
+        '人文主义的三大教派统治了20世纪：<b>自由人文主义</b>（个人自由至上）、<b>社会人文主义</b>（集体平等至上）、<b>进化人文主义</b>（优胜劣汰至上）。第二次世界大战是这三种"宗教"之间的战争：进化人文主义（纳粹）战败，冷战是自由人文主义与社会人文主义的较量——前者在1991年获胜。',
+        '但胜利不等于真理。<b>自由人文主义的核心信条——每个人的内在体验具有至上价值——正面临来自神经科学和人工智能的双重挑战。</b>如果"自由意志"只是神经元的电化学反应，如果算法比你更了解你自己——那么"追随你的内心"还有什么意义？'
+      ],
+      deepDives: [
+        {
+          title: '人文主义：最成功的现代宗教', icon: '🕊️',
+          chain: {
+            premise: '如果宗教被定义为"建立在对超人类秩序信仰之上的规范系统"，那么现代意识形态完全符合这个定义——只是它们将"超人类秩序"的来源从上帝转移到了"人性"或"自然法则"。',
+            evidence: '自由人文主义的核心信条："每个个体都有不可侵犯的内在价值，个人体验是一切意义的终极来源。"这与基督教"每个灵魂都是上帝创造的"在结构上完全同源——只是将"上帝"替换为"人性"。自由人文主义有自己的圣典（《人权宣言》）、圣地（民主选举的投票站）、仪式（消费即朝圣）、异端审判（政治正确审查）。',
+            conclusion: '赫拉利的洞察不是要"贬低"自由人文主义，而是要指出：它和所有宗教一样，建立在一个未经证明的信仰之上——即"人的内在体验具有至上价值"。这个信仰在历史上运作良好，但它不是科学事实。当生物技术和人工智能开始比我们自己更了解我们的内在体验时，这个信仰的基础将被彻底动摇。'
+          }
+        },
+        {
+          title: '从泛灵论到人文主义：宗教的进化史', icon: '📜',
+          chain: {
+            premise: '宗教不是从"原始迷信"进化为"理性信仰"，而是从"地方性规范"进化为"普世性规范"。每一步进化都扩大了宗教能够组织的人群规模。',
+            evidence: '泛灵论（采集时代）：每棵树、每条河都有灵——没有统一规则，无法组织大规模合作。多神教（早期农业）：众神有分工、有等级——可以组织城邦和小型帝国。一神教（轴心时代）：唯一的神拥有绝对真理——可以组织跨越种族和文化的庞大帝国。人文主义（现代）：人本身就是"神"——可以组织全球文明。',
+            conclusion: '宗教进化的每一步都遵循同一逻辑：缩小"我们"与"他们"的区别，扩大"信徒"的范围。泛灵论只承认本部落的灵；基督教承认所有人的灵魂；人文主义承认所有人的尊严。但每一步扩展都伴随着新的排斥：一神教排斥多神教徒，人文主义排斥不接受"人权"概念的文化。包容的边界总是同时也是排斥的边界。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 12: 成功的秘密
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-12', number: '第三部分 · 场景 12', palette: 'scene12',
+      title: '成功的秘密',
+      subtitle: 'THE SECRET OF SUCCESS',
+      heroQuote: '事后来看，每一段历史都显得合理而必然。但这不过是一种认知偏差——我们在把偶然伪装成命运。',
+      narrative: [
+        '到这里，我们已经看到了推动人类文化融合的三大力量：金钱、帝国、宗教。但一个更根本的问题浮现了：<b>历史有没有"方向"？</b>是什么决定了一种文化兴盛而另一种衰落？',
+        '大多数人的直觉是："适者生存"——更优越的文化会战胜更落后的文化。<b>但赫拉利警告我们：这是最危险的历史错觉之一。</b>',
+        '让我们想想基督教。在公元一世纪，它不过是犹太教的一个边缘教派，信徒不过几百人。凭什么它——而不是密特拉教、琐罗亚斯德教、摩尼教——最终成为罗马帝国的国教？<b>答案是：我们不知道。</b>没有任何客观因素可以预测公元30年的一个犹太木匠的追随者会在三百年后征服全世界最强大的帝国。',
+        '同样的逻辑适用于所有历史事件。<b>为什么是欧洲而不是中国在15世纪开始了全球殖民？</b>在1400年，中国拥有世界上最庞大的舰队、最先进的技术和最高效的官僚体系。但到了1500年，中国放弃了远洋航行，而欧洲的几个小国开始征服全球。没有任何"客观因素"可以在1400年预测这个结果。',
+        '赫拉利提出了一个深刻的方法论警告：<b>"事后诸葛亮谬误"是历史学中最普遍的认知陷阱。</b>一旦事情发生了，我们就会找出种种"必然原因"来解释它为什么会发生。但如果我们诚实地承认：在关键节点上，历史可能走向完全不同的方向——那么所有那些"必然性"就不过是事后编造的故事。',
+        '<b>历史的铁律只有一条：事后来看一切都可以被合理化，但没有任何事情是必然的。</b>理解这一点的人会变得更加谦卑——因为他们知道，今天看似牢不可破的世界秩序，不过是一长串偶然事件的脆弱累积。'
+      ],
+      deepDives: [
+        {
+          title: '后见之明偏差：历史的认知陷阱', icon: '🎲',
+          chain: {
+            premise: '人类大脑擅长因果叙事：给它一个结果，它就能编出一个看似合理的因果链来"解释"这个结果。但这种能力在分析历史时是一个严重的缺陷。',
+            evidence: '①阿拉伯帝国的崛起：在公元610年，一个商人开始在沙漠中布道。没有任何历史分析师能在那时预测，一百年内他的追随者将统治从西班牙到印度的广大领土。但事后来看，我们轻松地列出了种种"原因"。②二战结果：如果希特勒在1941年没有入侵苏联，或日本没有偷袭珍珠港——历史可能完全不同。但这些"偶然选择"在事后的叙述中都被赋予了"必然性"。',
+            conclusion: '赫拉利的核心方法论立场是：我们可以在事后理解历史如何展开，但我们无法证明它必然如此展开。这不是虚无主义——而是智识上的诚实。它提醒我们：下一次重大历史转折可能来自一个今天看来完全不可能的方向。'
+          }
+        },
+        {
+          title: '文化模因 vs 生物基因：历史的进化论', icon: '🧬',
+          chain: {
+            premise: '生物进化论告诉我们：物种的兴衰取决于基因的适应性。那么文化的兴衰是否同样遵循某种"适者生存"的逻辑？',
+            evidence: '基督教的传播不是因为它"更正确"——而是因为罗马皇帝君士坦丁的一次政治决策（313年米兰敕令）。伊斯兰教的传播很大程度上依赖军事征服。资本主义的胜利不是因为它让所有人更幸福——而是因为它让国家更富有、军队更强大。历史上最"成功"的文化理念往往不是最"好"的，而是最善于自我复制和传播的。',
+            conclusion: '文化进化与生物进化有一个令人不安的共同点：成功不等于善良。一种文化可能让大多数人过得更悲惨，但只要它能更有效地组织力量、征服领土、生产后代，它就会"胜出"。这意味着我们无法从历史的"胜利者"中推导出道德结论——"赢了"不代表"对了"。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART IV · 科学革命 · THE SCIENTIFIC REVOLUTION
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 13: 发现自己的无知
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-13', number: '第四部分 · 场景 13', palette: 'scene13',
+      title: '发现自己的无知',
+      subtitle: 'THE DISCOVERY OF IGNORANCE',
+      heroQuote: '科学革命不是知识的革命，而是无知的革命。现代科学与此前所有知识体系的根本区别在于：它愿意承认"我们不知道"。',
+      narrative: [
+        '公元1500年之前的人类，掌握的知识远少于今天的我们。但他们有一个我们没有的东西——<b>确定性</b>。他们相信，关于世界最重要的事情，已经有了答案：《圣经》、《古兰经》、佛经、儒家经典——这些文本包含了人类需要知道的一切。如果你想知道什么，去翻书就好了。',
+        '<b>科学革命的本质不是获得了新知识，而是发现了无知。</b>1543年，哥白尼发表《天体运行论》，不仅挑战了地心说，更挑战了整个知识体系的基础假设——"古人已经知道了所有重要的事"。从这一刻起，"我不知道"从可耻变成了高贵。',
+        '赫拉利指出了现代科学的三条核心信条：<b>①承认无知</b>——没有任何理论是不可推翻的，包括科学自身的理论。<b>②以观察和数学为核心</b>——经验证据和数学模型是检验真理的唯一标准。<b>③追求新能力</b>——科学的目的不是纯粹的真理，而是获得做新事情的力量。',
+        '第三点至关重要。<b>科学与技术的联姻——"研究→技术→权力"这一循环——在1500年之前并不存在。</b>古代帝国很少资助基础研究，因为它们相信重要的知识已经存在于经典中。现代政府和企业每年投入数万亿美元进行研究，因为它们相信新知识可以转化为新的经济和军事力量。',
+        '这个循环的最戏剧性例子是原子弹。<b>1939年，爱因斯坦致信罗斯福总统</b>，告诉他理论物理的最新发现可能制造出一种毁灭性武器。六年和20亿美元之后，两座日本城市变成了废墟。从此，没有一个国家政府敢忽视基础科学研究。',
+        '<b>"科学革命"这个名字其实是个误导。</b>在过去五百年中真正推动变革的不是科学本身——科学只提供了可能性。真正把可能性变成现实的，是两种力量的加入：帝国主义和资本主义。这三者的联盟，彻底改变了世界。'
+      ],
+      dataViz: {
+        type: 'ignorance-revolution',
+        title: '知识范式的根本转变'
+      },
+      deepDives: [
+        {
+          title: '承认无知：人类认知史上的分水岭', icon: '🔬',
+          chain: {
+            premise: '在1500年之前，全球所有主要知识传统——基督教、伊斯兰教、儒学、佛教——都假设最重要的知识已经被发现。新的学习意味着深入理解古老的文本，而不是发现全新的事实。',
+            evidence: '1620年，弗朗西斯·培根在《新工具》中宣称：真正的知识来自实验和观察，而非权威文本。这在当时是一种异端思想。但在随后的两个世纪里，这种新方法产生了前所未有的成果：牛顿力学、电磁理论、细菌学说、元素周期表——每一项发现都证明了"古人不知道"的事实远比"古人知道"的多得多。',
+            conclusion: '承认无知之所以具有革命性，不是因为它让人变得谦虚——而是因为它释放了一种全新的动力。如果最重要的发现尚未到来，那么投资研究就变得合理。如果今天的理论明天可能被推翻，那么挑战权威就变得正当。现代世界的整个动力系统——经济增长、技术进步、社会变革——都建立在"未来比过去更重要"这个假设之上。而这个假设只有在承认无知之后才有意义。'
+          }
+        },
+        {
+          title: '科学-帝国-资本：现代世界的三位一体', icon: '⚛️',
+          chain: {
+            premise: '科学提供可能性，帝国提供政治意愿和组织能力，资本提供资金。三者缺一不可。',
+            evidence: '中国在1400年拥有世界上最先进的技术（火药、指南针、印刷术、造船技术），但它没有将这些技术转化为全球征服——因为它缺乏"去发现未知"的意识形态动力。欧洲在1500年技术并不领先，但它拥有一种独特的组合：好奇心（科学精神）+ 野心（帝国主义）+ 信贷（资本主义）。正是这个三位一体的组合，让欧洲在短短三百年内从世界的边缘变成了世界的中心。',
+            conclusion: '理解这个三位一体是理解现代世界的关键。当我们谈论"科学进步"时，我们实际上在谈论一个政治-经济-知识的复合系统。科学从来不是在真空中运作的——它被政治野心驱动，被资本利润催化。这解释了为什么某些领域（军事、医药、通信）获得了海量研究经费，而另一些领域（贫困、不平等、生态）被长期忽视。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 14: 科学与帝国的联姻
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-14', number: '第四部分 · 场景 14', palette: 'scene14',
+      title: '科学与帝国的联姻',
+      subtitle: 'THE MARRIAGE OF SCIENCE AND EMPIRE',
+      heroQuote: '欧洲征服世界的真正武器不是枪炮，而是一张空白的世界地图——上面标注着"未知领域"。其他文明没有这种地图，因为它们不认为世界上存在"未知"。',
+      narrative: [
+        '1768年，英国皇家海军的"奋进号"从普利茅斯启航。船上除了水手，还有一队天文学家和植物学家。<b>他们的任务：观测金星凌日，并绘制太平洋的未知海域。</b>这不是一次纯粹的科学考察——它同时也是一次帝国扩张行动。库克船长在这次航行中"发现"了澳大利亚并为英国宣示了主权。',
+        '这个故事完美体现了科学与帝国之间的关系：<b>科学家需要帝国提供经费和船只，帝国需要科学家提供地图和知识。</b>在19世纪之前的欧洲，几乎每一次重大科学考察都同时也是一次军事侦察。达尔文搭乘"小猎犬号"环球航行时，那艘船的主要任务是绘制南美海岸线以便英国海军使用。',
+        '<b>为什么是欧洲——而不是中国、印度或伊斯兰世界——征服了全球？</b>这个问题困扰了几代历史学家。赫拉利的回答出人意料：不是因为技术优势（在1500年，欧洲的技术并不明显领先），而是因为一种独特的心态——<b>对"未知"的渴望。</b>',
+        '看看世界地图就知道了。1459年的欧洲地图上充满了空白区域和"此处有龙"的标注——<b>欧洲人知道自己不知道</b>。而同时代的中国和伊斯兰世界地图则描绘了一个"完整"的世界——他们认为所有重要的东西都已经被知道了。',
+        '这种心态的差异意味着：<b>只有欧洲人会投入巨大资源去探索他们承认自己不了解的地方。</b>郑和的船队在1405-1433年七次下西洋，但他的目的是展示天朝威仪，而非发现新大陆。他不认为有什么"新大陆"值得发现。哥伦布则不同——他相信世界上存在他不知道的东西，而且这些东西值得去找。',
+        '这种"承认无知→探索未知→获得新力量"的循环，与纯粹的军事力量相比，是一种更加根本的优势。<b>到19世纪，当其他文明终于意识到欧洲的强大时，追赶的唯一方式就是全面接受欧洲的知识体系——科学、技术、教育模式。</b>这就是为什么今天的中国大学教授量子力学，而不是欧洲大学教授阴阳五行。'
+      ],
+      deepDives: [
+        {
+          title: '空白地图：欧洲扩张的认知根源', icon: '🗺️',
+          chain: {
+            premise: '一种文明是否会投资探索和征服，取决于它是否认为世界上存在有价值的"未知"。如果你相信所有重要的知识已经在你手中，你就没有动力去远方。',
+            evidence: '对比三个文明在1500年的世界观：①中华帝国——"天下"概念暗示中国是世界的中心，边缘是不值得关注的蛮荒之地。②奥斯曼帝国——伊斯兰知识传统极其丰富，但它假设《古兰经》已经包含了所有终极真理。③欧洲——刚从中世纪苏醒，对古希腊罗马的"遗失知识"充满渴望，同时意识到世界上还有大量未知。欧洲的"无知感"不是弱点，而是一种独特的动力。',
+            conclusion: '"承认无知"这一看似谦虚的姿态，实际上蕴含着一种极其傲慢的野心：它意味着"我有权利和能力去填补这些空白"。欧洲的征服者和科学家共享这一心态——他们都认为世界是一张等待被填满的空白地图。这种心态产生的力量，最终压倒了所有"已知一切"的文明。'
+          }
+        },
+        {
+          title: '科学种族主义：知识为权力服务', icon: '⚠️',
+          chain: {
+            premise: '科学是中立的——但科学研究的方向、资金来源和成果应用从来不是中立的。当科学与帝国联姻时，科学往往为统治提供"客观"依据。',
+            evidence: '19世纪的"科学种族主义"是最极端的例子：欧洲科学家用颅骨测量学"证明"白人在智力上优于其他种族，用社会达尔文主义"证明"殖民统治是自然选择的结果。这些理论在今天看来荒谬，但在当时它们发表在顶级学术期刊上，被最受尊敬的大学教授所教授。同样的逻辑：20世纪的经济学"证明"了自由市场的优越性，为美国的全球扩张提供了知识背书。',
+            conclusion: '科学为帝国服务不仅仅是提供武器——更重要的是提供正当性。"客观知识"的外衣使得征服和统治看起来不像暴力，而像文明的进步。这个教训在今天仍然适用：每当一种权力结构声称自己有"科学依据"时，我们都应该追问：是谁资助了这项研究？是谁在使用这些结论？'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 15: 资本主义教条
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-15', number: '第四部分 · 场景 15', palette: 'scene15',
+      title: '资本主义教条',
+      subtitle: 'THE CAPITALIST CREED',
+      heroQuote: '资本主义的核心不是"贪婪"，而是"信用"——相信明天会比今天更好，因此今天可以借用明天的资源。这是一种对未来的宗教信仰。',
+      narrative: [
+        '在1500年之前，全球经济几乎是一个零和游戏。<b>如果一个国王变得更富有，一定是因为某个农民变得更贫穷。</b>经济的总蛋糕不会增长——它只会被重新分配。在这种世界观中，信贷是不道德的（伊斯兰教禁止利息，基督教视高利贷为罪恶），因为借出的钱不可能"生出"更多的钱。',
+        '然后，一个革命性的新信仰出现了：<b>"增长"。</b>如果面包师贷款建了一个更大的烤炉，他可以烤出更多的面包，偿还贷款后还有盈余。总财富增加了——蛋糕变大了。这就是现代经济的核心发现：<b>信贷不是对现有财富的重新分配，而是对未来财富的提前使用。</b>',
+        '赫拉利用一个简洁的公式描述了整个现代经济的逻辑链：<b>"信任未来→信贷扩张→经济增长→未来更好→更多信任"</b>——这是一个正反馈循环。但它有一个致命的前提条件：未来确实比今天更好。如果这个信念崩溃——比如在经济危机中——整个系统就会反向运转：恐慌→信贷收缩→经济萎缩→未来更差→更多恐慌。',
+        '<b>资本主义与科学之间的联盟是理解现代世界的关键。</b>科学提供了"未来会更好"的实际证据（新技术不断出现），资本主义则将这种信念转化为经济机制（信贷系统）。没有科学进步，资本主义就是庞氏骗局；没有资本主义的资金，科学研究就会停滞。',
+        '但资本主义有一个道德盲点：<b>它将"增长"本身视为最高价值。</b>GDP增长被当作衡量一切的标准——即使这种增长伴随着环境破坏、社会不平等和个人焦虑的加剧。一家公司如果为了利润而污染河流、剥削工人，在纯粹的资本主义逻辑中是完全"理性"的。',
+        '历史上，资本主义最黑暗的篇章始终与帝国主义交织在一起。<b>大西洋奴隶贸易不是疯狂行为——它是冷静的商业计算。</b>荷兰东印度公司在印度尼西亚的种植园每年创造惊人的投资回报率，而代价是数百万原住民的生命和自由。自由市场从来不会自动产生自由——它只是为利润最大化服务。'
+      ],
+      dataViz: {
+        type: 'credit-cycle',
+        title: '信贷-增长的永动机'
+      },
+      deepDives: [
+        {
+          title: '信贷：关于未来的集体信仰', icon: '🏦',
+          chain: {
+            premise: '经济增长需要投资，投资需要资金，但当前的资金总量是有限的。唯一的解决方案是"借用"尚不存在的未来财富——但这要求所有人都相信未来会更好。',
+            evidence: '一个简化的模型：面包师需要100万建新烘焙坊。他去银行贷款。银行给了他100万——但这100万从何而来？不是从银行金库里——大部分现代银行的准备金率只有10%左右。这100万是银行"创造"出来的——它只是在账本上记了一笔。如果面包师成功了，他偿还贷款，银行收回本金加利息，面包师保留利润——总财富增加了。但如果他失败了，这100万就凭空消失了。整个现代金融系统建立在一个统计赌注之上：大部分人会成功偿还贷款。',
+            conclusion: '货币不再是"已存在的财富的代表"——它变成了"对未来财富的信任"。今天全球的信贷总额远超全球实际资产的价值。这意味着现代经济运行在一种集体信仰之上——如果所有人同时停止相信未来会增长，整个金融系统将在24小时内崩溃。2008年的金融危机只是这种脆弱性的一次小规模演示。'
+          }
+        },
+        {
+          title: '资本主义与奴隶制：自由市场的阴暗面', icon: '⛓️',
+          chain: {
+            premise: '自由市场的核心原则是：资源应该流向能产生最高回报的地方。这个原则在理论上是中立的，但在实践中它对人类苦难完全麻木。',
+            evidence: '大西洋奴隶贸易（1500-1850）可能是资本主义历史上最大的"投资项目"。它的商业逻辑完美无缺：从非洲"采购"劳动力（成本极低），运送到美洲种植园（运输成本由规模经济降低），生产糖、棉花和烟草（在欧洲售价极高）。整条产业链的投资回报率高达数百个百分点。荷兰东印度公司——人类历史上第一家上市公司——在其鼎盛时期的市值，相当于今天的7.9万亿美元。它的利润建立在对印度尼西亚的系统性掠夺之上。',
+            conclusion: '资本主义不是天生的恶——但它天生没有道德指南针。利润最大化原则不会区分"烤面包的利润"和"贩卖人口的利润"。历史证明，每当资本主义被允许在没有外部约束（法律、道德、社会运动）的情况下运作时，它几乎总是滑向剥削和暴力。自由市场需要一只看不见的手——但这只手不是亚当·斯密想象的那只，而是法律和道德的手。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 16: 工业的巨轮
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-16', number: '第四部分 · 场景 16', palette: 'scene16',
+      title: '工业的巨轮',
+      subtitle: 'THE WHEELS OF INDUSTRY',
+      heroQuote: '在过去两百年里，人类生产力的增长超过了此前一万年的总和。代价是：我们第一次有能力毁灭整个生物圈。',
+      narrative: [
+        '人类历史上几乎所有的经济活动都受制于一个终极瓶颈：<b>能量。</b>一个农民能生产多少粮食，取决于他的肌肉和牲畜能提供多少能量。一个工匠能制造多少商品，取决于他双手的能量输出。这个限制在数千年间几乎没有改变。',
+        '然后，一切在两百年内被颠覆了。1825年，<b>乔治·斯蒂芬森的蒸汽火车</b>以每小时20公里的"惊人"速度从达灵顿驶向斯托克顿。它的动力来源不是肌肉，而是煤炭——<b>数百万年前被太阳能"存储"在地下的化石能量。</b>人类第一次打开了地球的能量储蓄罐。',
+        '工业革命的本质是一次<b>能量转换革命</b>。蒸汽机把热能变成机械能，内燃机把化学能变成动能，发电厂把各种形式的能量变成电能——这种最通用、最灵活的能量形式。<b>今天，人类每年消耗的能量大约是500艾焦——这相当于每天引爆几千颗广岛原子弹。</b>',
+        '能量的释放彻底改变了生产的逻辑。<b>短缺问题变成了过剩问题。</b>在农业社会，主要问题是"如何生产足够的东西"；在工业社会，主要问题变成了"如何让人们购买已经生产出来的东西"。消费主义——作为一种意识形态——由此诞生。',
+        '工业革命对人类社会的影响不亚于农业革命。<b>家庭和社区被瓦解</b>——工厂需要的是个体工人，而不是家庭单位。传统的大家庭、村社、行会被市场和国家所取代。<b>国家变成了个人生活的终极保姆</b>——从教育到养老，从医疗到安全，以前由家庭和社区提供的功能现在由政府接管。',
+        '但最深远的影响也许是心理层面的。工业革命创造了一种全新的时间观念：<b>精确时间。</b>在农业社会，时间是模糊的——日出日落、春种秋收就够了。但火车需要时刻表，工厂需要打卡钟，金融市场需要精确到秒。人类第一次被迫按照机器的节奏生活，而不是按照自己身体的节奏。'
+      ],
+      deepDives: [
+        {
+          title: '能量革命：打开地球的储蓄罐', icon: '⚡',
+          chain: {
+            premise: '经济增长的终极限制不是资金、劳动力或技术——而是可用能量。如果没有新的能量来源，经济增长就有硬性天花板。',
+            evidence: '从公元前8000年到公元1800年的近一万年间，人类可用的能量来源基本没有变化：人力、畜力、水力、风力。全球GDP在这一万年中增长了约100倍。而从1800年到2000年的仅仅200年间，化石能源的释放使全球GDP增长了约100倍——与前一万年的总增长相当。今天，一辆家用汽车的发动机功率相当于约150匹马。一架波音747的引擎功率相当于一个中世纪城市的全部能量输出。',
+            conclusion: '工业革命的真正意义不在于蒸汽机或纺织机——而在于打开了化石能源这个"时间胶囊"。我们燃烧的每一吨煤、每一桶石油，都是在消耗数百万年前由太阳能储存的能量。这给了我们前所未有的力量——但也意味着我们在以百万年的时间尺度上透支地球的能量储蓄。问题是：这个储蓄罐还够用多久？'
+          }
+        },
+        {
+          title: '消费主义：工业时代的新宗教', icon: '🛒',
+          chain: {
+            premise: '当生产力超过消费力时，经济系统面临崩溃。过剩的商品需要买家——但传统美德（节俭、知足）教导人们减少消费。解决方案：创造一种新的道德体系，将消费本身定义为美德。',
+            evidence: '在前工业社会，"浪费"是道德上可鄙的行为，"节俭"是美德。但工业资本主义需要持续不断的消费来维持运转。解决方案是消费主义意识形态：广告业（每年全球支出超过7000亿美元）致力于让人们购买他们不需要的东西；时尚产业每季更换潮流以制造"淘汰感"；食品工业用超大份量和促销活动鼓励过度饮食——发达国家的肥胖率超过30%，而全球仍有8亿人营养不良。',
+            conclusion: '消费主义的道德悖论在于：它要求富人"多买多花"（消费），同时要求穷人"多干多存"（生产）。精英阶层的美德是"投资"（让钱生钱），普通人的美德是"消费"（把钱花掉）。这不是矛盾——这是同一个系统的两面：资本家需要工人既是生产者又是消费者。整个系统的运转依赖于一个永不停息的循环：生产→消费→更多生产→更多消费。地球的承载能力，是这个循环的唯一物理极限。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 17: 一场永远的革命
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-17', number: '第四部分 · 场景 17', palette: 'scene17',
+      title: '从此过着幸福快乐的日子？',
+      subtitle: 'AND THEY LIVED HAPPILY EVER AFTER',
+      heroQuote: '如果一个古埃及农民能穿越时空来到今天，他最感到震惊的不会是科技——而是我们在拥有了一切之后仍然不快乐。',
+      narrative: [
+        '到目前为止，我们讲述的一直是"能力"的故事——人类如何获得了越来越强大的力量来改造自然和组织社会。但一个最基本的问题被系统性地忽略了：<b>这一切让人类更幸福了吗？</b>',
+        '这个问题之所以被忽略，是因为它极其难以回答。<b>我们如何比较一个中世纪农民和一个现代白领的幸福感？</b>没有任何客观指标可以直接测量"幸福"——GDP不行，寿命不行，消费水平也不行。',
+        '但近几十年的心理学和神经科学研究提供了一些令人不安的线索。<b>主观幸福感（self-reported happiness）的调查显示：在基本物质需求被满足之后，收入增长与幸福感的相关性急剧下降。</b>美国人的平均实际收入自1950年代以来翻了数倍，但幸福感调查结果几乎没有变化。',
+        '赫拉利提出了一个更深层的生物学解释：<b>幸福感可能不取决于客观条件，而取决于神经化学。</b>我们的快乐与痛苦最终都是大脑中血清素、多巴胺、催产素等化学物质的浓度变化。进化"设计"了这个系统，使其总是回归基线——无论你中了彩票还是失去了一条腿，大约一年后你的幸福感就会回到基因决定的基线水平。',
+        '如果这个理论是正确的，那么整个人类历史——从认知革命到工业革命——对人类的幸福总量可能几乎没有影响。<b>一个石器时代的采集者和一个21世纪的亿万富翁，可能拥有几乎相同水平的幸福感。</b>区别只在于，采集者在采到蘑菇后感到快乐，亿万富翁在股价上涨后感到快乐——但快乐本身的生化基质是相同的。',
+        '如果这是真的，那么整个"进步叙事"就需要被重新审视。<b>我们花了一万年来增加人类的"能力"，但我们从未系统地增加过人类的"快乐"。</b>也许真正的进步不在于更快的汽车、更大的房子或更长的寿命，而在于直接干预快乐的生化机制——这正是佛教两千年前就在尝试的事情，也是制药业和基因工程在21世纪可能实现的事情。'
+      ],
+      dataViz: {
+        type: 'happiness-paradox',
+        title: '进步的悖论：更多的能力 ≠ 更多的幸福'
+      },
+      deepDives: [
+        {
+          title: '幸福的生化基线：进步的终极讽刺', icon: '🧪',
+          chain: {
+            premise: '如果幸福感的终极决定因素不是外部条件（财富、健康、社会地位），而是内部生化状态（神经递质水平），那么改变外部条件来追求幸福就像调整收音机天线来改变播出的节目——方向搞错了。',
+            evidence: '①"享乐适应"研究：彩票中奖者在一年后的幸福感与中奖前几乎相同；截肢患者在一年后的幸福感也回升到接近基线水平。②跨国幸福感调查：哥斯达黎加的人均GDP不到美国的1/5，但其国民幸福指数与美国相当。③双胞胎研究表明：幸福感的遗传率约为50%——即你出生时就已经"设定"了幸福感的大致范围。',
+            conclusion: '这不意味着外部条件完全无关——极度贫困和战争确实会降低幸福感。但它意味着，在基本需求被满足之后，继续增加物质财富的边际幸福回报几乎为零。人类花了一万年来"改善"生活条件，但可能从未触及幸福的真正来源。这是进步叙事的终极讽刺：我们改变了世界的一切，却没有改变最重要的东西。'
+          }
+        },
+        {
+          title: '佛陀vs 制药业：两种通往幸福的路径', icon: '☸️',
+          chain: {
+            premise: '如果幸福的关键在于内在的生化/心理状态而非外在条件，那么追求幸福的有效策略应该向内而非向外。历史上只有一种重要的知识传统做到了这一点。',
+            evidence: '佛教的核心洞察（约公元前500年）：痛苦来自"渴求"——大脑不断地渴望愉悦、回避痛苦的本能。解决方案不是获得更多愉悦，而是训练心智不再执著于感受的波动。2500年后，现代神经科学基本验证了这一观点：冥想确实可以改变大脑结构（降低杏仁核活跃度、增厚前额叶皮层）。另一条路径是直接的生化干预：抗抑郁药物（SSRIs）通过提高血清素水平来改善情绪；未来的基因工程可能直接改写"幸福感基线"。',
+            conclusion: '人类面临一个选择：是通过内在修行（冥想、正念）来改变我们体验世界的方式，还是通过外部技术（药物、基因工程）来改变我们的生化基底？佛教的路径需要一生的修行，药物的路径可能只需要一粒药丸——但后者打开了一个潘多拉魔盒：如果我们可以直接制造幸福，"生命的意义"还剩下什么？'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 18: 智人末日
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-18', number: '第四部分 · 场景 18', palette: 'scene18',
+      title: '智人末日',
+      subtitle: 'THE END OF HOMO SAPIENS',
+      heroQuote: '我们即将创造的不是新工具，而是新物种。七万年前我们获得了改变世界的能力；现在我们正在获得改变自身的能力。下一个十字路口没有路标。',
+      narrative: [
+        '让我们回到七万年前。认知革命赋予了智人一种前所未有的能力：<b>改变环境。</b>从那一刻起，智人开始重塑地球的面貌——清除森林、驯化动物、建造城市、改变气候。但在所有这些变革中，有一样东西始终未变：<b>智人自身。</b>',
+        '今天的人类大脑与七万年前的大脑在生物学上几乎相同。我们用石器时代的硬件运行着核时代的软件。<b>但这种生物学稳定性正在终结。</b>',
+        '赫拉利描述了三种正在发展中的技术，每一种都可能从根本上改变"人"的定义：',
+        '<b>第一：生物工程。</b>我们已经可以通过基因编辑（CRISPR）修改人类基因组。目前的应用主要是治疗遗传病，但技术上没有任何障碍阻止我们"增强"人类——更强的免疫力、更高的智力、更长的寿命。当第一个基因增强婴儿出生时，"人人平等"这一虚构故事将面临前所未有的挑战——因为人与人之间的差异将不再只是文化的，而是生物学的。',
+        '<b>第二：半机械人工程。</b>我们已经在使用人工耳蜗、脑机接口和智能假肢。下一步是将电子设备直接整合到人体和大脑中——不是为了修复缺陷，而是为了增强功能。当你的大脑可以直接连接互联网时，"思考"的含义将被彻底重新定义。',
+        '<b>第三：非有机生命。</b>人工智能正在走向通用智能。如果（或者说"当"）我们创造出超越人类智能的实体，智人将不再是地球上最聪明的物种。这些实体是否会有意识？是否会有权利？是否会把智人视为我们今天看待黑猩猩的方式？',
+        '赫拉利以一个问题结束全书：<b>"我们究竟想要什么？"</b>我们已经有能力重新设计生命本身，但我们甚至不知道自己想用这种能力做什么。一个能设计生命形式的物种，不知道自己想要什么——<b>还有什么比这更危险的吗？</b>'
+      ],
+      deepDives: [
+        {
+          title: '三种改变"人"的技术', icon: '🧬',
+          chain: {
+            premise: '在过去七万年中，智人改变了地球上几乎所有其他物种的命运——通过灭绝、驯化或环境改造。但智人自身的生物学特征几乎没有变化。三项技术正在终结这种稳定性。',
+            evidence: '①基因工程——2018年贺建奎事件证明，编辑人类胚胎基因在技术上已经可行。CRISPR技术的精度和成本每年都在改善。从治疗到增强只有一步之遥。②脑机接口——Neuralink等公司正在开发植入式脑芯片。当人脑可以直接访问云端数据时，"记忆"和"知识"的概念将被颠覆。③人工智能——GPT系列、DeepMind的AlphaFold已经展示了在特定领域超越人类的能力。通用人工智能（AGI）可能在未来几十年内出现。',
+            conclusion: '这三种技术不是科幻——它们已经在实验室和公司中积极发展。当它们成熟时，"人类"这个词的含义将面临根本性的挑战。基因增强将创造生物学上不平等的人群；脑机接口将模糊人与机器的边界；AGI将挑战人类的认知优势——这是七万年来我们唯一的王牌。'
+          }
+        },
+        {
+          title: '终极问题：我们想要什么？', icon: '❓',
+          chain: {
+            premise: '技术赋予我们"做"的能力，但不告诉我们"该做什么"。在过去，这个问题不那么紧迫——因为我们的能力有限。但当能力变得几乎无限时，"想要什么"就变成了一个存亡攸关的问题。',
+            evidence: '回顾全书：认知革命让智人能够创造虚构故事来组织合作——但我们用这种能力既建造了医院也建造了集中营。农业革命让我们能养活更多人——但大多数人的生活变得更糟。科学革命让我们能分裂原子——但我们用它既发了电也造了核弹。每一次"能力升级"都同时放大了善与恶的可能性。现在，我们即将获得改变自身基因、与机器融合、创造超级智能的能力——而我们仍然没有一个可靠的框架来回答"该怎么使用这些能力"。',
+            conclusion: '赫拉利的结论不是乐观也不是悲观，而是一种清醒的警告：<b>拥有神一般力量的不满足灵长类动物，可能是最危险的存在。</b>我们不缺力量——我们缺的是智慧。而讽刺的是，尽管七万年来我们不断增加自己的力量，我们几乎从未认真增加过自己的智慧。全书的最终问题是：在我们把自己升级为神之前，我们是否应该先弄清楚自己想要什么？'
+          }
+        }
+      ]
+    }
+  ]
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════════════════
+const app = document.getElementById('app');
+const sceneNav = document.getElementById('sceneNav');
+
+function renderApp() {
+  const { meta, scenes } = CONTENT_DATA;
+  let html = '';
+
+  // Hero
+  html += `
+    <section class="hero" id="hero">
+      <div class="hero-overline">${meta.author} · ${meta.bookSub}</div>
+      <h1 class="hero-title">${meta.book}</h1>
+      <p class="hero-subtitle">${meta.partTitle}</p>
+      <div class="hero-part">${meta.part} · ${meta.partSub}</div>
+      <div class="hero-scroll-hint">
+        <span>向下滚动</span>
+        <div class="scroll-line"></div>
+      </div>
+    </section>`;
+
+  scenes.forEach((scene, idx) => {
+    html += `<section class="scene" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner">`;
+    html += `
+      <div class="reveal scene-number">${scene.number}</div>
+      <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
+      <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle}</div>
+      <div class="hero-quote-wrap reveal-wipe">
+        <blockquote class="hero-quote">${scene.heroQuote}</blockquote>
+      </div>
+      <div class="narrative">`;
+    scene.narrative.forEach(p => { html += `<p class="reveal">${p}</p>`; });
+    html += `</div>`;
+
+    // Data Viz
+    if (scene.dataViz) html += renderDataViz(scene.dataViz);
+
+    // Comparison
+    if (scene.comparison) html += renderComparison(scene.comparison);
+
+    // Extinction
+    if (scene.extinction) html += renderExtinction(scene.extinction);
+
+    // Deep Dives
+    if (scene.deepDives?.length) {
+      html += `<div class="dd-trigger-section reveal"><div class="dd-trigger-label">深度解析 · Deep Dive</div><div class="dd-trigger-grid">`;
+      scene.deepDives.forEach((dd, i) => {
+        html += `
+          <div class="dd-trigger reveal reveal-delay-${i+1}" data-dd-idx="${idx}-${i}">
+            <span class="dd-trigger-icon">${dd.icon}</span>
+            <div class="dd-trigger-content">
+              <div class="dd-trigger-title">${dd.title}</div>
+              <div class="dd-trigger-hint">点击展开完整论证链</div>
+            </div>
+            <span class="dd-trigger-arrow">→</span>
+          </div>`;
+      });
+      html += `</div></div>`;
+    }
+    html += `</div></section>`;
+
+    // Part dividers
+    if (scene.id === 'scene-4') {
+      html += `
+        <section class="hero" id="part2-intro" data-palette="scene5" style="min-height:80vh;">
+          <div class="hero-overline reveal" style="animation:none;">第二部分</div>
+          <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">农业革命</h1>
+          <p class="hero-subtitle reveal reveal-delay-2" style="animation:none;">THE AGRICULTURAL REVOLUTION</p>
+        </section>`;
+    }
+    if (scene.id === 'scene-8') {
+      html += `
+        <section class="hero" id="part3-intro" data-palette="scene9" style="min-height:80vh;">
+          <div class="hero-overline reveal" style="animation:none;">第三部分</div>
+          <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">人类的融合统一</h1>
+          <p class="hero-subtitle reveal reveal-delay-2" style="animation:none;">THE UNIFICATION OF HUMANKIND</p>
+        </section>`;
+    }
+    if (scene.id === 'scene-12') {
+      html += `
+        <section class="hero" id="part4-intro" data-palette="scene13" style="min-height:80vh;">
+          <div class="hero-overline reveal" style="animation:none;">第四部分</div>
+          <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">科学革命</h1>
+          <p class="hero-subtitle reveal reveal-delay-2" style="animation:none;">THE SCIENTIFIC REVOLUTION</p>
+        </section>`;
+    }
+  });
+
+  // Epilogue: AI-era reflection
+  html += `
+    <section class="scene epilogue-section" id="epilogue" data-palette="scene18" style="min-height:auto; padding: clamp(4rem,10vw,8rem) 0;">
+      <div class="scene-inner">
+        <div class="reveal scene-number" style="opacity:0.4;">写在最后</div>
+        <h2 class="reveal scene-title reveal-delay-1" style="font-size:clamp(1.8rem,5vw,3rem);">当AI读完这本书</h2>
+        <div class="reveal scene-subtitle reveal-delay-2">WHEN AI READS SAPIENS</div>
+        <div class="hero-quote-wrap reveal-wipe">
+          <blockquote class="hero-quote" style="font-size:clamp(1rem,2.5vw,1.4rem);">赫拉利在2011年写下这本书时，ChatGPT还不存在。但他描述的每一个模式，都在AI时代以惊人的精度重演。</blockquote>
+        </div>
+        <div class="narrative">
+          <p class="reveal"><b>虚构的力量，正在被算法接管。</b>七万年前，智人发明了虚构故事来组织大规模合作。今天，推荐算法正在做同样的事——只是更快、更精准、更难以察觉。当TikTok的算法比你的朋友更了解你的偏好时，"虚构故事的创作权"正在从人类手中转移到机器手中。赫拉利所说的"主体间现实"——金钱、国家、法律——都需要数百万人的共识来维持。但一个足够强大的AI系统，可以实时为每个人定制一套"虚构叙事"，让每个人活在自己的故事泡泡里，同时仍然"协调"运作。这不是科幻——这是社交媒体已经在做的事。</p>
+          <p class="reveal"><b>奢侈品陷阱，正在以AI的速度重演。</b>智能手机、电子邮件、社交媒体——每一项技术都遵循了小麦驯化智人的同一模式：先是奢侈品，然后是日常品，最终是不可摆脱的必需品。AI工具正在走同一条路。当你的工作流程、思考方式、甚至创造力都依赖AI辅助时，你还能"戒掉"AI吗？我们正在经历人类历史上速度最快的一次奢侈品陷阱——而这一次，陷阱的另一端不是一株野草，而是一种可能比我们更聪明的实体。</p>
+          <p class="reveal"><b>"承认无知"的科学精神，正面临最大考验。</b>科学革命的核心是承认"我们不知道"。但AI创造了一种新的知识悖论：GPT可以生成流利的、看似正确的答案——但它不知道自己是否正确。当机器可以自信地说出任何话，而人类越来越依赖机器的输出时，"承认无知"这一科学精神的基石将面临前所未有的侵蚀。讽刺的是，AI可能让我们从"知道自己不知道"退回到"不知道自己不知道"。</p>
+          <p class="reveal"><b>赫拉利的终极问题在AI时代变得紧迫百倍：我们究竟想要什么？</b>我们用AI来提高效率——但效率的目的是什么？我们用AI来做出更好的决策——但"更好"的标准由谁定义？我们用AI来了解自己——但当算法比你更了解你时，"自我"还意味着什么？整本《人类简史》都在告诉我们一件事：<b>智人最擅长的是创造强大的工具，最不擅长的是思考工具应该服务于什么目的。</b>这一次，赌注比以往任何时候都高——因为这一次，工具本身可能比我们更聪明。</p>
+        </div>
+      </div>
+    </section>`;
+
+  // Footer
+  html += `
+    <footer class="footer" data-palette="hero">
+      <div class="reveal footer-title">全书 · 终</div>
+      <p class="reveal footer-text reveal-delay-1">七万年前，一种微不足道的灵长类动物学会了编故事。<br>一万年前，它用这些故事把自己锁进了农田。<br>五百年前，它承认了自己的无知——然后用无知的力量征服了世界。<br>今天，它正站在一个十字路口：继续做智人，还是把自己升级为神。<br><br><b>我们拥有了神的力量，却仍然保有采集者的欲望和中世纪农民的恐惧。<br>还有什么比这更危险的吗？</b></p>
+      <div class="reveal footer-next reveal-delay-2" style="opacity:0.4;margin-top:3rem;font-size:0.7rem;">尤瓦尔·赫拉利《人类简史：从动物到上帝》· 沉浸式深度导读 · 全四部分</div>
+    </footer>`;
+
+  app.innerHTML = html;
+
+  // Nav
+  let navHtml = '';
+  scenes.forEach(s => { navHtml += `<a href="#${s.id}" data-scene="${s.id}" data-label="${s.title}"></a>`; });
+  sceneNav.innerHTML = navHtml;
+
+  initScrollSystem();
+  initDeepDiveModal();
+  initComparison();
+}
+
+// ── Data Viz Renderers ──
+function renderDataViz(viz) {
+  if (viz.type === 'brain-energy') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div class="svg-container" data-viz="brain-energy">
+          <svg viewBox="0 0 600 200" fill="none">
+            <!-- Body mass bar -->
+            <text x="0" y="28" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">体重占比</text>
+            <rect x="80" y="16" width="500" height="20" rx="4" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="10" x="80" y="16" width="0" height="20" rx="4" fill="var(--accent)" opacity="0.4"/>
+            <text class="bar-label" x="95" y="30" font-family="var(--serif)" font-size="12" font-weight="700" fill="#fff" opacity="0">2%</text>
+            <!-- Energy bar -->
+            <text x="0" y="78" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">能量消耗</text>
+            <rect x="80" y="66" width="500" height="20" rx="4" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="125" x="80" y="66" width="0" height="20" rx="4" fill="var(--accent)"/>
+            <text class="bar-label" x="210" y="80" font-family="var(--serif)" font-size="12" font-weight="700" fill="#fff" opacity="0">25%</text>
+            <!-- Divider annotation -->
+            <line x1="80" y1="110" x2="580" y2="110" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="0" y="150" font-family="var(--sans)" font-size="10" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.05em">咀嚼时间</text>
+            <!-- Chewing time comparison -->
+            <rect x="80" y="136" width="500" height="10" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="416" x="80" y="136" width="0" height="10" rx="3" fill="var(--fg-secondary)" opacity="0.15"/>
+            <text class="bar-label" x="500" y="146" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0">黑猩猩 ~5小时/天</text>
+            <rect x="80" y="156" width="500" height="10" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="83" x="80" y="156" width="0" height="10" rx="3" fill="var(--accent)" opacity="0.6"/>
+            <text class="bar-label" x="168" y="166" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0">人类 ~1小时/天</text>
+          </svg>
+        </div>
+        <div class="number-grid reveal">
+          <div>
+            <div class="big-number" data-count-to="2">0</div>
+            <div class="big-number-label">% 体重占比</div>
+          </div>
+          <div>
+            <div class="big-number" data-count-to="25">0</div>
+            <div class="big-number-label">% 能量消耗</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  if (viz.type === 'dunbar') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div class="dunbar-viz" data-viz="dunbar">
+          <div class="dunbar-circle beyond" data-delay="1200">
+            <span class="dc-num">∞</span>
+            <span class="dc-label">虚构故事 → 无上限</span>
+          </div>
+          <div class="dunbar-circle limit" data-delay="800">
+            <span class="dc-num">150</span>
+            <span class="dc-label">邓巴数字 · 生物极限</span>
+          </div>
+          <div class="dunbar-circle band" data-delay="400">
+            <span class="dc-num">50</span>
+            <span class="dc-label">亲密朋友</span>
+          </div>
+          <div class="dunbar-circle core" data-delay="0">
+            <span class="dc-num">5</span>
+            <span class="dc-label">至亲</span>
+          </div>
+        </div>
+        <div class="number-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
+          <div>
+            <div class="big-number" data-count-to="150">0</div>
+            <div class="big-number-label">人 · 邓巴数字</div>
+          </div>
+          <div>
+            <div class="big-number" data-count-to="120">0</div>
+            <div class="big-number-label">人 · 罗马连队</div>
+          </div>
+          <div>
+            <div class="big-number" style="font-size:clamp(2rem,5vw,3.5rem);" data-count-to="1000000" data-suffix="+">0</div>
+            <div class="big-number-label">人 · 虚构合作上限</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  if (viz.type === 'agri-trap') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div class="svg-container" data-viz="agri-trap">
+          <svg viewBox="0 0 600 220" fill="none">
+            <text x="0" y="18" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">人口总量</text>
+            <rect x="80" y="8" width="500" height="22" rx="4" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="450" x="80" y="8" width="0" height="22" rx="4" fill="var(--accent)"/>
+            <text class="bar-label" x="535" y="23" font-family="var(--serif)" font-size="11" font-weight="700" fill="var(--accent)" opacity="0">↑ 5000%</text>
+
+            <text x="0" y="62" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">个体生活质量</text>
+            <rect x="80" y="52" width="500" height="22" rx="4" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="100" x="80" y="52" width="0" height="22" rx="4" fill="#DC2626" opacity="0.6"/>
+            <text class="bar-label" x="185" y="67" font-family="var(--serif)" font-size="11" font-weight="700" fill="#DC2626" opacity="0">↓ 急剧下降</text>
+
+            <line x1="80" y1="96" x2="580" y2="96" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="0" y="126" font-family="var(--sans)" font-size="10" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.05em">每日劳动</text>
+            <rect x="80" y="114" width="500" height="12" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="125" x="80" y="114" width="0" height="12" rx="3" fill="var(--accent)" opacity="0.3"/>
+            <text class="bar-label" x="210" y="124" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0">采集者 3-6小时</text>
+            <rect x="80" y="134" width="500" height="12" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="416" x="80" y="134" width="0" height="12" rx="3" fill="#DC2626" opacity="0.35"/>
+            <text class="bar-label" x="500" y="144" font-family="var(--sans)" font-size="9" fill="#DC2626" opacity="0">农民 10-14小时</text>
+
+            <text x="0" y="178" font-family="var(--sans)" font-size="10" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.05em">平均身高</text>
+            <rect x="80" y="166" width="500" height="12" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="440" x="80" y="166" width="0" height="12" rx="3" fill="var(--accent)" opacity="0.3"/>
+            <text class="bar-label" x="525" y="176" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0">采集者 ~177cm</text>
+            <rect x="80" y="186" width="500" height="12" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="340" x="80" y="186" width="0" height="12" rx="3" fill="#DC2626" opacity="0.35"/>
+            <text class="bar-label" x="425" y="196" font-family="var(--sans)" font-size="9" fill="#DC2626" opacity="0">农民 ~165cm (↓12cm)</text>
+          </svg>
+        </div>
+        <div class="number-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
+          <div>
+            <div class="big-number" data-count-to="225" data-suffix="万">0</div>
+            <div class="big-number-label">km² · 小麦种植面积</div>
+          </div>
+          <div>
+            <div class="big-number" style="color:#DC2626;" data-count-to="12">0</div>
+            <div class="big-number-label">cm · 身高下降</div>
+          </div>
+          <div>
+            <div class="big-number" data-count-to="5000" data-suffix="%">0</div>
+            <div class="big-number-label">人口增长率</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  if (viz.type === 'two-documents') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:2rem 0;">
+          <div style="padding:1.5rem; border-radius:10px; background:var(--accent-glow); border:1px solid var(--border);">
+            <div style="font-family:var(--sans); font-size:0.55rem; font-weight:700; letter-spacing:0.2em; color:var(--accent); margin-bottom:0.75rem; text-transform:uppercase;">公元前 1776 年</div>
+            <div style="font-family:var(--serif); font-size:1.1rem; font-weight:700; margin-bottom:0.75rem;">汉谟拉比法典</div>
+            <div style="font-size:0.8rem; line-height:1.8; opacity:0.75;">
+              "安努与恩利尔二神，为人类福祉计，命令我，荣耀而敬神的君主汉谟拉比，<b>发扬正义于世</b>，灭除不法邪恶之人，使强不凌弱。"
+            </div>
+            <div style="margin-top:1rem; font-size:0.65rem; color:var(--fg-secondary); opacity:0.6; line-height:1.7;">
+              核心假设：人由神创造为不同等级。<br>上等人命 = 30银舍客勒<br>平民命 = 20银舍客勒<br>奴隶 = 财产损失
+            </div>
+          </div>
+          <div style="padding:1.5rem; border-radius:10px; background:var(--accent-glow); border:1px solid var(--border);">
+            <div style="font-family:var(--sans); font-size:0.55rem; font-weight:700; letter-spacing:0.2em; color:var(--accent); margin-bottom:0.75rem; text-transform:uppercase;">公元 1776 年</div>
+            <div style="font-family:var(--serif); font-size:1.1rem; font-weight:700; margin-bottom:0.75rem;">美国独立宣言</div>
+            <div style="font-size:0.8rem; line-height:1.8; opacity:0.75;">
+              "我们认为下面这些真理是不证自明的：<b>人人生而平等</b>，造物主赋予他们若干不可剥夺的权利，其中包括生命权、自由权和追求幸福的权利。"
+            </div>
+            <div style="margin-top:1rem; font-size:0.65rem; color:var(--fg-secondary); opacity:0.6; line-height:1.7;">
+              核心假设：人由造物主创造为平等。<br>但：仅限白人有产男性<br>作者杰斐逊拥有600+奴隶<br>女性无投票权至1920年
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center; padding:1.5rem 0; font-family:var(--serif); font-size:0.85rem; opacity:0.6; line-height:2;">
+          两份文件相隔3552年，使用完全相同的修辞策略：<br>将虚构的社会规则伪装成超越人类的客观真理。
+        </div>
+      </div>`;
+  }
+  if (viz.type === 'money-evolution') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1.2rem; margin:2rem 0;">
+          ${[
+            {era:'公元前3000年',item:'大麦',desc:'苏美尔最早的支付媒介——一定量的大麦',icon:'🌾'},
+            {era:'公元前2500年',item:'白银',desc:'标准化重量的金属块，可切割和称量',icon:'🪙'},
+            {era:'公元前600年',item:'铸币',desc:'吕底亚王国发行第一批标准硬币',icon:'💰'},
+            {era:'公元7世纪',item:'纸币',desc:'唐朝"飞钱"——世界上最早的纸币',icon:'📜'},
+            {era:'1971年',item:'法定货币',desc:'尼克松终结金本位，货币彻底变为虚构',icon:'💵'},
+            {era:'2009年',item:'比特币',desc:'去中心化数字货币——纯粹的数学信任',icon:'₿'}
+          ].map(m => `
+            <div style="padding:1.2rem; border-radius:10px; background:var(--accent-glow); border:1px solid var(--border); text-align:center;">
+              <div style="font-size:2rem; margin-bottom:0.5rem;">${m.icon}</div>
+              <div style="font-family:var(--sans); font-size:0.55rem; font-weight:700; letter-spacing:0.15em; color:var(--accent); margin-bottom:0.4rem;">${m.era}</div>
+              <div style="font-family:var(--serif); font-size:0.9rem; font-weight:700; margin-bottom:0.4rem;">${m.item}</div>
+              <div style="font-size:0.7rem; line-height:1.6; opacity:0.6;">${m.desc}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="text-align:center; padding:1rem 0; font-family:var(--serif); font-size:0.8rem; opacity:0.5; line-height:2;">
+          5000年来，货币的物理形态不断变化，但本质始终如一：<br>它不是一种"东西"，而是一种"信任"。
+        </div>
+      </div>`;
+  }
+  if (viz.type === 'ignorance-revolution') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:2rem 0;">
+          <div style="padding:1.5rem; border-radius:10px; background:var(--accent-glow); border:1px solid var(--border);">
+            <div style="font-family:var(--sans); font-size:0.55rem; font-weight:700; letter-spacing:0.2em; color:var(--fg-secondary); margin-bottom:0.75rem;">1500年之前</div>
+            <div style="font-family:var(--serif); font-size:1.1rem; font-weight:700; margin-bottom:0.75rem;">前科学范式</div>
+            <div style="font-size:0.8rem; line-height:1.8; opacity:0.75;">
+              <b>"重要的事情都已知道"</b><br>
+              知识来源：经典文本（圣经/古兰经/四书五经）<br>
+              方法：注释、解读、权威引用<br>
+              目的：理解神/天的意志<br>
+              对未知的态度：不重要/已有答案
+            </div>
+          </div>
+          <div style="padding:1.5rem; border-radius:10px; background:var(--accent-glow); border:1px solid var(--border);">
+            <div style="font-family:var(--sans); font-size:0.55rem; font-weight:700; letter-spacing:0.2em; color:var(--accent); margin-bottom:0.75rem;">1500年之后</div>
+            <div style="font-family:var(--serif); font-size:1.1rem; font-weight:700; margin-bottom:0.75rem;">科学范式</div>
+            <div style="font-size:0.8rem; line-height:1.8; opacity:0.75;">
+              <b>"最重要的事情尚未发现"</b><br>
+              知识来源：观察与实验<br>
+              方法：假说→实验→验证/否定<br>
+              目的：获得新的能力/力量<br>
+              对未知的态度：核心驱动力/研究方向
+            </div>
+          </div>
+        </div>
+        <div class="number-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
+          <div>
+            <div class="big-number" data-count-to="1543">0</div>
+            <div class="big-number-label">哥白尼《天体运行论》</div>
+          </div>
+          <div>
+            <div class="big-number" data-count-to="20" data-suffix="亿">0</div>
+            <div class="big-number-label">美元 · 曼哈顿计划经费</div>
+          </div>
+          <div>
+            <div class="big-number" data-count-to="500" data-suffix="+">0</div>
+            <div class="big-number-label">年 · 科学持续加速</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  if (viz.type === 'credit-cycle') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:0.5rem; margin:2rem auto; max-width:600px; font-family:var(--serif); font-size:0.85rem; line-height:2.5;">
+          ${['信任未来','→','发放信贷','→','投资生产','→','经济增长','→','未来更好','→','更多信任','→ …'].map((t,i) =>
+            t === '→' || t === '→ …' ?
+              `<span style="color:var(--accent);font-weight:700;font-size:1.1rem;">${t}</span>` :
+              `<span style="padding:0.4rem 1rem; border-radius:8px; background:var(--accent-glow); border:1px solid var(--border); white-space:nowrap;">${t}</span>`
+          ).join('')}
+        </div>
+        <div style="text-align:center; margin:1.5rem 0; font-size:0.75rem; color:var(--fg-secondary); line-height:2; opacity:0.7;">
+          正循环：乐观 → 信贷扩张 → 增长 → 更乐观<br>
+          负循环：恐慌 → 信贷收缩 → 衰退 → 更恐慌<br>
+          整个现代经济运行在这两种循环之间
+        </div>
+        <div class="number-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
+          <div>
+            <div class="big-number" data-count-to="300" data-suffix="万亿">0</div>
+            <div class="big-number-label">美元 · 全球信贷总额</div>
+          </div>
+          <div>
+            <div class="big-number" data-count-to="100" data-suffix="万亿">0</div>
+            <div class="big-number-label">美元 · 全球GDP</div>
+          </div>
+          <div>
+            <div class="big-number" style="color:#DC2626;" data-count-to="3">0</div>
+            <div class="big-number-label">倍 · 信贷/实际财富</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  if (viz.type === 'happiness-paradox') {
+    return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${viz.title}</div>
+        <div class="svg-container" data-viz="happiness-paradox">
+          <svg viewBox="0 0 600 200" fill="none">
+            <text x="0" y="28" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">人均GDP增长（1950-2020）</text>
+            <rect x="80" y="16" width="500" height="22" rx="4" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="450" x="80" y="16" width="0" height="22" rx="4" fill="var(--accent)"/>
+            <text class="bar-label" x="535" y="31" font-family="var(--serif)" font-size="11" font-weight="700" fill="var(--accent)" opacity="0">↑ 600%</text>
+
+            <text x="0" y="74" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">幸福感变化</text>
+            <rect x="80" y="62" width="500" height="22" rx="4" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="15" x="80" y="62" width="0" height="22" rx="4" fill="#8A5AA0" opacity="0.6"/>
+            <text class="bar-label" x="100" y="77" font-family="var(--serif)" font-size="11" font-weight="700" fill="#8A5AA0" opacity="0">≈ 持平</text>
+
+            <line x1="80" y1="106" x2="580" y2="106" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="0" y="136" font-family="var(--sans)" font-size="10" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.05em">预期寿命</text>
+            <rect x="80" y="124" width="500" height="12" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="350" x="80" y="124" width="0" height="12" rx="3" fill="var(--accent)" opacity="0.3"/>
+            <text class="bar-label" x="435" y="134" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0">48岁 → 73岁</text>
+            <text x="0" y="162" font-family="var(--sans)" font-size="10" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.05em">抑郁症发病率</text>
+            <rect x="80" y="150" width="500" height="12" rx="3" fill="var(--border)"/>
+            <rect class="draw-bar" data-target-w="200" x="80" y="150" width="0" height="12" rx="3" fill="#DC2626" opacity="0.35"/>
+            <text class="bar-label" x="285" y="160" font-family="var(--sans)" font-size="9" fill="#DC2626" opacity="0">全球3.5亿人 ↑ 持续上升</text>
+          </svg>
+        </div>
+        <div class="number-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
+          <div>
+            <div class="big-number" data-count-to="600" data-suffix="%">0</div>
+            <div class="big-number-label">人均GDP增长</div>
+          </div>
+          <div>
+            <div class="big-number" style="color:#8A5AA0;" data-count-to="0">0</div>
+            <div class="big-number-label">% · 幸福感净变化</div>
+          </div>
+          <div>
+            <div class="big-number" style="color:#DC2626;" data-count-to="50" data-suffix="%">0</div>
+            <div class="big-number-label">遗传决定的幸福基线</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  return '';
+}
+
+// ── Comparison Module ──
+function renderComparison(comp) {
+  let html = `
+    <div class="comparison-section reveal">
+      <div class="dd-trigger-label">生活质量对比 · Quality of Life</div>
+      <div class="comparison-toggle">
+        <button class="toggle-btn active" data-mode="foraging">采集生活</button>
+        <button class="toggle-btn" data-mode="farming">农耕生活</button>
+        <button class="toggle-btn" data-mode="compare">对比</button>
+      </div>
+      <div class="comparison-rows">`;
+  comp.dimensions.forEach((dim, i) => {
+    html += `
+      <div class="comp-row reveal reveal-delay-${Math.min(i+1,4)}" data-comp-row>
+        <div class="comp-row-label">${dim.label}</div>
+        <div class="comp-bars">
+          <div class="comp-bar-wrapper" data-bar="foraging">
+            <span class="comp-bar-tag">采集</span>
+            <div class="comp-bar-track"><div class="comp-bar-fill amber" data-score="${dim.foraging.score}"></div></div>
+            <span class="comp-bar-value">${dim.foraging.score}/10</span>
+          </div>
+          <div class="comp-bar-wrapper" data-bar="farming" style="display:none;">
+            <span class="comp-bar-tag">农耕</span>
+            <div class="comp-bar-track"><div class="comp-bar-fill grey" data-score="${dim.farming.score}"></div></div>
+            <span class="comp-bar-value">${dim.farming.score}/10</span>
+          </div>
+        </div>
+        <div class="comp-text" data-text-foraging>${dim.foraging.text}</div>
+        <div class="comp-text" data-text-farming style="display:none;">${dim.farming.text}</div>
+      </div>`;
+  });
+  html += `</div></div>`;
+  return html;
+}
+
+// ── Extinction Viz ──
+function renderExtinction(ext) {
+  let html = `<div class="extinction-section"><div class="dd-trigger-label reveal">灭绝档案 · Extinction Record</div>`;
+  ext.regions.forEach((region, i) => {
+    html += `
+      <div class="extinction-region" data-ext-region data-delay="${i*600}" data-percent="${region.percentLost}">
+        <div class="ext-header">
+          <span class="ext-region-name">${region.name}</span>
+          <span class="ext-arrival">智人到达：${region.arrival}</span>
+        </div>
+        <div class="ext-species">
+          ${region.species.map((s,j) => `<span class="ext-species-icon" data-ext-species data-delay="${j*120}" title="${s.name} · ${s.weight}">${s.icon}</span>`).join('')}
+        </div>
+        <div class="ext-bar-wrapper">
+          <span class="ext-bar-label">灭绝率</span>
+          <div class="ext-bar-track"><div class="ext-bar-fill" data-ext-fill data-target="${region.percentLost}"></div></div>
+          <span class="ext-percent"><span class="counter" data-ext-counter data-target="${region.percentLost}">0</span>%</span>
+        </div>
+        <div class="ext-note">${region.note}</div>
+      </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// SCROLL SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function initScrollSystem() {
+  const scenes = document.querySelectorAll('.scene');
+  const navLinks = document.querySelectorAll('.scene-nav a');
+  const progressBar = document.getElementById('progressBar');
+  const nav = document.getElementById('sceneNav');
+
+  // Reveal observer
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); revealObs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => revealObs.observe(el));
+
+  // Extinction observer — reveal first, then animate bars after a beat
+  const extObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('ext-visible');
+        // Wait for fade-in to complete before animating bars
+        setTimeout(() => animateExtRegion(e.target), 400);
+        extObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('[data-ext-region]').forEach(el => extObs.observe(el));
+
+  // Comparison observer
+  const compObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateCompBars(); compObs.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  const compSec = document.querySelector('.comparison-section');
+  if (compSec) compObs.observe(compSec);
+
+  // Data viz observers
+  const vizObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateDataViz(e.target); vizObs.unobserve(e.target); } });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('[data-viz]').forEach(el => vizObs.observe(el));
+
+  // Dunbar circles observer
+  const dunbarObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateDunbar(e.target); dunbarObs.unobserve(e.target); } });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.dunbar-viz').forEach(el => dunbarObs.observe(el));
+
+  // Big number counter observer
+  const countObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const target = parseInt(e.target.dataset.countTo);
+        const suffix = e.target.dataset.suffix || '';
+        animateCounter(e.target, 0, target, 2000, suffix);
+        countObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-count-to]').forEach(el => countObs.observe(el));
+
+  // Scroll handler — palette + progress + nav
+  let currentPalette = 'hero';
+  let ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+      nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
+
+      // Determine active scene
+      const viewMid = scrollTop + window.innerHeight * 0.45;
+      let newPalette = 'hero';
+      // Check all palette-bearing sections (scenes + part intros)
+      document.querySelectorAll('[data-palette]').forEach(s => {
+        if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+          newPalette = s.dataset.palette;
+        }
+      });
+      scenes.forEach(s => {
+        if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+          navLinks.forEach(l => l.classList.toggle('active', l.dataset.scene === s.id));
+        }
+      });
+      // Footer
+      const footer = document.querySelector('.footer');
+      if (footer && viewMid >= footer.offsetTop) newPalette = 'hero';
+
+      if (newPalette !== currentPalette) {
+        currentPalette = newPalette;
+        applyPalette(newPalette);
+      }
+      ticking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// DATA VIZ ANIMATIONS
+// ═══════════════════════════════════════════════════════════════
+function animateDataViz(container) {
+  // Animate SVG bars
+  const bars = container.querySelectorAll('.draw-bar');
+  bars.forEach((bar, i) => {
+    const targetW = parseFloat(bar.dataset.targetW);
+    setTimeout(() => {
+      bar.style.transition = 'width 1.5s var(--ease-out)';
+      bar.style.width = targetW + 'px';
+    }, i * 300);
+  });
+  // Show labels
+  const labels = container.querySelectorAll('.bar-label');
+  labels.forEach((lbl, i) => {
+    setTimeout(() => {
+      lbl.style.transition = 'opacity 0.6s';
+      lbl.style.opacity = '1';
+    }, 800 + i * 300);
+  });
+}
+
+function animateDunbar(container) {
+  const circles = container.querySelectorAll('.dunbar-circle');
+  circles.forEach(c => {
+    const delay = parseInt(c.dataset.delay) || 0;
+    setTimeout(() => c.classList.add('visible'), delay);
+  });
+}
+
+function animateCounter(el, from, to, duration, suffix) {
+  const start = performance.now();
+  function formatVal(val) {
+    if (suffix === '万') return val; // keep raw number, suffix added separately
+    if (suffix === '%') return val;
+    if (val >= 1000000) return (val / 1000000).toFixed(0) + 'M';
+    if (val >= 10000 && !suffix) return Math.round(val / 1000) + 'K';
+    return val;
+  }
+  function tick(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const val = Math.round(from + (to - from) * eased);
+    el.textContent = formatVal(val) + (p >= 1 && suffix ? suffix : (p < 1 && suffix === '+' ? '' : ''));
+    if (p >= 1) el.textContent = formatVal(to) + (suffix || '');
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// DEEP DIVE MODAL
+// ═══════════════════════════════════════════════════════════════
+function initDeepDiveModal() {
+  const overlay = document.getElementById('modalOverlay');
+  const backdrop = document.getElementById('modalBackdrop');
+  const closeBtn = document.getElementById('modalClose');
+  const body = document.getElementById('modalBody');
+
+  function openModal(sceneIdx, ddIdx) {
+    const dd = CONTENT_DATA.scenes[sceneIdx].deepDives[ddIdx];
+    body.innerHTML = `
+      <div class="modal-icon modal-stagger modal-stagger-1">${dd.icon}</div>
+      <h3 class="modal-title modal-stagger modal-stagger-2">${dd.title}</h3>
+      <div class="logic-chain-modal">
+        <div class="chain-step-modal modal-stagger modal-stagger-3">
+          <div class="chain-label-modal">前 提</div>
+          <div class="chain-text-modal">${dd.chain.premise}</div>
+        </div>
+        <div class="chain-step-modal modal-stagger modal-stagger-4">
+          <div class="chain-label-modal">证 据</div>
+          <div class="chain-text-modal">${dd.chain.evidence}</div>
+        </div>
+        <div class="chain-step-modal modal-stagger modal-stagger-5">
+          <div class="chain-label-modal">结 论</div>
+          <div class="chain-text-modal">${dd.chain.conclusion}</div>
+        </div>
+      </div>`;
+    // Force reflow so stagger transitions fire from initial state
+    body.offsetHeight;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('click', e => {
+    const trigger = e.target.closest('[data-dd-idx]');
+    if (trigger) {
+      const [sIdx, dIdx] = trigger.dataset.ddIdx.split('-').map(Number);
+      openModal(sIdx, dIdx);
+    }
+  });
+  backdrop.addEventListener('click', closeModal);
+  closeBtn.addEventListener('click', closeModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// COMPARISON MODULE
+// ═══════════════════════════════════════════════════════════════
+function initComparison() {
+  document.querySelectorAll('.comparison-toggle').forEach(toggle => {
+    toggle.addEventListener('click', e => {
+      const btn = e.target.closest('.toggle-btn');
+      if (!btn) return;
+      toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const section = toggle.closest('.comparison-section');
+      updateCompBars(btn.dataset.mode, section);
+    });
+  });
+}
+function updateCompBars(mode, section) {
+  section.querySelectorAll('[data-comp-row]').forEach(row => {
+    const fb = row.querySelector('[data-bar="foraging"]');
+    const ab = row.querySelector('[data-bar="farming"]');
+    const ft = row.querySelector('[data-text-foraging]');
+    const at = row.querySelector('[data-text-farming]');
+    fb.style.display = mode === 'farming' ? 'none' : 'flex';
+    ab.style.display = mode === 'foraging' ? 'none' : 'flex';
+    ft.style.display = mode === 'farming' ? 'none' : 'block';
+    at.style.display = mode === 'foraging' ? 'none' : 'block';
+  });
+  animateCompBars(section);
+}
+function animateCompBars(section) {
+  (section || document).querySelectorAll('.comp-bar-fill').forEach(bar => {
+    if (bar.closest('.comp-bar-wrapper').style.display === 'none') return;
+    bar.style.width = '0%';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      bar.style.width = (parseInt(bar.dataset.score) / 10 * 100) + '%';
+    }));
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// EXTINCTION ANIMATIONS
+// ═══════════════════════════════════════════════════════════════
+function animateExtRegion(region) {
+  const delay = parseInt(region.dataset.delay) || 0;
+  setTimeout(() => {
+    const fill = region.querySelector('[data-ext-fill]');
+    fill.style.width = fill.dataset.target + '%';
+    const counter = region.querySelector('[data-ext-counter]');
+    animateCounter(counter, 0, parseInt(counter.dataset.target), 1500, '');
+    region.querySelectorAll('[data-ext-species]').forEach((icon, i) => {
+      setTimeout(() => icon.classList.add('extinct'), 800 + (parseInt(icon.dataset.delay) || 0));
+    });
+  }, delay);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// KEYBOARD NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function initKeyboardNav() {
+  const kbHint = document.getElementById('kbHint');
+  let hintDismissed = false;
+
+  // Dismiss hint after first manual scroll
+  function dismissHint() {
+    if (!hintDismissed) {
+      hintDismissed = true;
+      kbHint.classList.add('hidden');
+      window.removeEventListener('wheel', dismissHint);
+      window.removeEventListener('touchstart', dismissHint);
+    }
+  }
+  window.addEventListener('wheel', dismissHint, { passive: true, once: true });
+  window.addEventListener('touchstart', dismissHint, { passive: true, once: true });
+
+  // Collect all navigable anchors: hero + scenes
+  function getAnchors() {
+    const anchors = [document.getElementById('hero')];
+    CONTENT_DATA.scenes.forEach(s => {
+      const el = document.getElementById(s.id);
+      if (el) anchors.push(el);
+    });
+    return anchors;
+  }
+
+  // Find current scene index based on scroll position
+  function currentIdx(anchors) {
+    const scrollMid = window.scrollY + window.innerHeight * 0.4;
+    let idx = 0;
+    for (let i = anchors.length - 1; i >= 0; i--) {
+      if (scrollMid >= anchors[i].offsetTop) { idx = i; break; }
+    }
+    return idx;
+  }
+
+  document.addEventListener('keydown', e => {
+    // Don't hijack keys when modal is open
+    if (document.getElementById('modalOverlay').classList.contains('open')) return;
+
+    const anchors = getAnchors();
+    const cur = currentIdx(anchors);
+
+    if (e.key === 'ArrowDown' || (e.key === ' ' && !e.shiftKey)) {
+      e.preventDefault();
+      const next = Math.min(cur + 1, anchors.length - 1);
+      anchors[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      dismissHint();
+    } else if (e.key === 'ArrowUp' || (e.key === ' ' && e.shiftKey)) {
+      e.preventDefault();
+      const prev = Math.max(cur - 1, 0);
+      anchors[prev].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      dismissHint();
+    }
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+renderApp();
+initKeyboardNav();
+</script>
+</body>
+</html>
