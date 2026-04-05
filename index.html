@@ -1985,6 +1985,25 @@ function renderApp() {
     }
   });
 
+  // Epilogue: AI-era reflection
+  html += `
+    <section class="scene epilogue-section" id="epilogue" data-palette="scene18" style="min-height:auto; padding: clamp(4rem,10vw,8rem) 0;">
+      <div class="scene-inner">
+        <div class="reveal scene-number" style="opacity:0.4;">写在最后</div>
+        <h2 class="reveal scene-title reveal-delay-1" style="font-size:clamp(1.8rem,5vw,3rem);">当AI读完这本书</h2>
+        <div class="reveal scene-subtitle reveal-delay-2">WHEN AI READS SAPIENS</div>
+        <div class="hero-quote-wrap reveal-wipe">
+          <blockquote class="hero-quote" style="font-size:clamp(1rem,2.5vw,1.4rem);">赫拉利在2011年写下这本书时，ChatGPT还不存在。但他描述的每一个模式，都在AI时代以惊人的精度重演。</blockquote>
+        </div>
+        <div class="narrative">
+          <p class="reveal"><b>虚构的力量，正在被算法接管。</b>七万年前，智人发明了虚构故事来组织大规模合作。今天，推荐算法正在做同样的事——只是更快、更精准、更难以察觉。当TikTok的算法比你的朋友更了解你的偏好时，"虚构故事的创作权"正在从人类手中转移到机器手中。赫拉利所说的"主体间现实"——金钱、国家、法律——都需要数百万人的共识来维持。但一个足够强大的AI系统，可以实时为每个人定制一套"虚构叙事"，让每个人活在自己的故事泡泡里，同时仍然"协调"运作。这不是科幻——这是社交媒体已经在做的事。</p>
+          <p class="reveal"><b>奢侈品陷阱，正在以AI的速度重演。</b>智能手机、电子邮件、社交媒体——每一项技术都遵循了小麦驯化智人的同一模式：先是奢侈品，然后是日常品，最终是不可摆脱的必需品。AI工具正在走同一条路。当你的工作流程、思考方式、甚至创造力都依赖AI辅助时，你还能"戒掉"AI吗？我们正在经历人类历史上速度最快的一次奢侈品陷阱——而这一次，陷阱的另一端不是一株野草，而是一种可能比我们更聪明的实体。</p>
+          <p class="reveal"><b>"承认无知"的科学精神，正面临最大考验。</b>科学革命的核心是承认"我们不知道"。但AI创造了一种新的知识悖论：GPT可以生成流利的、看似正确的答案——但它不知道自己是否正确。当机器可以自信地说出任何话，而人类越来越依赖机器的输出时，"承认无知"这一科学精神的基石将面临前所未有的侵蚀。讽刺的是，AI可能让我们从"知道自己不知道"退回到"不知道自己不知道"。</p>
+          <p class="reveal"><b>赫拉利的终极问题在AI时代变得紧迫百倍：我们究竟想要什么？</b>我们用AI来提高效率——但效率的目的是什么？我们用AI来做出更好的决策——但"更好"的标准由谁定义？我们用AI来了解自己——但当算法比你更了解你时，"自我"还意味着什么？整本《人类简史》都在告诉我们一件事：<b>智人最擅长的是创造强大的工具，最不擅长的是思考工具应该服务于什么目的。</b>这一次，赌注比以往任何时候都高——因为这一次，工具本身可能比我们更聪明。</p>
+        </div>
+      </div>
+    </section>`;
+
   // Footer
   html += `
     <footer class="footer" data-palette="hero">
@@ -2319,12 +2338,12 @@ function renderComparison(comp) {
   let html = `
     <div class="comparison-section reveal">
       <div class="dd-trigger-label">生活质量对比 · Quality of Life</div>
-      <div class="comparison-toggle" id="compToggle">
+      <div class="comparison-toggle">
         <button class="toggle-btn active" data-mode="foraging">采集生活</button>
         <button class="toggle-btn" data-mode="farming">农耕生活</button>
         <button class="toggle-btn" data-mode="compare">对比</button>
       </div>
-      <div class="comparison-rows" id="compRows">`;
+      <div class="comparison-rows">`;
   comp.dimensions.forEach((dim, i) => {
     html += `
       <div class="comp-row reveal reveal-delay-${Math.min(i+1,4)}" data-comp-row>
@@ -2585,18 +2604,19 @@ function initDeepDiveModal() {
 // COMPARISON MODULE
 // ═══════════════════════════════════════════════════════════════
 function initComparison() {
-  const toggle = document.getElementById('compToggle');
-  if (!toggle) return;
-  toggle.addEventListener('click', e => {
-    const btn = e.target.closest('.toggle-btn');
-    if (!btn) return;
-    toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    updateCompBars(btn.dataset.mode);
+  document.querySelectorAll('.comparison-toggle').forEach(toggle => {
+    toggle.addEventListener('click', e => {
+      const btn = e.target.closest('.toggle-btn');
+      if (!btn) return;
+      toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const section = toggle.closest('.comparison-section');
+      updateCompBars(btn.dataset.mode, section);
+    });
   });
 }
-function updateCompBars(mode) {
-  document.querySelectorAll('[data-comp-row]').forEach(row => {
+function updateCompBars(mode, section) {
+  section.querySelectorAll('[data-comp-row]').forEach(row => {
     const fb = row.querySelector('[data-bar="foraging"]');
     const ab = row.querySelector('[data-bar="farming"]');
     const ft = row.querySelector('[data-text-foraging]');
@@ -2606,10 +2626,10 @@ function updateCompBars(mode) {
     ft.style.display = mode === 'farming' ? 'none' : 'block';
     at.style.display = mode === 'foraging' ? 'none' : 'block';
   });
-  animateCompBars();
+  animateCompBars(section);
 }
-function animateCompBars() {
-  document.querySelectorAll('.comp-bar-fill').forEach(bar => {
+function animateCompBars(section) {
+  (section || document).querySelectorAll('.comp-bar-fill').forEach(bar => {
     if (bar.closest('.comp-bar-wrapper').style.display === 'none') return;
     bar.style.width = '0%';
     requestAnimationFrame(() => requestAnimationFrame(() => {
