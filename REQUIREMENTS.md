@@ -19,10 +19,19 @@
 6. **效率与规模** —— 通用工具化，放入一本书就能高效产出沉浸式体验
 
 ### 使用流程（用户视角）
+
+**输入方式（三选一）**：
+- **方式A**：将电子书文件放入项目根目录（支持 PDF / EPUB / MOBI / TXT / DOCX）
+- **方式B**：直接告诉AI书名，AI基于自身深度知识进行解读（无需文件）
+- **方式C**：提供书名 + 电子书文件，AI结合文件内容与自身知识进行解读
+
+> 说明：本项目为个人学习用途，不涉及内容再分发。
+
 ```
-用户将PDF放入文件夹
+用户指定一本书（提供文件 或 告知书名）
     ↓
-AI读取PDF，自动判断书籍类型（历史/心理学/哲学/科学...）
+AI读取文件内容（如有）+ 调用自身对该书的深度知识
+AI自动判断书籍类型（历史/心理学/哲学/科学...）
     ↓
 AI执行"五层解读法"，逐层深度拆解：
     ├─ L1 检视：提取全书骨架（目录、主旨、术语表、场景划分）
@@ -33,7 +42,9 @@ AI执行"五层解读法"，逐层深度拆解：
     ↓
 AI根据书籍类型选择配色基调，生成 PALETTES
     ↓
-渲染引擎将数据组装为完整的交互式HTML页面
+渲染引擎组装为沉浸式交互页面
+（CDN加载专业库：GSAP动画 + ECharts数据可视化 + Canvas粒子，
+ 实现电影级视觉冲击和丰富动态交互）
     ↓
 自动更新书架首页（新增卡片）
     ↓
@@ -59,7 +70,7 @@ AI根据书籍类型选择配色基调，生成 PALETTES
 | 维度 | 说明 |
 |------|------|
 | **Adler对应** | 第二层"检视阅读"——快速把握全貌 |
-| **目标** | 读者在10分钟内理解这本书讲了什么、结构如何 |
+| **目标** | 用精炼的首屏体验**引发兴趣**——让读者一眼看到这本书的全貌、核心问题和知识结构，产生"想深入了解"的冲动（注意：这是阅读旅程的**入口钩子**，不是限制全书深度的时间约束） |
 | **AI工作** | 分类书籍类型 → 提取目录结构 → 一句话概括主旨 → 列出关键术语表 → 确定场景划分 |
 | **呈现形式** | Hero首屏（书名+作者+核心标签）、BookMeta（类型/场景数/部分数）、可选的Timeline总览 |
 | **质量门控** | 一句话主旨是否精准？术语表是否覆盖核心概念？场景划分是否逻辑自洽？ |
@@ -171,12 +182,16 @@ fiction     → CharacterMap + NarrativeArc + ThemeWeb
 
 ### 阶段0：输入与预处理
 ```
-输入：用户将PDF放入根目录
+输入（三种方式）：
+  A. 用户将电子书文件放入根目录（PDF/EPUB/MOBI/TXT/DOCX）
+  B. 用户直接告知书名，AI基于自身深度知识解读（无需文件）
+  C. 用户提供书名 + 电子书文件，AI结合文件内容与自身知识
 处理：
-  1. 读取PDF文本内容（如无法提取则依赖AI既有知识）
-  2. 识别书名、作者、出版信息
-  3. 提取目录结构（如有）
-输出：原始文本 + 目录结构
+  1. 如有文件：读取文本内容（如为扫描版则标记为不可用）
+  2. 结合AI对该书的深度知识（无论是否有文件，AI知识始终参与）
+  3. 识别书名、作者、出版信息
+  4. 提取目录结构（如有）
+输出：原始文本（如有）+ 目录结构 + AI知识就绪
 ```
 
 ### 阶段1：检视阅读（L1）—— 全局扫描
@@ -545,6 +560,128 @@ if (window.CUSTOM_COMPONENTS) {
 | 8+个IntersectionObserver | 多余的观察任务 | 合并为2-3个Observer（reveal / palette / component-init） | P1 |
 | `background-color`过渡触发全页重绘 | 每次换场景全页repaint | 改用固定伪元素的`opacity`过渡（GPU合成层，不触发重绘） | P1 |
 | Google Fonts加载3族13+权重 | 中文字体5-10MB+ | 精简为实际使用的权重，加`font-display:swap` | P2 |
+
+### 5.9 渲染技术栈（CDN专业库）
+
+为实现电影级视觉冲击力，引擎通过CDN加载以下专业库，替代手写CSS动画和SVG字符串：
+
+| 库 | CDN | 用途 | 引擎中的使用方式 |
+|---|-----|------|-----------------|
+| **GSAP** (GreenSock) | `cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js` + ScrollTrigger插件 | 滚动驱动动画、时间线编排、弹性缓动 | 替代IntersectionObserver的`.revealed`逐帧动画；场景进入时触发GSAP timeline |
+| **ECharts** | `cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js` | 交互式数据图表（柱状图、折线图、雷达图、桑基图、地图等） | DataViz组件不再手写SVG，改为调用ECharts实例；支持hover交互、缩放、工具提示 |
+| **Canvas粒子** | 自写轻量引擎（<100行）或 `tsparticles` | 背景装饰粒子、DNA螺旋、星空等 | 每个场景可选配粒子效果类型（通过palette配置），离屏自动暂停 |
+
+#### GSAP使用模式
+```javascript
+// engine.js 中的标准用法
+function initGSAPAnimations() {
+  // 1. 注册ScrollTrigger插件
+  gsap.registerPlugin(ScrollTrigger);
+
+  // 2. 场景进入动画
+  document.querySelectorAll('.scene').forEach(scene => {
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: scene,
+        start: 'top 80%',
+        end: 'bottom 20%',
+        toggleActions: 'play none none reverse'
+      }
+    });
+
+    // HeroQuote: 从下方滑入 + 裁剪展开
+    tl.from(scene.querySelector('.hero-quote'), {
+      y: 60, opacity: 0, clipPath: 'inset(100% 0 0 0)',
+      duration: 1.2, ease: 'power4.out'
+    });
+
+    // Narrative段落: 逐段交错进入
+    tl.from(scene.querySelectorAll('.narrative p'), {
+      y: 40, opacity: 0,
+      duration: 0.8, stagger: 0.15, ease: 'power3.out'
+    }, '-=0.6');
+
+    // DeepDive卡片: 从左侧滑入
+    tl.from(scene.querySelectorAll('.deep-dive-card'), {
+      x: -30, opacity: 0,
+      duration: 0.6, stagger: 0.12, ease: 'power2.out'
+    }, '-=0.4');
+  });
+
+  // 3. 数据可视化进入时触发ECharts动画
+  document.querySelectorAll('.data-viz-container').forEach(el => {
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 75%',
+      onEnter: () => el.__echarts_instance__?.resize()
+    });
+  });
+}
+```
+
+#### ECharts使用模式
+```javascript
+// components.js 中的标准DataViz渲染
+function renderBarChart(config) {
+  const containerId = `chart-${config.id || Date.now()}`;
+  // 返回容器HTML，init阶段创建ECharts实例
+  return `<div id="${containerId}" class="echart-container"
+    style="width:100%;height:${config.height || 360}px;"
+    data-chart-config='${JSON.stringify(config)}'></div>`;
+}
+
+function initECharts() {
+  document.querySelectorAll('.echart-container').forEach(el => {
+    const config = JSON.parse(el.dataset.chartConfig);
+    const chart = echarts.init(el, null, { renderer: 'svg' });
+    chart.setOption({
+      // 主题色从CSS变量读取
+      color: [getComputedStyle(el).getPropertyValue('--accent').trim()],
+      tooltip: { trigger: 'axis' },
+      animationDuration: 1200,
+      animationEasing: 'cubicOut',
+      ...config.echartOption  // 书籍数据直接传入ECharts配置
+    });
+    el.__echarts_instance__ = chart;
+    // 响应式
+    new ResizeObserver(() => chart.resize()).observe(el);
+  });
+}
+```
+
+#### 粒子系统使用模式
+```javascript
+// engine.js 中的轻量粒子引擎
+function initParticles(canvas, type = 'float') {
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  let running = false;
+
+  // 类型映射：不同书籍/场景可选不同粒子效果
+  const PARTICLE_TYPES = {
+    'float':    { count: 30, speed: 0.3, size: [2, 5], opacity: 0.15 },
+    'stars':    { count: 60, speed: 0.1, size: [1, 3], opacity: 0.4 },
+    'dna':      { count: 40, speed: 0.5, size: [3, 6], opacity: 0.2 },
+    'neurons':  { count: 25, speed: 0.4, size: [2, 4], opacity: 0.25, connect: true }
+  };
+
+  // IntersectionObserver控制：离屏暂停，入屏恢复
+  new IntersectionObserver(([entry]) => {
+    running = entry.isIntersecting;
+    if (running) animate();
+  }, { threshold: 0 }).observe(canvas);
+}
+```
+
+#### 降级策略（Graceful Degradation）
+```
+CDN加载失败时的降级方案：
+├── GSAP加载失败 → fallback到现有IntersectionObserver + CSS transition方案
+├── ECharts加载失败 → fallback到手写SVG静态图表
+└── Canvas不支持 → 隐藏粒子，不影响内容
+```
+
+所有CDN库在`<head>`中以`defer`方式加载，引擎在`DOMContentLoaded`后检测全局对象是否存在，决定使用专业库还是降级方案。
 
 ---
 
