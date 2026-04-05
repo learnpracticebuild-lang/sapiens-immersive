@@ -1474,7 +1474,9 @@ body::before {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1rem 1.2rem;
-  width: 180px;
+  width: 240px;
+  white-space: normal;
+  word-break: break-all;
   font-size: 0.72rem;
   line-height: 1.7;
   color: var(--fg-secondary);
@@ -1483,6 +1485,23 @@ body::before {
   transition: all 0.3s var(--ease-out);
   box-shadow: 0 8px 30px rgba(0,0,0,0.1);
   z-index: 10;
+}
+.timeline-milestone:first-child .timeline-desc {
+  left: 0;
+  transform: translateX(0) translateY(8px);
+}
+.timeline-milestone:first-child.active .timeline-desc,
+.timeline-milestone:first-child:hover .timeline-desc {
+  transform: translateX(0) translateY(0);
+}
+.timeline-milestone:last-child .timeline-desc {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(8px);
+}
+.timeline-milestone:last-child.active .timeline-desc,
+.timeline-milestone:last-child:hover .timeline-desc {
+  transform: translateX(0) translateY(0);
 }
 .timeline-milestone.active .timeline-desc,
 .timeline-milestone:hover .timeline-desc {
@@ -1681,6 +1700,95 @@ body::before {
 }
 .footer-bookshelf:hover .arrow {
   transform: translateX(-4px);
+}
+/* ═══════════════════════════════════════════════════════
+   KNOWLEDGE MIND MAPS
+   ═══════════════════════════════════════════════════════ */
+.knowledge-map {
+  margin: 4rem 0;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+.km-title {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: var(--accent);
+}
+.km-center {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px var(--accent-mid);
+}
+.km-connector {
+  width: 2px;
+  height: 2rem;
+  background: linear-gradient(to bottom, var(--accent-mid), transparent);
+  margin: 0 auto;
+}
+.km-branches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.km-branch {
+  background: var(--accent-glow);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem;
+  text-align: left;
+}
+.km-branch-title {
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.km-branch-title::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+.km-leaves {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.km-leaf {
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--fg-secondary);
+  padding-left: 1rem;
+  position: relative;
+}
+.km-leaf::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 1px;
+  background: var(--accent-mid);
 }
 </style>
 </head>
@@ -1953,15 +2061,6 @@ const CONTENT_DATA = {
         '健康状况同样出人意料。农业社会带来了定居、人口密集和家畜驯化，这成为了传染病的温床。<b>天花、麻疹、结核——这些"文明病"几乎都源于人畜共处的农耕村落</b>。采集者分散居住、频繁迁徙，反而有效避免了瘟疫。',
         '最具颠覆性的一点或许是社会平等。<b>采集社会几乎没有私有财产的概念</b>，因此也就没有贫富分化。没有国王、没有贵族、没有地主。如果用"平等"作为衡量标准，人类社会在"进步"了一万年之后，反而大幅倒退了。'
       ],
-      comparison: {
-        dimensions: [
-          { label: '饮食多样性', foraging: { score: 9, text: '数十种植物、动物、昆虫、菌类，营养全面均衡' }, farming: { score: 3, text: '严重依赖1-3种谷物，营养单一，维生素缺乏常见' } },
-          { label: '每日闲暇时间', foraging: { score: 8, text: '每天工作3-6小时，大量时间用于社交、休息和娱乐' }, farming: { score: 3, text: '日出而作日落而息，农忙季节几乎没有休息时间' } },
-          { label: '身体健康', foraging: { score: 8, text: '骨骼强健，身材高大，传染病罕见，牙齿状况良好' }, farming: { score: 4, text: '身高下降，传染病频发，营养不良，椎间盘病变普遍' } },
-          { label: '社会平等', foraging: { score: 9, text: '无私有财产积累，无阶级分化，决策相对民主' }, farming: { score: 2, text: '土地私有化导致阶层固化，国王、贵族与农奴的鸿沟' } },
-          { label: '技能多样性', foraging: { score: 9, text: '每个人都是通才：追踪、采集、制造工具、导航、急救' }, farming: { score: 4, text: '高度专业化分工，个体技能窄化，依赖他人生存' } }
-        ]
-      },
       deepDives: [
         {
           title: '"最初的富裕社会"假说', icon: '🌿',
@@ -2718,6 +2817,46 @@ function renderApp() {
     // Part dividers
     if (scene.id === 'scene-4') {
       html += `
+        <section class="knowledge-map" data-palette="scene4">
+          <div class="km-title reveal">认知革命知识地图</div>
+          <div class="km-center reveal reveal-delay-1">认知革命</div>
+          <div class="km-connector reveal reveal-delay-1"></div>
+          <div class="km-branches">
+            <div class="km-branch reveal reveal-delay-2">
+              <div class="km-branch-title">大脑进化</div>
+              <div class="km-leaves">
+                <div class="km-leaf">能量代价：占体重2%却消耗25%能量</div>
+                <div class="km-leaf">火与烹饪：缩短消化时间，释放能量</div>
+                <div class="km-leaf">体外消化：让肠道缩短、大脑扩张成为可能</div>
+              </div>
+            </div>
+            <div class="km-branch reveal reveal-delay-2">
+              <div class="km-branch-title">虚构能力</div>
+              <div class="km-leaves">
+                <div class="km-leaf">语言质变：不只描述现实，更能讨论虚构之物</div>
+                <div class="km-leaf">八卦 / 计划 / 虚构叙事</div>
+                <div class="km-leaf">突破150人邓巴数上限，实现大规模合作</div>
+              </div>
+            </div>
+            <div class="km-branch reveal reveal-delay-3">
+              <div class="km-branch-title">采集生活</div>
+              <div class="km-leaves">
+                <div class="km-leaf">多样饮食：数十种植物、动物、菌类</div>
+                <div class="km-leaf">少量工作：每天仅需3-6小时</div>
+                <div class="km-leaf">社会平等：无私有财产，无阶级分化</div>
+              </div>
+            </div>
+            <div class="km-branch reveal reveal-delay-3">
+              <div class="km-branch-title">生态影响</div>
+              <div class="km-leaves">
+                <div class="km-leaf">大型动物灭绝：到达即毁灭的模式</div>
+                <div class="km-leaf">生态天真：猎物从未见过人类</div>
+                <div class="km-leaf">连环杀手：澳洲、美洲巨型动物群消亡</div>
+              </div>
+            </div>
+          </div>
+        </section>`;
+      html += `
         <section class="hero" id="part2-intro" data-palette="scene5" style="min-height:80vh;">
           <div class="hero-overline reveal" style="animation:none;">第二部分</div>
           <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">农业革命</h1>
@@ -2726,6 +2865,48 @@ function renderApp() {
     }
     if (scene.id === 'scene-8') {
       html += `
+        <section class="knowledge-map" data-palette="scene8">
+          <div class="km-title reveal">农业革命知识地图</div>
+          <div class="km-center reveal reveal-delay-1">农业革命</div>
+          <div class="km-connector reveal reveal-delay-1"></div>
+          <div class="km-branches">
+            <div class="km-branch reveal reveal-delay-2">
+              <div class="km-branch-title">奢侈品陷阱</div>
+              <div class="km-leaves">
+                <div class="km-leaf">小麦驯化：从野草到地球最成功的植物</div>
+                <div class="km-leaf">人口增长：更多的人，更差的生活</div>
+                <div class="km-leaf">不可逆转：回不去的采集生活</div>
+              </div>
+            </div>
+            <div class="km-branch reveal reveal-delay-2">
+              <div class="km-branch-title">想象的秩序</div>
+              <div class="km-leaves">
+                <div class="km-leaf">法典与宣言：汉谟拉比 vs 独立宣言</div>
+                <div class="km-leaf">嵌入物质世界：建筑、法律、习俗</div>
+                <div class="km-leaf">塑造欲望：让人相信秩序是"自然"的</div>
+                <div class="km-leaf">主体间现实：存在于集体想象之中</div>
+              </div>
+            </div>
+            <div class="km-branch reveal reveal-delay-3">
+              <div class="km-branch-title">书写与数字</div>
+              <div class="km-leaves">
+                <div class="km-leaf">文字诞生：不是为了写诗，而是为了记账</div>
+                <div class="km-leaf">官僚体系：大规模社会的管理工具</div>
+                <div class="km-leaf">把人变成数字：归类、统计、编号</div>
+              </div>
+            </div>
+            <div class="km-branch reveal reveal-delay-3">
+              <div class="km-branch-title">社会不平等</div>
+              <div class="km-leaves">
+                <div class="km-leaf">恶性循环：偶然事件固化为社会结构</div>
+                <div class="km-leaf">种姓制度：纯洁与污染的虚构</div>
+                <div class="km-leaf">种族歧视：生物差异被文化放大</div>
+                <div class="km-leaf">性别不平等：最持久的等级制度</div>
+              </div>
+            </div>
+          </div>
+        </section>`;
+      html += `
         <section class="hero" id="part3-intro" data-palette="scene9" style="min-height:80vh;">
           <div class="hero-overline reveal" style="animation:none;">第三部分</div>
           <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">人类的融合统一</h1>
@@ -2733,6 +2914,46 @@ function renderApp() {
         </section>`;
     }
     if (scene.id === 'scene-12') {
+      html += `
+        <section class="knowledge-map" data-palette="scene12">
+          <div class="km-title reveal">融合统一知识地图</div>
+          <div class="km-center reveal reveal-delay-1">人类融合</div>
+          <div class="km-connector reveal reveal-delay-1"></div>
+          <div class="km-branches">
+            <div class="km-branch reveal reveal-delay-2">
+              <div class="km-branch-title">金钱</div>
+              <div class="km-leaves">
+                <div class="km-leaf">互信系统：陌生人之间合作的基础</div>
+                <div class="km-leaf">最普世的虚构：跨文化、跨宗教的共同信仰</div>
+                <div class="km-leaf">一切标价：将万物转化为可交换的数字</div>
+              </div>
+            </div>
+            <div class="km-branch reveal reveal-delay-2">
+              <div class="km-branch-title">帝国</div>
+              <div class="km-leaves">
+                <div class="km-leaf">征服与同化：武力开路，文化融合</div>
+                <div class="km-leaf">文化炼金术：被征服者反过来改变帝国</div>
+                <div class="km-leaf">全球帝国：从区域霸权到世界体系</div>
+              </div>
+            </div>
+            <div class="km-branch reveal reveal-delay-3">
+              <div class="km-branch-title">宗教</div>
+              <div class="km-leaves">
+                <div class="km-leaf">超人类秩序：不依赖个人信仰的社会规范</div>
+                <div class="km-leaf">泛灵论 → 多神教 → 一神教 → 人文主义</div>
+                <div class="km-leaf">宗教作为统一工具：共同的神话与仪式</div>
+              </div>
+            </div>
+            <div class="km-branch reveal reveal-delay-3">
+              <div class="km-branch-title">历史偶然性</div>
+              <div class="km-leaves">
+                <div class="km-leaf">后见之明偏差：事后觉得一切"必然"</div>
+                <div class="km-leaf">历史无必然方向：基督教未必胜出</div>
+                <div class="km-leaf">盲目的力神：历史不为任何人的利益服务</div>
+              </div>
+            </div>
+          </div>
+        </section>`;
       html += `
         <section class="hero" id="part4-intro" data-palette="scene13" style="min-height:80vh;">
           <div class="hero-overline reveal" style="animation:none;">第四部分</div>
@@ -2757,6 +2978,52 @@ function renderApp() {
           <p class="reveal"><b>奢侈品陷阱，正在以AI的速度重演。</b>智能手机、电子邮件、社交媒体——每一项技术都遵循了小麦驯化智人的同一模式：先是奢侈品，然后是日常品，最终是不可摆脱的必需品。AI工具正在走同一条路。当你的工作流程、思考方式、甚至创造力都依赖AI辅助时，你还能"戒掉"AI吗？我们正在经历人类历史上速度最快的一次奢侈品陷阱——而这一次，陷阱的另一端不是一株野草，而是一种可能比我们更聪明的实体。</p>
           <p class="reveal"><b>"承认无知"的科学精神，正面临最大考验。</b>科学革命的核心是承认"我们不知道"。但AI创造了一种新的知识悖论：GPT可以生成流利的、看似正确的答案——但它不知道自己是否正确。当机器可以自信地说出任何话，而人类越来越依赖机器的输出时，"承认无知"这一科学精神的基石将面临前所未有的侵蚀。讽刺的是，AI可能让我们从"知道自己不知道"退回到"不知道自己不知道"。</p>
           <p class="reveal"><b>赫拉利的终极问题在AI时代变得紧迫百倍：我们究竟想要什么？</b>我们用AI来提高效率——但效率的目的是什么？我们用AI来做出更好的决策——但"更好"的标准由谁定义？我们用AI来了解自己——但当算法比你更了解你时，"自我"还意味着什么？整本《人类简史》都在告诉我们一件事：<b>智人最擅长的是创造强大的工具，最不擅长的是思考工具应该服务于什么目的。</b>这一次，赌注比以往任何时候都高——因为这一次，工具本身可能比我们更聪明。</p>
+        </div>
+      </div>
+    </section>`;
+
+  // Full-book knowledge map
+  html += `
+    <section class="knowledge-map" data-palette="hero">
+      <div class="km-title reveal">全书知识架构</div>
+      <div class="km-center reveal reveal-delay-1" style="width:140px;height:140px;font-size:1.1rem;">人类简史</div>
+      <div class="km-connector reveal reveal-delay-1"></div>
+      <div class="km-branches" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+        <div class="km-branch reveal reveal-delay-2">
+          <div class="km-branch-title">第一部分 · 认知革命</div>
+          <div class="km-leaves">
+            <div class="km-leaf">大脑进化与火的驯化</div>
+            <div class="km-leaf">虚构能力：突破150人合作上限</div>
+            <div class="km-leaf">采集者的富裕生活</div>
+            <div class="km-leaf">生态连环杀手：巨型动物灭绝</div>
+          </div>
+        </div>
+        <div class="km-branch reveal reveal-delay-2">
+          <div class="km-branch-title">第二部分 · 农业革命</div>
+          <div class="km-leaves">
+            <div class="km-leaf">奢侈品陷阱与不可逆的人口增长</div>
+            <div class="km-leaf">想象的秩序与主体间现实</div>
+            <div class="km-leaf">书写系统：从记账到官僚</div>
+            <div class="km-leaf">不平等的制度化：种姓、种族、性别</div>
+          </div>
+        </div>
+        <div class="km-branch reveal reveal-delay-3">
+          <div class="km-branch-title">第三部分 · 人类融合统一</div>
+          <div class="km-leaves">
+            <div class="km-leaf">金钱：最普世的互信系统</div>
+            <div class="km-leaf">帝国：征服、同化与文化炼金术</div>
+            <div class="km-leaf">宗教：从泛灵论到人文主义</div>
+            <div class="km-leaf">历史偶然性与后见之明偏差</div>
+          </div>
+        </div>
+        <div class="km-branch reveal reveal-delay-3">
+          <div class="km-branch-title">第四部分 · 科学革命</div>
+          <div class="km-leaves">
+            <div class="km-leaf">承认无知：科学的核心发动机</div>
+            <div class="km-leaf">科学-帝国-资本的反馈循环</div>
+            <div class="km-leaf">工业革命：打开地球能量储蓄罐</div>
+            <div class="km-leaf">终极问题：我们究竟想要什么？</div>
+          </div>
         </div>
       </div>
     </section>`;
