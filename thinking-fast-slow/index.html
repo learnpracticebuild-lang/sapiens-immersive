@@ -802,6 +802,791 @@ body {
   .scene-nav { display: none; }
   .hero-quote { font-size: 1.2rem; }
   .number-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .interactive-module { padding: 1.5rem !important; }
+  .interactive-module h3 { font-size: 1.1rem !important; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Noise/Grain Texture Overlay
+   ═══════════════════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Progress Bar Shimmer
+   ═══════════════════════════════════════════════════════ */
+.progress-bar {
+  background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent)) !important;
+  background-size: 200% 100%;
+  animation: progressShimmer 3s ease infinite;
+  height: 3px !important;
+}
+@keyframes progressShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Scene Nav Tooltips
+   ═══════════════════════════════════════════════════════ */
+.scene-nav a::after {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Drop Caps
+   ═══════════════════════════════════════════════════════ */
+.narrative p.drop-cap-p::first-letter {
+  font-family: var(--serif);
+  font-size: 3.5em;
+  font-weight: 900;
+  float: left;
+  line-height: 0.8;
+  margin-right: 0.08em;
+  margin-top: 0.1em;
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Bold text marker highlight
+   ═══════════════════════════════════════════════════════ */
+.narrative p strong, .narrative p b {
+  color: var(--accent);
+  font-weight: 600;
+  background: linear-gradient(120deg, var(--accent-dim) 0%, transparent 100%);
+  padding: 0.05em 0.2em;
+  border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Hero Quote Decorative Marks
+   ═══════════════════════════════════════════════════════ */
+.hero-quote-wrap .quote-deco {
+  position: absolute;
+  font-family: var(--serif);
+  font-size: clamp(6rem, 15vw, 12rem);
+  font-weight: 900;
+  color: var(--accent);
+  opacity: 0.06;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.hero-quote-wrap .quote-deco-open {
+  top: -0.5em;
+  left: -0.3em;
+}
+.hero-quote-wrap .quote-deco-close {
+  bottom: -0.8em;
+  right: -0.1em;
+}
+.hero-quote {
+  position: relative;
+  z-index: 1;
+}
+.hero-quote-highlight {
+  background: linear-gradient(120deg, var(--accent-dim) 0%, var(--accent-mid) 100%);
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  background-position: 0 100%;
+  transition: background-size 1.8s var(--ease-out);
+  padding: 0.1em 0;
+}
+.reveal-wipe.revealed .hero-quote-highlight {
+  background-size: 100% 100%;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Deep Dive 3D Tilt + Breathing Pulse
+   ═══════════════════════════════════════════════════════ */
+.dd-trigger {
+  perspective: 800px;
+  transform-style: preserve-3d;
+  transition: all 0.4s var(--ease-out), transform 0.3s var(--ease-out);
+}
+.dd-trigger:hover {
+  transform: translateY(-4px) rotateX(2deg) rotateY(-2deg);
+  box-shadow: 0 12px 40px var(--accent-dim), 0 4px 12px rgba(0,0,0,0.08);
+}
+.dd-trigger:not(.clicked) {
+  animation: ddPulse 3s ease-in-out infinite;
+}
+.dd-trigger.clicked {
+  animation: none;
+}
+@keyframes ddPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+  50% { box-shadow: 0 0 0 6px transparent; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Comparison Bar Gradient Fills
+   ═══════════════════════════════════════════════════════ */
+.comp-bar-fill.amber {
+  background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent));
+  background-size: 200% 100%;
+  animation: barGradient 3s ease infinite;
+}
+.comp-bar-fill.grey {
+  background: linear-gradient(90deg, var(--fg-secondary), rgba(128,128,128,0.4), var(--fg-secondary));
+  background-size: 200% 100%;
+  animation: barGradient 3s ease infinite;
+  opacity: 0.5;
+}
+@keyframes barGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Data Viz Corner Accents
+   ═══════════════════════════════════════════════════════ */
+.data-viz {
+  position: relative;
+  padding: 3rem 0;
+}
+.data-viz::before,
+.data-viz::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: var(--accent-mid);
+  border-style: solid;
+}
+.data-viz::before {
+  top: 0;
+  left: 0;
+  border-width: 2px 0 0 2px;
+}
+.data-viz::after {
+  bottom: 0;
+  right: 0;
+  border-width: 0 2px 2px 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Big Number Glow
+   ═══════════════════════════════════════════════════════ */
+.big-number {
+  text-shadow: 0 0 40px var(--accent-dim), 0 0 80px var(--accent-glow);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Gradient Mesh Backgrounds for Scenes
+   ═══════════════════════════════════════════════════════ */
+.scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background:
+    radial-gradient(ellipse at 20% 20%, var(--accent-glow) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, var(--accent-dim) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 100%);
+  z-index: -1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Dark Mode Floating Particles
+   ═══════════════════════════════════════════════════════ */
+.dark-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.dark-particles .particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  animation: particleFloat 12s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes particleFloat {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.4; }
+  50% { transform: translateY(-80px) translateX(30px); opacity: 0.2; }
+  90% { opacity: 0.4; }
+  100% { transform: translateY(-160px) translateX(-20px); opacity: 0; }
+}
+
+/* Dark scene accent glow */
+.scene.dark-scene .scene-title {
+  text-shadow: 0 0 60px var(--accent-dim);
+}
+.scene.dark-scene .big-number {
+  text-shadow: 0 0 40px var(--accent-mid), 0 0 80px var(--accent-dim);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Hero Title will-change
+   ═══════════════════════════════════════════════════════ */
+.hero-title {
+  will-change: transform;
+}
+.hero-scroll-hint .scroll-arrow {
+  font-size: 1.2rem;
+  color: var(--accent);
+  animation: bounceArrow 2s var(--ease-out) infinite;
+  opacity: 0.6;
+}
+@keyframes bounceArrow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   FOOTER UPGRADE: Bookshelf Button
+   ═══════════════════════════════════════════════════════ */
+.footer-bookshelf {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2.5rem;
+  padding: 0.75rem 2rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  color: var(--fg-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: all 0.4s var(--ease-out);
+  background: var(--accent-glow);
+}
+.footer-bookshelf:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px var(--accent-dim);
+}
+.footer-bookshelf .arrow {
+  transition: transform 0.3s var(--ease-out);
+}
+.footer-bookshelf:hover .arrow {
+  transform: translateX(-4px);
+}
+
+/* ═══════════════════════════════════════════════════════
+   INTERACTIVE MODULES: Cognitive Bias Simulators
+   ═══════════════════════════════════════════════════════ */
+.interactive-module {
+  margin: 3rem 0;
+  padding: 2.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--accent-glow);
+  position: relative;
+  overflow: hidden;
+}
+.interactive-module::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent-dim), transparent 60%);
+  pointer-events: none;
+  opacity: 0.5;
+}
+.interactive-module > * {
+  position: relative;
+  z-index: 1;
+}
+.interactive-module h3 {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.interactive-module .module-tag {
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.interactive-module .module-tag::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: tagPulse 2s ease-in-out infinite;
+}
+@keyframes tagPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.6); }
+}
+.interactive-module .module-desc {
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--fg-secondary);
+  margin-bottom: 2rem;
+}
+.module-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.5rem;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--fg-secondary);
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+}
+.module-reset-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+
+/* Bat-and-Ball Quiz */
+.bat-ball-btns {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+.bat-ball-btns button {
+  flex: 1;
+  min-width: 140px;
+  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--accent-glow);
+  font-family: var(--serif);
+  font-size: 1.8rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+  color: var(--fg);
+  position: relative;
+  overflow: hidden;
+}
+.bat-ball-btns button:hover {
+  border-color: var(--accent-mid);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--accent-dim);
+}
+.bat-ball-btns button.wrong {
+  border-color: #DC2626;
+  background: rgba(220,38,38,0.1);
+  color: #DC2626;
+  animation: wrongShake 0.5s ease;
+}
+.bat-ball-btns button.correct {
+  border-color: #16a34a;
+  background: rgba(22,163,74,0.1);
+  color: #16a34a;
+}
+@keyframes wrongShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.bat-ball-result {
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.9;
+  display: none;
+}
+.bat-ball-result.show { display: block; }
+.bat-ball-result.wrong-result {
+  background: rgba(220,38,38,0.08);
+  border: 1px solid rgba(220,38,38,0.2);
+}
+.bat-ball-result.correct-result {
+  background: rgba(22,163,74,0.08);
+  border: 1px solid rgba(22,163,74,0.2);
+}
+.bat-ball-stats {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--fg-secondary);
+}
+.bat-ball-stats .stat {
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  background: var(--accent-glow);
+  border: 1px solid var(--border);
+}
+
+/* Anchoring Spinner */
+.anchor-spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+.anchor-wheel {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 4px solid var(--accent-mid);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: conic-gradient(
+    var(--accent-dim) 0deg, var(--accent-glow) 45deg,
+    var(--accent-dim) 90deg, var(--accent-glow) 135deg,
+    var(--accent-dim) 180deg, var(--accent-glow) 225deg,
+    var(--accent-dim) 270deg, var(--accent-glow) 315deg,
+    var(--accent-dim) 360deg
+  );
+  transition: transform 3s cubic-bezier(0.2, 0.8, 0.3, 1);
+  will-change: transform;
+}
+.anchor-wheel-number {
+  font-family: var(--serif);
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--accent);
+  background: var(--bg);
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px var(--accent-dim);
+}
+.anchor-wheel-pointer {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 14px solid var(--accent);
+}
+.anchor-spin-btn {
+  padding: 0.7rem 2rem;
+  border-radius: 100px;
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+}
+.anchor-spin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--accent-mid);
+}
+.anchor-spin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.anchor-slider-section {
+  width: 100%;
+  margin-top: 1.5rem;
+  display: none;
+}
+.anchor-slider-section.show { display: block; }
+.anchor-slider-section input[type=range] {
+  width: 100%;
+  margin: 1rem 0;
+  accent-color: var(--accent);
+  height: 6px;
+}
+.anchor-slider-value {
+  text-align: center;
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--accent);
+}
+.anchor-submit-btn {
+  display: block;
+  margin: 1rem auto;
+  padding: 0.6rem 2rem;
+  border-radius: 100px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+}
+.anchor-submit-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+.anchor-result {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: var(--accent-glow);
+  border: 1px solid var(--border);
+  display: none;
+  line-height: 2;
+  font-size: 0.9rem;
+}
+.anchor-result.show { display: block; }
+.anchor-result .result-bar {
+  height: 8px;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  transition: width 1s var(--ease-out);
+  background: var(--accent);
+}
+
+/* Loss Aversion Coin Flip */
+.coin-flip-area {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+.coin {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f0c040, #d4a020);
+  border: 4px solid #c49000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #7a5500;
+  margin: 1rem auto;
+  transition: transform 0.1s;
+  will-change: transform;
+}
+.coin.flipping {
+  animation: coinFlip 0.6s ease;
+}
+@keyframes coinFlip {
+  0% { transform: rotateX(0); }
+  50% { transform: rotateX(1800deg) scale(1.2); }
+  100% { transform: rotateX(3600deg); }
+}
+.coin-balance {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--accent);
+  margin: 0.5rem 0;
+}
+.coin-flip-btns {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+.coin-flip-btns button {
+  padding: 0.7rem 1.5rem;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+}
+.coin-flip-btns button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.coin-flip-btns button.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.coin-flip-btns button.primary:hover {
+  box-shadow: 0 4px 15px var(--accent-mid);
+}
+.coin-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+  margin: 1rem 0;
+  max-height: 80px;
+  overflow: hidden;
+}
+.coin-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+.coin-dot.win { background: #16a34a; }
+.coin-dot.lose { background: #DC2626; }
+.coin-graph {
+  width: 100%;
+  height: 120px;
+  margin: 1rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--accent-glow);
+  overflow: hidden;
+}
+.coin-graph svg {
+  width: 100%;
+  height: 100%;
+}
+.coin-result-text {
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: var(--fg-secondary);
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: var(--accent-glow);
+  border: 1px solid var(--border);
+  display: none;
+}
+.coin-result-text.show { display: block; }
+
+/* Linda Problem */
+.linda-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+.linda-options button {
+  padding: 1.2rem 1.5rem;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--accent-glow);
+  text-align: left;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+  color: var(--fg);
+}
+.linda-options button:hover {
+  border-color: var(--accent-mid);
+  transform: translateX(4px);
+}
+.linda-options button.wrong {
+  border-color: #DC2626;
+  background: rgba(220,38,38,0.08);
+}
+.linda-options button.correct {
+  border-color: #16a34a;
+  background: rgba(22,163,74,0.08);
+}
+.linda-result {
+  margin-top: 1.5rem;
+  display: none;
+}
+.linda-result.show { display: block; }
+.linda-venn {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+.linda-venn svg {
+  max-width: 300px;
+}
+
+/* Peak-End Rule Demo */
+.peak-end-choices {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+.peak-end-choices button {
+  flex: 1;
+  min-width: 200px;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--accent-glow);
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+  text-align: center;
+  color: var(--fg);
+}
+.peak-end-choices button:hover {
+  border-color: var(--accent-mid);
+  transform: translateY(-2px);
+}
+.peak-end-choices button.selected {
+  border-color: var(--accent);
+  box-shadow: 0 4px 20px var(--accent-dim);
+}
+.peak-end-result {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: var(--accent-glow);
+  border: 1px solid var(--border);
+  line-height: 2;
+  font-size: 0.9rem;
+  display: none;
+}
+.peak-end-result.show { display: block; }
+.experience-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+  font-size: 0.75rem;
+  color: var(--fg-secondary);
+}
+.experience-bar .bar {
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  transition: width 1s var(--ease-out);
 }
 </style>
 </head>
@@ -1409,22 +2194,46 @@ function renderApp() {
       <div class="hero-part">${meta.part} &middot; ${meta.partSub}</div>
       <div class="hero-scroll-hint">
         <span>向下滚动</span>
+        <div class="scroll-arrow">&#8595;</div>
         <div class="scroll-line"></div>
       </div>
     </section>`;
 
+  const darkScenes = ['scene2','scene5','scene9','scene12'];
   scenes.forEach((scene, idx) => {
-    html += `<section class="scene" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner">`;
+    const isDark = darkScenes.includes(scene.palette);
+    html += `<section class="scene${isDark ? ' dark-scene' : ''}" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner" style="position:relative;z-index:1;">`;
+
+    // Dark mode particles
+    if (isDark) {
+      html += `<div class="dark-particles">${Array.from({length:20}, (_,i) => {
+        const x = Math.random()*100, y = Math.random()*100, d = 8+Math.random()*16, delay = Math.random()*10;
+        return '<div class="particle" style="left:'+x+'%;top:'+y+'%;animation-duration:'+d+'s;animation-delay:'+delay+'s;"></div>';
+      }).join('')}</div>`;
+    }
+
     html += `
       <div class="reveal scene-number">${scene.number}</div>
       <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
       <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle}</div>
       <div class="hero-quote-wrap reveal-wipe">
-        <blockquote class="hero-quote">${scene.heroQuote}</blockquote>
+        <span class="quote-deco quote-deco-open">\u300C</span>
+        <span class="quote-deco quote-deco-close">\u300D</span>
+        <blockquote class="hero-quote"><span class="hero-quote-highlight">${scene.heroQuote}</span></blockquote>
       </div>
       <div class="narrative">`;
-    scene.narrative.forEach(p => { html += `<p class="reveal">${p}</p>`; });
+    scene.narrative.forEach((p, pi) => {
+      const cls = pi === 0 ? ' drop-cap-p' : '';
+      html += `<p class="reveal${cls}">${p}</p>`;
+    });
     html += `</div>`;
+
+    // Interactive Modules
+    if (scene.id === 'scene-3') html += renderBatBallQuiz();
+    if (scene.id === 'scene-4') html += renderAnchoringDemo();
+    if (scene.id === 'scene-5') html += renderLindaProblem();
+    if (scene.id === 'scene-8') html += renderCoinFlipGame();
+    if (scene.id === 'scene-11') html += renderPeakEndDemo();
 
     // Data Viz
     if (scene.dataViz) html += renderDataViz(scene.dataViz);
@@ -1491,6 +2300,7 @@ function renderApp() {
       <div class="reveal footer-title">全书 &middot; 终</div>
       <p class="reveal footer-text reveal-delay-1">你的大脑中住着两个系统——<br>一个快速、自信、不知疲倦的直觉机器，<br>一个缓慢、懒惰、但偶尔能纠错的理性监工。<br><br>直觉让你活下来，理性让你活得更好。<br>但理性从不自动启动——它需要你主动唤醒它。<br><br><b>认识偏差不能消除偏差。<br>但它能让你知道何时该对自己的确信，保持一丝怀疑。</b></p>
       <div class="reveal footer-next reveal-delay-2" style="opacity:0.4;margin-top:3rem;font-size:0.7rem;">丹尼尔·卡尼曼《思考，快与慢》&middot; 沉浸式深度导读 &middot; 全五部分</div>
+      <a href="../index.html" class="footer-bookshelf reveal reveal-delay-3"><span class="arrow">&larr;</span> 返回书架</a>
     </footer>`;
 
   app.innerHTML = html;
@@ -1513,8 +2323,8 @@ function renderDataViz(viz) {
         <div class="data-viz-title">${viz.title}</div>
         <div class="comparison-section">
           <div class="comparison-toggle">
-            <button class="toggle-btn active" data-mode="foraging">系统1（快）</button>
-            <button class="toggle-btn" data-mode="farming">系统2（慢）</button>
+            <button class="toggle-btn active" data-mode="foraging">⚡ 系统1（快）</button>
+            <button class="toggle-btn" data-mode="farming">🐢 系统2（慢）</button>
             <button class="toggle-btn" data-mode="compare">对比</button>
           </div>
           <div class="comparison-rows">
@@ -1631,29 +2441,34 @@ function renderDataViz(viz) {
         <div class="data-viz-title">${viz.title}</div>
         <div class="svg-container" data-viz="loss-aversion">
           <svg viewBox="0 0 600 340" fill="none">
-            <!-- Axes -->
+            
             <line x1="300" y1="20" x2="300" y2="320" stroke="var(--fg-secondary)" stroke-width="1" opacity="0.2"/>
             <line x1="40" y1="170" x2="560" y2="170" stroke="var(--fg-secondary)" stroke-width="1" opacity="0.2"/>
-            <!-- Labels -->
+            
             <text x="560" y="165" font-family="var(--sans)" font-size="9" fill="var(--accent)" font-weight="600" text-anchor="end">收益 +</text>
             <text x="45" y="165" font-family="var(--sans)" font-size="9" fill="#DC2626" font-weight="600">损失 &minus;</text>
             <text x="310" y="35" font-family="var(--sans)" font-size="9" fill="var(--accent)" font-weight="600">心理价值 +</text>
             <text x="310" y="315" font-family="var(--sans)" font-size="9" fill="#DC2626" font-weight="600">心理价值 &minus;</text>
-            <!-- Value function curve - gains (concave, less steep) -->
+            
             <path class="draw-path" d="M300,170 C330,140 380,105 430,85 C470,70 520,60 560,55"
               stroke="var(--accent)" stroke-width="2.5" fill="none" style="--path-length:350"/>
-            <!-- Value function curve - losses (convex, steeper) -->
+            
             <path class="draw-path" d="M300,170 C270,210 220,265 170,290 C130,308 80,318 40,322"
               stroke="#DC2626" stroke-width="2.5" fill="none" style="--path-length:350"/>
-            <!-- Reference point -->
+            
             <circle cx="300" cy="170" r="5" fill="var(--fg)" opacity="0.6"/>
             <text x="308" y="185" font-family="var(--sans)" font-size="8" fill="var(--fg-secondary)" opacity="0.6">参照点</text>
-            <!-- Asymmetry annotation -->
+            
             <line x1="400" y1="100" x2="400" y2="170" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3" opacity="0.4"/>
             <line x1="200" y1="170" x2="200" y2="275" stroke="#DC2626" stroke-width="1" stroke-dasharray="3 3" opacity="0.4"/>
             <text x="405" y="140" font-family="var(--sans)" font-size="8" fill="var(--accent)" opacity="0.6">+$100 的快乐</text>
             <text x="130" y="240" font-family="var(--sans)" font-size="8" fill="#DC2626" opacity="0.6">&minus;$100 的痛苦</text>
             <text x="130" y="255" font-family="var(--sans)" font-size="8" fill="#DC2626" opacity="0.5">(约为快乐的2倍)</text>
+            
+            <rect x="380" y="60" width="90" height="26" rx="6" fill="var(--accent)" opacity="0.08"/>
+            <text x="425" y="77" font-family="var(--sans)" font-size="8" fill="var(--accent)" font-weight="600" opacity="0.7" text-anchor="middle">收益区 · 平缓</text>
+            <rect x="80" y="260" width="90" height="26" rx="6" fill="#DC2626" opacity="0.06"/>
+            <text x="125" y="277" font-family="var(--sans)" font-size="8" fill="#DC2626" font-weight="600" opacity="0.7" text-anchor="middle">损失区 · 陡峭</text>
           </svg>
         </div>
         <div class="number-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
@@ -1752,29 +2567,32 @@ function renderDataViz(viz) {
         <div class="data-viz-title">${viz.title}</div>
         <div class="svg-container" data-viz="probability-weighting">
           <svg viewBox="0 0 600 340" fill="none">
-            <!-- Axes -->
+            
             <line x1="60" y1="300" x2="560" y2="300" stroke="var(--fg-secondary)" stroke-width="1" opacity="0.2"/>
             <line x1="60" y1="300" x2="60" y2="30" stroke="var(--fg-secondary)" stroke-width="1" opacity="0.2"/>
-            <!-- Diagonal (rational) -->
+            
             <line x1="60" y1="300" x2="560" y2="30" stroke="var(--fg-secondary)" stroke-width="1" stroke-dasharray="5 5" opacity="0.2"/>
             <text x="440" y="110" font-family="var(--sans)" font-size="8" fill="var(--fg-secondary)" opacity="0.3" transform="rotate(-32 440 110)">理性加权线</text>
-            <!-- Labels -->
+            
             <text x="310" y="325" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0.5" text-anchor="middle">客观概率</text>
             <text x="20" y="170" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0.5" transform="rotate(-90 20 170)">决策权重</text>
             <text x="80" y="318" font-family="var(--sans)" font-size="8" fill="var(--fg-secondary)" opacity="0.4">0%</text>
             <text x="545" y="318" font-family="var(--sans)" font-size="8" fill="var(--fg-secondary)" opacity="0.4">100%</text>
-            <!-- Probability weighting curve -->
+            
             <path class="draw-path" d="M60,300 C80,260 100,245 140,230 C200,210 280,195 340,175 C400,155 440,135 480,100 C510,75 540,50 556,34"
               stroke="var(--accent)" stroke-width="2.5" fill="none" style="--path-length:600"/>
-            <!-- Overweighting zone -->
-            <text x="100" y="240" font-family="var(--sans)" font-size="9" fill="var(--accent)" font-weight="600" opacity="0.7">过度加权区</text>
-            <text x="100" y="255" font-family="var(--sans)" font-size="7" fill="var(--accent)" opacity="0.5">小概率被赋予过高权重</text>
-            <!-- Underweighting zone -->
-            <text x="310" y="210" font-family="var(--sans)" font-size="9" fill="#DC2626" font-weight="600" opacity="0.7">低估区</text>
-            <text x="310" y="225" font-family="var(--sans)" font-size="7" fill="#DC2626" opacity="0.5">中等概率被忽视</text>
-            <!-- Certainty effect zone -->
-            <text x="460" y="65" font-family="var(--sans)" font-size="9" fill="var(--accent)" font-weight="600" opacity="0.7">确定性效应</text>
-            <text x="460" y="80" font-family="var(--sans)" font-size="7" fill="var(--accent)" opacity="0.5">99%&rarr;100% 价值极大</text>
+            
+            <rect x="70" y="220" width="100" height="45" rx="6" fill="var(--accent)" opacity="0.08"/>
+            <text x="120" y="238" font-family="var(--sans)" font-size="9" fill="var(--accent)" font-weight="600" opacity="0.8" text-anchor="middle">过度加权区</text>
+            <text x="120" y="253" font-family="var(--sans)" font-size="7.5" fill="var(--accent)" opacity="0.6" text-anchor="middle">🎰 彩票效应</text>
+            
+            <rect x="260" y="192" width="100" height="45" rx="6" fill="#DC2626" opacity="0.06"/>
+            <text x="310" y="210" font-family="var(--sans)" font-size="9" fill="#DC2626" font-weight="600" opacity="0.8" text-anchor="middle">低估区</text>
+            <text x="310" y="225" font-family="var(--sans)" font-size="7.5" fill="#DC2626" opacity="0.6" text-anchor="middle">中等概率被忽视</text>
+            
+            <rect x="440" y="45" width="110" height="45" rx="6" fill="var(--accent)" opacity="0.08"/>
+            <text x="495" y="63" font-family="var(--sans)" font-size="9" fill="var(--accent)" font-weight="600" opacity="0.8" text-anchor="middle">确定性效应</text>
+            <text x="495" y="78" font-family="var(--sans)" font-size="7.5" fill="var(--accent)" opacity="0.6" text-anchor="middle">🛡️ 保险效应</text>
           </svg>
         </div>
         <div class="number-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
@@ -1799,13 +2617,13 @@ function renderDataViz(viz) {
         <div class="data-viz-title">${viz.title}</div>
         <div class="svg-container" data-viz="peak-end">
           <svg viewBox="0 0 600 240" fill="none">
-            <!-- Condition A -->
+            
             <text x="0" y="18" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">条件A：60秒冷水</text>
             <rect x="60" y="30" width="200" height="40" rx="6" fill="#DC2626" opacity="0.3"/>
             <text x="160" y="55" font-family="var(--serif)" font-size="11" fill="#DC2626" font-weight="600" text-anchor="middle">14&deg;C &middot; 60秒 &middot; 痛苦</text>
             <text x="280" y="55" font-family="var(--sans)" font-size="9" fill="var(--fg-secondary)" opacity="0.5">&larr; 结束</text>
 
-            <!-- Condition B -->
+            
             <text x="0" y="108" font-family="var(--sans)" font-size="10" font-weight="600" fill="var(--fg-secondary)" opacity="0.5" letter-spacing="0.1em">条件B：60秒 + 30秒渐暖</text>
             <rect x="60" y="120" width="200" height="40" rx="6" fill="#DC2626" opacity="0.3"/>
             <text x="160" y="145" font-family="var(--serif)" font-size="11" fill="#DC2626" font-weight="600" text-anchor="middle">14&deg;C &middot; 60秒 &middot; 痛苦</text>
@@ -1813,7 +2631,7 @@ function renderDataViz(viz) {
             <text x="310" y="145" font-family="var(--serif)" font-size="10" fill="var(--accent)" font-weight="600" text-anchor="middle">15&deg;C &middot; 30秒</text>
             <text x="378" y="145" font-family="var(--sans)" font-size="9" fill="var(--accent)" opacity="0.5">&larr; 结束（稍好）</text>
 
-            <!-- Result -->
+            
             <text x="60" y="205" font-family="var(--serif)" font-size="14" fill="var(--accent)" font-weight="700">80% 的人选择重复条件B</text>
             <text x="60" y="228" font-family="var(--sans)" font-size="10" fill="var(--fg-secondary)" opacity="0.5">尽管B的总痛苦量更大（90秒 &gt; 60秒）</text>
           </svg>
@@ -1835,6 +2653,190 @@ function renderDataViz(viz) {
       </div>`;
   }
   return '';
+}
+
+// ── Interactive Module Renderers ──
+
+function renderBatBallQuiz() {
+  return `
+    <div class="interactive-module reveal" id="batBallModule">
+      <div class="module-tag">互动实验 · Interactive</div>
+      <h3>🏏 球棒与球：你的系统1会抢答吗？</h3>
+      <div class="module-desc">球拍和球一共 <b>1.10元</b>，球拍比球贵 <b>1元</b>。<br>请问球多少钱？</div>
+      <div class="bat-ball-btns" id="batBallBtns">
+        <button data-answer="wrong" aria-label="0.10元">0.10元</button>
+        <button data-answer="correct" aria-label="0.05元">0.05元</button>
+      </div>
+      <div class="bat-ball-result wrong-result" id="batBallWrong">
+        <b style="color:#DC2626;font-size:1.1rem;">😱 你的系统1抢答了！</b><br>
+        这就是卡尼曼说的"系统2的懒惰"——你的直觉自动计算了 1.10 - 1.00 = 0.10，但没有去验证。<br>
+        正确答案是 <b>0.05元</b>：球棒 1.05 + 球 0.05 = 1.10，且 1.05 - 0.05 = 1.00 ✓<br>
+        <b>超过50%的哈佛和MIT学生也答错了——这不是智力问题，是思维习惯问题。</b>
+      </div>
+      <div class="bat-ball-result correct-result" id="batBallCorrect">
+        <b style="color:#16a34a;font-size:1.1rem;">🎉 你的系统2在线！</b><br>
+        正确！球是 0.05元，球棒是 1.05元。你击败了大多数人——包括50%以上的顶级大学学生。<br>
+        <b>你属于那些对直觉答案保持怀疑的少数派。</b>
+      </div>
+      <div class="bat-ball-stats" id="batBallStats" style="display:none;">
+        <div class="stat" id="batBallStatWrong">❌ 选0.10元: <b>0</b>人</div>
+        <div class="stat" id="batBallStatCorrect">✅ 选0.05元: <b>0</b>人</div>
+      </div>
+      <button class="module-reset-btn" id="batBallReset" style="display:none;">🔄 重新测试</button>
+    </div>`;
+}
+
+function renderAnchoringDemo() {
+  return `
+    <div class="interactive-module reveal" id="anchorModule">
+      <div class="module-tag">互动实验 · Interactive</div>
+      <h3>🎡 锚定效应：随机数字如何操控你的判断</h3>
+      <div class="module-desc">转动轮盘，然后回答一个关于联合国的问题。</div>
+      <div class="anchor-spinner-wrap">
+        <div style="position:relative;">
+          <div class="anchor-wheel" id="anchorWheel">
+            <div class="anchor-wheel-pointer"></div>
+            <div class="anchor-wheel-number" id="anchorNumber">?</div>
+          </div>
+        </div>
+        <button class="anchor-spin-btn" id="anchorSpinBtn">🎯 转动轮盘</button>
+      </div>
+      <div class="anchor-slider-section" id="anchorSlider">
+        <div style="font-size:0.9rem;line-height:1.8;margin-bottom:1rem;">
+          <b>联合国中非洲国家的百分比是高于还是低于<span id="anchorValueRef"></span>？</b><br>
+          你的估计是多少？
+        </div>
+        <div class="anchor-slider-value" id="anchorSliderValue">50%</div>
+        <input type="range" min="0" max="100" value="50" id="anchorSliderInput">
+        <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--fg-secondary);opacity:0.5;"><span>0%</span><span>100%</span></div>
+        <button class="anchor-submit-btn" id="anchorSubmitBtn">提交我的估计</button>
+      </div>
+      <div class="anchor-result" id="anchorResult">
+        <b style="font-size:1.05rem;">📊 实验结果对比</b><br><br>
+        <div id="anchorResultContent"></div>
+      </div>
+      <button class="module-reset-btn" id="anchorReset" style="display:none;">🔄 重新实验</button>
+    </div>`;
+}
+
+function renderLindaProblem() {
+  return `
+    <div class="interactive-module reveal" id="lindaModule">
+      <div class="module-tag">互动实验 · Interactive</div>
+      <h3>👩 琳达问题：你的直觉符合逻辑吗？</h3>
+      <div class="module-desc">
+        琳达31岁，单身，直言不讳且非常聪明。她主修哲学，在学生时代积极参与社会正义和反核运动。<br><br>
+        <b>哪个更可能？</b>
+      </div>
+      <div class="linda-options" id="lindaOptions">
+        <button data-answer="correct">A. 琳达是银行出纳员</button>
+        <button data-answer="wrong">B. 琳达是银行出纳员，同时也是女权运动的积极分子</button>
+      </div>
+      <div class="linda-result" id="lindaResult">
+        <div id="lindaResultContent"></div>
+        <div class="linda-venn">
+          <svg viewBox="0 0 300 200" fill="none">
+            <circle cx="130" cy="100" r="80" fill="rgba(220,38,38,0.1)" stroke="#DC2626" stroke-width="2"/>
+            <circle cx="190" cy="100" r="55" fill="rgba(22,163,74,0.1)" stroke="#16a34a" stroke-width="2"/>
+            <text x="80" y="60" font-family="var(--sans)" font-size="10" fill="#DC2626" font-weight="600">银行出纳员</text>
+            <text x="80" y="75" font-family="var(--sans)" font-size="9" fill="#DC2626" opacity="0.6">P(A) = 较大</text>
+            <text x="160" y="105" font-family="var(--sans)" font-size="9" fill="#16a34a" font-weight="600" text-anchor="middle">A 且 B</text>
+            <text x="160" y="120" font-family="var(--sans)" font-size="8" fill="#16a34a" opacity="0.6" text-anchor="middle">P(A∩B) ≤ P(A)</text>
+            <text x="215" y="60" font-family="var(--sans)" font-size="10" fill="var(--accent)" font-weight="600">女权活跃分子</text>
+          </svg>
+        </div>
+        <div style="font-size:0.85rem;line-height:1.9;color:var(--fg-secondary);padding:1rem;border-radius:8px;background:var(--accent-glow);border:1px solid var(--border);margin-top:1rem;">
+          <b>这就是"合取谬误"</b>——"银行出纳员且女权主义者"是"银行出纳员"的<b>子集</b>。<br>
+          子集永远不可能比全集更大：P(A∩B) ≤ P(A)，这是基本逻辑。<br>
+          但超过 <b>80%</b> 的人选错了——因为B的描述与琳达的形象更"相似"（代表性启发法）。
+        </div>
+      </div>
+      <button class="module-reset-btn" id="lindaReset" style="display:none;">🔄 重新测试</button>
+    </div>`;
+}
+
+function renderCoinFlipGame() {
+  return `
+    <div class="interactive-module reveal" id="coinModule">
+      <div class="module-tag">互动实验 · Interactive</div>
+      <h3>🪙 损失厌恶：你敢接受这个赌注吗？</h3>
+      <div class="module-desc">
+        规则：抛硬币。<b>正面赢150元，反面输100元。</b><br>
+        你有 <b>1000元</b> 起始资金。你愿意赌吗？
+      </div>
+      <div class="coin-flip-area" id="coinArea">
+        <div id="coinPreQuestion">
+          <div style="font-size:0.95rem;margin-bottom:1.5rem;color:var(--fg-secondary);">在开始之前——你的第一反应是什么？</div>
+          <div class="coin-flip-btns">
+            <button id="coinRefuse">😰 不愿意，太冒险了</button>
+            <button id="coinAccept" class="primary">💪 愿意，我来试试</button>
+          </div>
+        </div>
+        <div id="coinGame" style="display:none;">
+          <div class="coin" id="coinVisual">🪙</div>
+          <div class="coin-balance">余额：<span id="coinBalance">1000</span>元</div>
+          <div style="font-size:0.75rem;color:var(--fg-secondary);margin-bottom:0.5rem;">
+            第 <span id="coinRound">0</span> 轮 ·
+            胜 <span id="coinWins" style="color:#16a34a;">0</span> ·
+            负 <span id="coinLosses" style="color:#DC2626;">0</span> ·
+            期望收益：<span style="color:var(--accent);">+25元/轮</span>
+          </div>
+          <div class="coin-history" id="coinHistory"></div>
+          <div class="coin-graph" id="coinGraph">
+            <svg id="coinGraphSvg" viewBox="0 0 400 120" preserveAspectRatio="none"></svg>
+          </div>
+          <div class="coin-flip-btns">
+            <button id="coinFlipOne">抛一次</button>
+            <button id="coinFlip10" class="primary">连抛10次</button>
+            <button id="coinFlip50">连抛50次</button>
+          </div>
+        </div>
+        <div class="coin-result-text" id="coinReveal"></div>
+      </div>
+      <button class="module-reset-btn" id="coinReset" style="display:none;">🔄 重新开始</button>
+    </div>`;
+}
+
+function renderPeakEndDemo() {
+  return `
+    <div class="interactive-module reveal" id="peakEndModule">
+      <div class="module-tag">互动实验 · Interactive</div>
+      <h3>🌡️ 峰终定律：你会选择重复哪段经历？</h3>
+      <div class="module-desc">
+        想象你必须参加一个冷水实验，然后选择一个重复。
+      </div>
+      <div style="margin:1.5rem 0;">
+        <div class="experience-bar">
+          <span style="width:60px;flex-shrink:0;font-weight:600;">体验A</span>
+          <div class="bar" style="width:60%;background:#DC2626;opacity:0.7;">60秒 · 14°C 痛苦</div>
+          <span>结束</span>
+        </div>
+        <div class="experience-bar" style="margin-top:0.75rem;">
+          <span style="width:60px;flex-shrink:0;font-weight:600;">体验B</span>
+          <div class="bar" style="width:60%;background:#DC2626;opacity:0.7;">60秒 · 14°C 痛苦</div>
+          <div class="bar" style="width:30%;background:var(--accent);opacity:0.5;">30秒 · 15°C 微痛</div>
+          <span>结束</span>
+        </div>
+      </div>
+      <div style="font-size:0.85rem;color:var(--fg-secondary);margin-bottom:1.5rem;text-align:center;">
+        体验B = 体验A的全部痛苦 + 额外30秒不适<br>
+        <b>如果必须重复一次，你选哪个？</b>
+      </div>
+      <div class="peak-end-choices" id="peakEndChoices">
+        <button data-choice="A">
+          <div style="font-size:1.5rem;margin-bottom:0.5rem;">😣</div>
+          <div style="font-family:var(--serif);font-size:1.1rem;font-weight:700;">体验A</div>
+          <div style="font-size:0.75rem;color:var(--fg-secondary);margin-top:0.3rem;">60秒痛苦，然后结束</div>
+        </button>
+        <button data-choice="B">
+          <div style="font-size:1.5rem;margin-bottom:0.5rem;">😐</div>
+          <div style="font-family:var(--serif);font-size:1.1rem;font-weight:700;">体验B</div>
+          <div style="font-size:0.75rem;color:var(--fg-secondary);margin-top:0.3rem;">60秒痛苦 + 30秒微痛</div>
+        </button>
+      </div>
+      <div class="peak-end-result" id="peakEndResult"></div>
+      <button class="module-reset-btn" id="peakEndReset" style="display:none;">🔄 重新选择</button>
+    </div>`;
 }
 
 // ── Comparison Module ──
@@ -2039,6 +3041,7 @@ function initDeepDiveModal() {
   document.addEventListener('click', e => {
     const trigger = e.target.closest('[data-dd-idx]');
     if (trigger) {
+      trigger.classList.add('clicked');
       const [sIdx, dIdx] = trigger.dataset.ddIdx.split('-').map(Number);
       openModal(sIdx, dIdx);
     }
@@ -2084,6 +3087,345 @@ function animateCompBars(section) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
       bar.style.width = (parseInt(bar.dataset.score) / 10 * 100) + '%';
     }));
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// INTERACTIVE MODULES
+// ═══════════════════════════════════════════════════════════════
+function initInteractiveModules() {
+  initBatBall();
+  initAnchoring();
+  initLinda();
+  initCoinFlip();
+  initPeakEnd();
+}
+
+function initBatBall() {
+  const btns = document.getElementById('batBallBtns');
+  const wrongResult = document.getElementById('batBallWrong');
+  const correctResult = document.getElementById('batBallCorrect');
+  const stats = document.getElementById('batBallStats');
+  const resetBtn = document.getElementById('batBallReset');
+  if (!btns) return;
+
+  let data = JSON.parse(localStorage.getItem('batBallStats') || '{"wrong":0,"correct":0}');
+
+  function updateStats() {
+    stats.style.display = 'flex';
+    document.querySelector('#batBallStatWrong b').textContent = data.wrong;
+    document.querySelector('#batBallStatCorrect b').textContent = data.correct;
+  }
+
+  btns.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn || btn.classList.contains('wrong') || btn.classList.contains('correct')) return;
+    const answer = btn.dataset.answer;
+    btns.querySelectorAll('button').forEach(b => b.style.pointerEvents = 'none');
+
+    if (answer === 'wrong') {
+      btn.classList.add('wrong');
+      wrongResult.classList.add('show');
+      data.wrong++;
+    } else {
+      btn.classList.add('correct');
+      correctResult.classList.add('show');
+      data.correct++;
+    }
+    localStorage.setItem('batBallStats', JSON.stringify(data));
+    updateStats();
+    resetBtn.style.display = 'inline-flex';
+  });
+
+  resetBtn.addEventListener('click', () => {
+    btns.querySelectorAll('button').forEach(b => {
+      b.classList.remove('wrong', 'correct');
+      b.style.pointerEvents = '';
+    });
+    wrongResult.classList.remove('show');
+    correctResult.classList.remove('show');
+    resetBtn.style.display = 'none';
+  });
+}
+
+function initAnchoring() {
+  const spinBtn = document.getElementById('anchorSpinBtn');
+  const wheel = document.getElementById('anchorWheel');
+  const numberEl = document.getElementById('anchorNumber');
+  const sliderSection = document.getElementById('anchorSlider');
+  const sliderInput = document.getElementById('anchorSliderInput');
+  const sliderValue = document.getElementById('anchorSliderValue');
+  const valueRef = document.getElementById('anchorValueRef');
+  const submitBtn = document.getElementById('anchorSubmitBtn');
+  const result = document.getElementById('anchorResult');
+  const resultContent = document.getElementById('anchorResultContent');
+  const resetBtn = document.getElementById('anchorReset');
+  if (!spinBtn) return;
+
+  let anchorVal = 0;
+
+  spinBtn.addEventListener('click', () => {
+    spinBtn.disabled = true;
+    anchorVal = Math.random() > 0.5 ? 65 : 10;
+    const spins = 5 + Math.random() * 3;
+    const targetDeg = spins * 360 + (anchorVal === 10 ? 36 : 234);
+    wheel.style.transform = 'rotate(' + targetDeg + 'deg)';
+
+    setTimeout(() => {
+      numberEl.textContent = anchorVal;
+      numberEl.style.fontSize = '3rem';
+      valueRef.textContent = anchorVal;
+      sliderSection.classList.add('show');
+    }, 3200);
+  });
+
+  sliderInput.addEventListener('input', () => {
+    sliderValue.textContent = sliderInput.value + '%';
+  });
+
+  submitBtn.addEventListener('click', () => {
+    const userEstimate = parseInt(sliderInput.value);
+    submitBtn.style.display = 'none';
+    sliderInput.disabled = true;
+
+    const lowAnchor = { anchor: 10, avg: 25 };
+    const highAnchor = { anchor: 65, avg: 45 };
+
+    let html = '';
+    html += '<div style="margin-bottom:1rem;"><b>你的锚定值：' + anchorVal + '</b> &middot; <b>你的估计：' + userEstimate + '%</b></div>';
+    html += '<div style="font-size:0.8rem;color:var(--fg-secondary);margin-bottom:1rem;">卡尼曼实验中两组被试的平均估计：</div>';
+
+    html += '<div style="margin-bottom:0.75rem;">';
+    html += '<div style="font-size:0.7rem;margin-bottom:0.3rem;">锚定值=10的组 → 平均估计 <b>25%</b></div>';
+    html += '<div style="width:' + lowAnchor.avg + '%;background:#4AACCF;height:8px;border-radius:4px;transition:width 1s;"></div>';
+    html += '</div>';
+
+    html += '<div style="margin-bottom:0.75rem;">';
+    html += '<div style="font-size:0.7rem;margin-bottom:0.3rem;">锚定值=65的组 → 平均估计 <b>45%</b></div>';
+    html += '<div style="width:' + highAnchor.avg + '%;background:#D4A845;height:8px;border-radius:4px;transition:width 1s;"></div>';
+    html += '</div>';
+
+    html += '<div style="margin-bottom:0.75rem;">';
+    html += '<div style="font-size:0.7rem;margin-bottom:0.3rem;">你的估计 → <b>' + userEstimate + '%</b>' + (anchorVal === 10 ? '（你的锚=10）' : '（你的锚=65）') + '</div>';
+    html += '<div style="width:' + userEstimate + '%;background:var(--accent);height:8px;border-radius:4px;transition:width 1s;"></div>';
+    html += '</div>';
+
+    const myGroup = anchorVal === 10 ? lowAnchor : highAnchor;
+    const diff = Math.abs(userEstimate - myGroup.avg);
+    if (diff <= 5) {
+      html += '<div style="margin-top:1rem;padding:1rem;border-radius:8px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.15);font-size:0.85rem;">😱 你的估计非常接近你这组的平均值！<b>锚定效应对你产生了典型影响。</b>一个明显随机的数字，悄悄地拉偏了你的判断。</div>';
+    } else if ((anchorVal === 10 && userEstimate < 30) || (anchorVal === 65 && userEstimate > 40)) {
+      html += '<div style="margin-top:1rem;padding:1rem;border-radius:8px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.15);font-size:0.85rem;">🎯 你的估计方向与你的锚定值一致——锚定效应在起作用。<b>两组之间20个百分点的差异，仅因一个随机数字。</b></div>';
+    } else {
+      html += '<div style="margin-top:1rem;padding:1rem;border-radius:8px;background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.15);font-size:0.85rem;">🧠 你的估计似乎没有被锚定值强烈影响。但在卡尼曼的实验中，即使被试知道数字来自转盘，<b>两组的平均估计仍相差20个百分点</b>。</div>';
+    }
+
+    resultContent.innerHTML = html;
+    result.classList.add('show');
+    resetBtn.style.display = 'inline-flex';
+  });
+
+  resetBtn.addEventListener('click', () => {
+    spinBtn.disabled = false;
+    wheel.style.transform = 'rotate(0deg)';
+    numberEl.textContent = '?';
+    sliderSection.classList.remove('show');
+    sliderInput.disabled = false;
+    sliderInput.value = 50;
+    sliderValue.textContent = '50%';
+    submitBtn.style.display = 'block';
+    result.classList.remove('show');
+    resetBtn.style.display = 'none';
+  });
+}
+
+function initLinda() {
+  const options = document.getElementById('lindaOptions');
+  const resultEl = document.getElementById('lindaResult');
+  const resetBtn = document.getElementById('lindaReset');
+  if (!options) return;
+
+  options.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn || btn.classList.contains('wrong') || btn.classList.contains('correct')) return;
+    const answer = btn.dataset.answer;
+    options.querySelectorAll('button').forEach(b => b.style.pointerEvents = 'none');
+
+    const resultContent = document.getElementById('lindaResultContent');
+    if (answer === 'wrong') {
+      btn.classList.add('wrong');
+      options.querySelector('[data-answer="correct"]').classList.add('correct');
+      resultContent.innerHTML = '<b style="color:#DC2626;font-size:1.1rem;">😱 合取谬误！你和80%的人一样落入了陷阱</b><br>你选了B——但这在逻辑上不可能比A更可能。';
+    } else {
+      btn.classList.add('correct');
+      resultContent.innerHTML = '<b style="color:#16a34a;font-size:1.1rem;">🎉 你击败了合取谬误！</b><br>正确！P(A∩B) ≤ P(A) 是基本逻辑——子集永远不大于全集。但超过80%的人会选错。';
+    }
+    resultEl.classList.add('show');
+    resetBtn.style.display = 'inline-flex';
+  });
+
+  resetBtn.addEventListener('click', () => {
+    options.querySelectorAll('button').forEach(b => {
+      b.classList.remove('wrong', 'correct');
+      b.style.pointerEvents = '';
+    });
+    resultEl.classList.remove('show');
+    resetBtn.style.display = 'none';
+  });
+}
+
+function initCoinFlip() {
+  const coinArea = document.getElementById('coinArea');
+  if (!coinArea) return;
+
+  let balance = 1000, round = 0, wins = 0, losses = 0, history = [];
+
+  const preQ = document.getElementById('coinPreQuestion');
+  const game = document.getElementById('coinGame');
+  const coinVisual = document.getElementById('coinVisual');
+  const balanceEl = document.getElementById('coinBalance');
+  const roundEl = document.getElementById('coinRound');
+  const winsEl = document.getElementById('coinWins');
+  const lossesEl = document.getElementById('coinLosses');
+  const historyEl = document.getElementById('coinHistory');
+  const graphSvg = document.getElementById('coinGraphSvg');
+  const reveal = document.getElementById('coinReveal');
+  const resetBtn = document.getElementById('coinReset');
+
+  document.getElementById('coinRefuse').addEventListener('click', () => {
+    preQ.style.display = 'none';
+    game.style.display = 'block';
+    reveal.innerHTML = '😰 <b>大多数人和你一样拒绝了</b>——尽管这个赌注的期望收益是 <b>+25元/轮</b>（150x0.5 - 100x0.5 = 25）。损失100元的恐惧压过了赢150元的吸引力。这就是<b>损失厌恶</b>。<br><br>现在试试连续玩——看看结果如何。';
+    reveal.classList.add('show');
+  });
+
+  document.getElementById('coinAccept').addEventListener('click', () => {
+    preQ.style.display = 'none';
+    game.style.display = 'block';
+  });
+
+  function doFlip() {
+    const isHeads = Math.random() > 0.5;
+    round++;
+    if (isHeads) { balance += 150; wins++; history.push(1); }
+    else { balance -= 100; losses++; history.push(0); }
+    return isHeads;
+  }
+
+  function updateUI() {
+    balanceEl.textContent = balance;
+    roundEl.textContent = round;
+    winsEl.textContent = wins;
+    lossesEl.textContent = losses;
+
+    let dotsHtml = '';
+    const showLast = Math.min(history.length, 100);
+    for (let i = history.length - showLast; i < history.length; i++) {
+      dotsHtml += '<div class="coin-dot ' + (history[i] ? 'win' : 'lose') + '"></div>';
+    }
+    historyEl.innerHTML = dotsHtml;
+
+    if (history.length > 1) {
+      const values = [1000];
+      let cum = 1000;
+      for (let i = 0; i < history.length; i++) { cum += history[i] ? 150 : -100; values.push(cum); }
+      const maxVal = Math.max(...values, 1200), minVal = Math.min(...values, 800);
+      const range = maxVal - minVal || 1, w = 400, h = 120;
+      const step = w / Math.max(values.length - 1, 1);
+      let pathD = '';
+      values.forEach((v, i) => {
+        const x = i * step, y = h - ((v - minVal) / range) * (h - 10) - 5;
+        pathD += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+      });
+      const baseY = h - ((1000 - minVal) / range) * (h - 10) - 5;
+      graphSvg.innerHTML =
+        '<line x1="0" y1="' + baseY.toFixed(1) + '" x2="400" y2="' + baseY.toFixed(1) + '" stroke="var(--fg-secondary)" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.3"/>' +
+        '<text x="402" y="' + (baseY + 3).toFixed(1) + '" font-family="var(--sans)" font-size="8" fill="var(--fg-secondary)" opacity="0.5">1000</text>' +
+        '<path d="' + pathD + '" stroke="var(--accent)" stroke-width="2" fill="none"/>';
+    }
+
+    if (round >= 20 && !reveal.classList.contains('show')) {
+      const profit = balance - 1000;
+      reveal.innerHTML = (profit >= 0 ? '📈' : '📉') + ' 经过' + round + '轮，你的余额是 <b>' + balance + '元</b>（' + (profit >= 0 ? '+' : '') + profit + '元）。<br>' +
+        (profit >= 0
+          ? '正如期望值所预测——这个"有风险"的赌注几乎总是盈利的。<b>损失厌恶让大多数人拒绝了好赌注。</b>'
+          : '即使短期亏损，期望值仍是正的。继续玩——大数定律终会显现。<b>但损失厌���让我们在短期波动中放弃了。</b>');
+      reveal.classList.add('show');
+    }
+    resetBtn.style.display = round > 0 ? 'inline-flex' : 'none';
+  }
+
+  function animateFlip(count, cb) {
+    if (count <= 0) { cb && cb(); return; }
+    coinVisual.classList.add('flipping');
+    setTimeout(() => {
+      const isHeads = doFlip();
+      coinVisual.textContent = isHeads ? '🎉' : '💀';
+      coinVisual.classList.remove('flipping');
+      updateUI();
+      if (count > 1) {
+        setTimeout(() => animateFlip(count - 1, cb), count > 10 ? 50 : 200);
+      } else {
+        setTimeout(() => { coinVisual.textContent = '🪙'; cb && cb(); }, 800);
+      }
+    }, count > 10 ? 100 : 600);
+  }
+
+  document.getElementById('coinFlipOne').addEventListener('click', () => animateFlip(1));
+  document.getElementById('coinFlip10').addEventListener('click', () => animateFlip(10));
+  document.getElementById('coinFlip50').addEventListener('click', () => animateFlip(50));
+
+  resetBtn.addEventListener('click', () => {
+    balance = 1000; round = 0; wins = 0; losses = 0; history = [];
+    reveal.classList.remove('show');
+    updateUI();
+    graphSvg.innerHTML = '';
+    coinVisual.textContent = '🪙';
+    resetBtn.style.display = 'none';
+  });
+}
+
+function initPeakEnd() {
+  const choices = document.getElementById('peakEndChoices');
+  const resultEl = document.getElementById('peakEndResult');
+  const resetBtn = document.getElementById('peakEndReset');
+  if (!choices) return;
+
+  choices.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const choice = btn.dataset.choice;
+    choices.querySelectorAll('button').forEach(b => {
+      b.style.pointerEvents = 'none';
+      b.classList.remove('selected');
+    });
+    btn.classList.add('selected');
+
+    let html = '';
+    if (choice === 'B') {
+      html = '<b style="color:var(--accent);font-size:1.05rem;">😱 你和80%的实验被试做了相同的选择！</b><br><br>' +
+        '但体验B客观上更糟——它包含了A的<b>全���痛苦</b>，外加额外30秒的不适。你选择了更多总痛苦。<br><br>' +
+        '你的<b>记忆自我</b>只在乎<b>峰值</b>和<b>终值</b>。B的结尾稍好，所以记忆自我认为B"不那么糟"。<br><br>' +
+        '<b>这就是峰终定律——它改变了我们对幸福、医疗和人生回忆的理解。</b>';
+    } else {
+      html = '<b style="color:#16a34a;font-size:1.05rem;">🧠 理性的选择！但你是少数派。</b><br><br>' +
+        '逻��上A的总痛苦确实更少。但在实验中，<b>80%的人选了B</b>。<br><br>' +
+        '因为<b>记忆自我</b>只在乎<b>峰值</b>和<b>终值</b>——B的结尾更温和，"感觉没那么糟"。<br><br>' +
+        '<b>峰终定律：我们的生活决策几乎总由记忆自我主导——而记忆自我在系统性地欺骗我们。</b>';
+    }
+    resultEl.innerHTML = html;
+    resultEl.classList.add('show');
+    resetBtn.style.display = 'inline-flex';
+  });
+
+  resetBtn.addEventListener('click', () => {
+    choices.querySelectorAll('button').forEach(b => {
+      b.classList.remove('selected');
+      b.style.pointerEvents = '';
+    });
+    resultEl.classList.remove('show');
+    resetBtn.style.display = 'none';
   });
 }
 
@@ -2150,6 +3492,7 @@ function initKeyboardNav() {
 // ═══════════════════════════════════════════════════════════════
 renderApp();
 initKeyboardNav();
+initInteractiveModules();
 </script>
 </body>
 </html>

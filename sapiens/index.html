@@ -985,6 +985,702 @@ body {
   .dunbar-circle.limit { width: 190px; height: 190px; }
   .dunbar-circle.band { width: 120px; height: 120px; }
   .dunbar-circle.core { width: 60px; height: 60px; }
+  .timeline-explorer { padding: 3rem 1rem; }
+  .timeline-track { min-width: 900px; }
+  .wheat-map-section { padding: 2rem 0; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Noise/Grain Texture Overlay
+   ═══════════════════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Progress Bar Gradient
+   ═══════════════════════════════════════════════════════ */
+.progress-bar {
+  background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent)) !important;
+  background-size: 200% 100%;
+  animation: progressShimmer 3s ease infinite;
+  height: 3px !important;
+}
+@keyframes progressShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Scene Nav Tooltips
+   ═══════════════════════════════════════════════════════ */
+.scene-nav a::after {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Hero Section Upgrades
+   ═══════════════════════════════════════════════════════ */
+.hero-title {
+  will-change: transform;
+}
+.hero-quote-wrap {
+  position: relative;
+}
+.hero-quote-wrap .quote-deco {
+  position: absolute;
+  font-family: var(--serif);
+  font-size: clamp(6rem, 15vw, 12rem);
+  font-weight: 900;
+  color: var(--accent);
+  opacity: 0.06;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.hero-quote-wrap .quote-deco-open {
+  top: -0.5em;
+  left: -0.3em;
+}
+.hero-quote-wrap .quote-deco-close {
+  bottom: -0.8em;
+  right: -0.1em;
+}
+.hero-quote {
+  position: relative;
+  z-index: 1;
+}
+/* Animated underline highlight on hero quote */
+.hero-quote-highlight {
+  background: linear-gradient(120deg, var(--accent-dim) 0%, var(--accent-mid) 100%);
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  background-position: 0 100%;
+  transition: background-size 1.8s var(--ease-out);
+  padding: 0.1em 0;
+}
+.reveal-wipe.revealed .hero-quote-highlight {
+  background-size: 100% 100%;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Hero Scroll Hint - Bouncing Arrow
+   ═══════════════════════════════════════════════════════ */
+.hero-scroll-hint .scroll-arrow {
+  font-size: 1.2rem;
+  color: var(--accent);
+  animation: bounceArrow 2s var(--ease-out) infinite;
+  opacity: 0.6;
+}
+@keyframes bounceArrow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Drop Caps
+   ═══════════════════════════════════════════════════════ */
+.narrative p.drop-cap-p::first-letter {
+  font-family: var(--serif);
+  font-size: 3.5em;
+  font-weight: 900;
+  float: left;
+  line-height: 0.8;
+  margin-right: 0.08em;
+  margin-top: 0.1em;
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Bold text marker highlight
+   ═══════════════════════════════════════════════════════ */
+.narrative p strong, .narrative p b {
+  color: var(--accent);
+  font-weight: 600;
+  background: linear-gradient(120deg, var(--accent-dim) 0%, transparent 100%);
+  padding: 0.05em 0.2em;
+  border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Stat Pill Badges
+   ═══════════════════════════════════════════════════════ */
+.stat-pill {
+  display: inline-block;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-mid);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.85em;
+  padding: 0.1em 0.5em;
+  border-radius: 100px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Deep Dive Trigger 3D Tilt
+   ═══════════════════════════════════════════════════════ */
+.dd-trigger {
+  perspective: 800px;
+  transform-style: preserve-3d;
+  transition: all 0.4s var(--ease-out), transform 0.3s var(--ease-out);
+}
+.dd-trigger:hover {
+  transform: translateY(-4px) rotateX(2deg) rotateY(-2deg);
+  box-shadow: 0 12px 40px var(--accent-dim), 0 4px 12px rgba(0,0,0,0.08);
+}
+/* Breathing pulse before first click */
+.dd-trigger:not(.clicked) {
+  animation: ddPulse 3s ease-in-out infinite;
+}
+.dd-trigger.clicked {
+  animation: none;
+}
+@keyframes ddPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+  50% { box-shadow: 0 0 0 6px transparent; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Comparison bars - animated gradient fills
+   ═════════════════════════════════════════════════��═════ */
+.comp-bar-fill.amber {
+  background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent));
+  background-size: 200% 100%;
+  animation: barGradient 3s ease infinite;
+}
+.comp-bar-fill.grey {
+  background: linear-gradient(90deg, var(--fg-secondary), rgba(128,128,128,0.4), var(--fg-secondary));
+  background-size: 200% 100%;
+  animation: barGradient 3s ease infinite;
+  opacity: 0.5;
+}
+@keyframes barGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Data Viz Corner Accents
+   ═══════════════════════════════════════════════════════ */
+.data-viz {
+  position: relative;
+  padding: 3rem 0;
+}
+.data-viz::before,
+.data-viz::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: var(--accent-mid);
+  border-style: solid;
+}
+.data-viz::before {
+  top: 0;
+  left: 0;
+  border-width: 2px 0 0 2px;
+}
+.data-viz::after {
+  bottom: 0;
+  right: 0;
+  border-width: 0 2px 2px 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Big Number Glow
+   ═══════════════════════════════════════════════════════ */
+.big-number {
+  text-shadow: 0 0 40px var(--accent-dim), 0 0 80px var(--accent-glow);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Gradient Mesh Backgrounds for Scenes
+   ═══════════════════════════════════════════════════════ */
+.scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background:
+    radial-gradient(ellipse at 20% 20%, var(--accent-glow) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, var(--accent-dim) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 100%);
+  z-index: -1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Dark Mode Floating Particles
+   ═══════════════════════════════════════════════════════ */
+.dark-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.dark-particles .particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  animation: particleFloat 12s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes particleFloat {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.4; }
+  50% { transform: translateY(-80px) translateX(30px); opacity: 0.2; }
+  90% { opacity: 0.4; }
+  100% { transform: translateY(-160px) translateX(-20px); opacity: 0; }
+}
+
+/* Star field for scene 18 */
+.star-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.star-field .star {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  background: #fff;
+  border-radius: 50%;
+  animation: starTwinkle 4s ease-in-out infinite;
+  will-change: opacity;
+}
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.7; }
+}
+
+/* Dark scene accent glow */
+.scene.dark-scene .scene-title {
+  text-shadow: 0 0 60px var(--accent-dim);
+}
+.scene.dark-scene .big-number {
+  text-shadow: 0 0 40px var(--accent-mid), 0 0 80px var(--accent-dim);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENHANCED: Extinction Cascade Upgrades
+   ═══════════════════════════════════════════════════════ */
+.ext-species-icon {
+  font-size: 2rem !important;
+  padding: 0.4rem;
+  border-radius: 8px;
+  background: var(--accent-glow);
+  transition: all 0.6s var(--ease-out);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  min-height: 3rem;
+}
+.ext-species-icon.extinct {
+  background: rgba(220, 38, 38, 0.08);
+}
+.ext-species-icon.extinct::after {
+  content: '✕';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  color: #DC2626;
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(220,38,38,0.6);
+  animation: extSlash 0.4s var(--ease-spring) forwards;
+  background: none;
+  left: auto;
+  right: auto;
+  top: auto;
+  height: auto;
+  width: auto;
+  transform: none;
+}
+@keyframes extSlash {
+  0% { opacity: 0; transform: scale(2) rotate(-20deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+/* Extinction percent red glow */
+.ext-percent {
+  text-shadow: 0 0 20px rgba(220,38,38,0.4);
+  animation: extPulse 2s ease-in-out infinite;
+}
+@keyframes extPulse {
+  0%, 100% { text-shadow: 0 0 20px rgba(220,38,38,0.3); }
+  50% { text-shadow: 0 0 30px rgba(220,38,38,0.6); }
+}
+/* Body count counter */
+.ext-body-count {
+  position: sticky;
+  top: 5rem;
+  z-index: 10;
+  text-align: right;
+  font-family: var(--serif);
+  font-size: 0.75rem;
+  color: #DC2626;
+  opacity: 0.8;
+  padding: 0.5rem 0;
+  letter-spacing: 0.05em;
+}
+.ext-body-count .count-num {
+  font-size: 1.5rem;
+  font-weight: 900;
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ════════════════════════════════════════════���══════════
+   TIMELINE EXPLORER
+   ═══════════════════════════════════════════════════════ */
+.timeline-explorer {
+  padding: 5rem 2rem 4rem;
+  overflow: hidden;
+  position: relative;
+}
+.timeline-explorer-title {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.timeline-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-mid) transparent;
+  padding-bottom: 1rem;
+}
+.timeline-scroll::-webkit-scrollbar { height: 4px; }
+.timeline-scroll::-webkit-scrollbar-track { background: transparent; }
+.timeline-scroll::-webkit-scrollbar-thumb { background: var(--accent-mid); border-radius: 2px; }
+.timeline-track {
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-width: 1200px;
+  padding: 3rem 4rem;
+}
+.timeline-line {
+  position: absolute;
+  top: 50%;
+  left: 4rem;
+  right: 4rem;
+  height: 2px;
+  background: var(--border);
+  transform: translateY(-50%);
+}
+.timeline-line-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-mid));
+  border-radius: 1px;
+  transition: width 2s var(--ease-out);
+}
+.timeline-milestone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+.timeline-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent-mid);
+  transition: all 0.4s var(--ease-spring);
+  position: relative;
+  z-index: 2;
+}
+.timeline-milestone:hover .timeline-dot,
+.timeline-milestone.active .timeline-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.5);
+  box-shadow: 0 0 16px var(--accent-mid);
+}
+.timeline-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  transition: transform 0.3s var(--ease-spring);
+}
+.timeline-milestone:hover .timeline-icon {
+  transform: scale(1.2);
+}
+.timeline-year {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: 0.75rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.timeline-label {
+  font-family: var(--serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin-top: 0.3rem;
+  text-align: center;
+  white-space: nowrap;
+}
+.timeline-desc {
+  position: absolute;
+  top: calc(100% + 2.5rem);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  width: 180px;
+  font-size: 0.72rem;
+  line-height: 1.7;
+  color: var(--fg-secondary);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s var(--ease-out);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+.timeline-milestone.active .timeline-desc,
+.timeline-milestone:hover .timeline-desc {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+/* ═══════════════════════════════════════════════════════
+   POPULATION COUNTER (Scene 5)
+   ═══════════════════════════════════════════════════════ */
+.pop-counter-section {
+  margin: 4rem 0;
+  padding: 3rem 0;
+  position: relative;
+}
+.pop-counter-title {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+}
+.pop-grid-viz {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 1.5rem 0;
+  min-height: 60px;
+}
+.pop-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  will-change: opacity;
+}
+.pop-dot.visible { opacity: 0.7; }
+.pop-counter-number {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 0 30px var(--accent-dim);
+}
+.pop-trap-bars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.pop-trap-bar {
+  text-align: center;
+}
+.pop-trap-bar-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--fg-secondary);
+  margin-bottom: 0.5rem;
+}
+.pop-trap-bar-track {
+  height: 120px;
+  width: 40px;
+  margin: 0 auto;
+  background: var(--border);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.pop-trap-bar-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  border-radius: 4px;
+  transition: height 2s var(--ease-out);
+}
+.pop-trap-bar-fill.up { background: var(--accent); }
+.pop-trap-bar-fill.down { background: #DC2626; opacity: 0.7; }
+.pop-trap-bar-val {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 900;
+  margin-top: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════
+   WHEAT SPREAD VISUALIZATION
+   ═══════════════════════════════════════════════════════ */
+.wheat-map-section {
+  margin: 4rem 0;
+  padding: 3rem 0;
+  position: relative;
+}
+.wheat-map-title {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+.wheat-map-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.wheat-map-container svg {
+  width: 100%;
+  height: auto;
+}
+.wheat-dot {
+  fill: var(--accent);
+  opacity: 0;
+  transition: opacity 0.5s ease, r 0.5s ease;
+}
+.wheat-dot.spread { opacity: 0.6; }
+.wheat-scrubber {
+  width: 100%;
+  margin: 1.5rem 0 0.5rem;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.wheat-scrubber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--accent-mid);
+}
+.wheat-scrubber::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 8px var(--accent-mid);
+}
+.wheat-year-display {
+  text-align: center;
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.wheat-coverage {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--fg-secondary);
+  margin-top: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FOOTER UPGRADE
+   ═══════════════════════════════════════════════════════ */
+.footer-bookshelf {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2.5rem;
+  padding: 0.75rem 2rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  color: var(--fg-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: all 0.4s var(--ease-out);
+  background: var(--accent-glow);
+}
+.footer-bookshelf:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px var(--accent-dim);
+}
+.footer-bookshelf .arrow {
+  transition: transform 0.3s var(--ease-out);
+}
+.footer-bookshelf:hover .arrow {
+  transform: translateX(-4px);
 }
 </style>
 </head>
@@ -1909,35 +2605,96 @@ function renderApp() {
   html += `
     <section class="hero" id="hero">
       <div class="hero-overline">${meta.author} · ${meta.bookSub}</div>
-      <h1 class="hero-title">${meta.book}</h1>
+      <h1 class="hero-title" id="heroTitle">${meta.book}</h1>
       <p class="hero-subtitle">${meta.partTitle}</p>
       <div class="hero-part">${meta.part} · ${meta.partSub}</div>
       <div class="hero-scroll-hint">
         <span>向下滚动</span>
+        <div class="scroll-arrow">↓</div>
         <div class="scroll-line"></div>
       </div>
     </section>`;
 
+  // Timeline Explorer
+  html += `
+    <section class="timeline-explorer" id="timelineExplorer">
+      <div class="timeline-explorer-title reveal">人类历史 · 关键里程碑</div>
+      <div class="timeline-scroll">
+        <div class="timeline-track" id="timelineTrack">
+          <div class="timeline-line"><div class="timeline-line-fill" id="timelineLineFill"></div></div>
+          ${[
+            {icon:'🦴', year:'250万年前', label:'最初的人属', desc:'第一批人属动物在东非出现，使用简单石器，在食物链中层苟活'},
+            {icon:'🔥', year:'70万年前', label:'驯化火', desc:'直立人学会控制火，开启了体外消化的革命，为大脑扩张提供能量'},
+            {icon:'🧠', year:'7万年前', label:'认知革命', desc:'智人获得了虚构能力——讨论不存在之物，从此突破150人合作上限'},
+            {icon:'🌾', year:'1.2万年前', label:'农业革命', desc:'人类开始驯化小麦和动物，人口暴增但个体生活质量急剧下降'},
+            {icon:'📝', year:'5000年前', label:'文字发明', desc:'苏美尔人发明楔形文字——不是为了写诗，而是为了记账'},
+            {icon:'🪙', year:'2500年前', label:'铸币出现', desc:'吕底亚王国铸造第一批标准硬币，金钱成为最普世的信任系统'},
+            {icon:'🔬', year:'500年前', label:'科学革命', desc:'承认无知成为力量——"我不知道"从可耻变为高贵'},
+            {icon:'⚡', year:'200年前', label:'工业革命', desc:'打开地球能量储蓄罐，生产力增长超过此前一万年的总和'},
+            {icon:'💻', year:'50年前', label:'信息革命', desc:'数字技术重塑人类生活，算法开始接管虚构故事的创作权'}
+          ].map((m,i) => `
+            <div class="timeline-milestone" data-tl-idx="${i}">
+              <div class="timeline-icon">${m.icon}</div>
+              <div class="timeline-dot"></div>
+              <div class="timeline-year">${m.year}</div>
+              <div class="timeline-label">${m.label}</div>
+              <div class="timeline-desc">${m.desc}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </section>`;
+
+  const darkScenes = ['scene4','scene8','scene11','scene16','scene18'];
   scenes.forEach((scene, idx) => {
-    html += `<section class="scene" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner">`;
+    const isDark = darkScenes.includes(scene.palette);
+    const isScene18 = scene.palette === 'scene18';
+    html += `<section class="scene${isDark ? ' dark-scene' : ''}" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner" style="position:relative;z-index:1;">`;
+
+    // Dark mode particles
+    if (isDark && !isScene18) {
+      html += `<div class="dark-particles">${Array.from({length:20}, (_,i) => {
+        const x = Math.random()*100, y = Math.random()*100, d = 8+Math.random()*16, delay = Math.random()*10;
+        return `<div class="particle" style="left:${x}%;top:${y}%;animation-duration:${d}s;animation-delay:${delay}s;"></div>`;
+      }).join('')}</div>`;
+    }
+    // Star field for scene 18
+    if (isScene18) {
+      html += `<div class="star-field">${Array.from({length:50}, (_,i) => {
+        const x = Math.random()*100, y = Math.random()*100, size = 1+Math.random()*2, delay = Math.random()*6, dur = 3+Math.random()*4;
+        return `<div class="star" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;"></div>`;
+      }).join('')}</div>`;
+    }
+
     html += `
       <div class="reveal scene-number">${scene.number}</div>
       <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
       <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle}</div>
       <div class="hero-quote-wrap reveal-wipe">
-        <blockquote class="hero-quote">${scene.heroQuote}</blockquote>
+        <span class="quote-deco quote-deco-open">「</span>
+        <span class="quote-deco quote-deco-close">」</span>
+        <blockquote class="hero-quote"><span class="hero-quote-highlight">${scene.heroQuote}</span></blockquote>
       </div>
       <div class="narrative">`;
-    scene.narrative.forEach(p => { html += `<p class="reveal">${p}</p>`; });
+    scene.narrative.forEach((p, pi) => {
+      const cls = pi === 0 ? ' drop-cap-p' : '';
+      html += `<p class="reveal${cls}">${p}</p>`;
+    });
     html += `</div>`;
 
     // Data Viz
     if (scene.dataViz) html += renderDataViz(scene.dataViz);
 
+    // Population Counter + Wheat Map for Scene 5
+    if (scene.id === 'scene-5') {
+      html += renderPopulationCounter();
+      html += renderWheatMap();
+    }
+
     // Comparison
     if (scene.comparison) html += renderComparison(scene.comparison);
 
-    // Extinction
+    // Extinction (enhanced with body count)
     if (scene.extinction) html += renderExtinction(scene.extinction);
 
     // Deep Dives
@@ -1956,7 +2713,7 @@ function renderApp() {
       });
       html += `</div></div>`;
     }
-    html += `</div></section>`;
+    html += `</div><!-- end scene-inner --></section>`;
 
     // Part dividers
     if (scene.id === 'scene-4') {
@@ -2010,6 +2767,7 @@ function renderApp() {
       <div class="reveal footer-title">全书 · 终</div>
       <p class="reveal footer-text reveal-delay-1">七万年前，一种微不足道的灵长类动物学会了编故事。<br>一万年前，它用这些故事把自己锁进了农田。<br>五百年前，它承认了自己的无知——然后用无知的力量征服了世界。<br>今天，它正站在一个十字路口：继续做智人，还是把自己升级为神。<br><br><b>我们拥有了神的力量，却仍然保有采集者的欲望和中世纪农民的恐惧。<br>还有什么比这更危险的吗？</b></p>
       <div class="reveal footer-next reveal-delay-2" style="opacity:0.4;margin-top:3rem;font-size:0.7rem;">尤瓦尔·赫拉利《人类简史：从动物到上帝》· 沉浸式深度导读 · 全四部分</div>
+      <a href="../index.html" class="footer-bookshelf reveal reveal-delay-3"><span class="arrow">←</span> 返回书架</a>
     </footer>`;
 
   app.innerHTML = html;
@@ -2370,7 +3128,11 @@ function renderComparison(comp) {
 
 // ── Extinction Viz ──
 function renderExtinction(ext) {
-  let html = `<div class="extinction-section"><div class="dd-trigger-label reveal">灭绝档案 · Extinction Record</div>`;
+  let html = `<div class="extinction-section"><div class="dd-trigger-label reveal">灭绝档案 · Extinction Record</div>
+    <div class="ext-body-count reveal" id="extBodyCount">
+      累计灭绝物种
+      <span class="count-num" id="extBodyNum">0</span>
+    </div>`;
   ext.regions.forEach((region, i) => {
     html += `
       <div class="extinction-region" data-ext-region data-delay="${i*600}" data-percent="${region.percentLost}">
@@ -2391,6 +3153,80 @@ function renderExtinction(ext) {
   });
   html += `</div>`;
   return html;
+}
+
+// ── Population Counter (Scene 5) ──
+function renderPopulationCounter() {
+  return `
+    <div class="pop-counter-section reveal" data-pop-counter>
+      <div class="pop-counter-title">人口爆炸 · Population Explosion</div>
+      <div class="pop-counter-number" id="popNumber">5,000,000</div>
+      <div style="font-size:0.7rem; color:var(--fg-secondary); opacity:0.6; margin-top:0.3rem;">采集时代 · 全球人口峰值</div>
+      <div class="pop-grid-viz" id="popGrid">${Array.from({length:200}, () => '<div class="pop-dot"></div>').join('')}</div>
+      <div class="pop-trap-bars">
+        <div class="pop-trap-bar">
+          <div class="pop-trap-bar-label">人口数量 ↑</div>
+          <div class="pop-trap-bar-track"><div class="pop-trap-bar-fill up" id="popBarUp" style="height:10%;"></div></div>
+          <div class="pop-trap-bar-val" style="color:var(--accent);" id="popBarUpVal">500万</div>
+        </div>
+        <div class="pop-trap-bar">
+          <div class="pop-trap-bar-label">个体生活质量 ↓</div>
+          <div class="pop-trap-bar-track"><div class="pop-trap-bar-fill down" id="popBarDown" style="height:90%;"></div></div>
+          <div class="pop-trap-bar-val" style="color:#DC2626;" id="popBarDownVal">极高</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Wheat Spread Map (Scene 5) ──
+function renderWheatMap() {
+  return `
+    <div class="wheat-map-section reveal" data-wheat-map>
+      <div class="wheat-map-title">小麦征服世界 · Wheat's Global Conquest</div>
+      <div class="wheat-map-container">
+        <svg viewBox="0 0 600 300" fill="none" id="wheatMapSvg">
+          <!-- Simplified world map outline -->
+          <path d="M80,120 Q100,100 130,105 Q160,90 180,95 Q200,85 210,90 L230,88 Q250,82 270,90 Q280,85 290,88 L310,92 Q330,95 340,90 Q360,85 380,92 Q400,88 420,95 L440,92 Q460,88 480,95" stroke="var(--border)" stroke-width="1" fill="none"/>
+          <path d="M100,130 Q80,150 70,180 Q65,200 80,220 L95,230 Q110,235 120,225 L130,210 Q140,195 135,180 L130,160 Q125,145 120,135Z" stroke="var(--border)" stroke-width="1" fill="var(--accent-glow)"/>
+          <!-- Europe -->
+          <path d="M240,90 Q250,80 270,85 L280,90 Q290,95 300,92 L310,88 Q315,100 310,110 Q305,120 295,125 L280,128 Q265,130 255,125 Q245,118 240,110Z" stroke="var(--border)" stroke-width="1" fill="var(--accent-glow)"/>
+          <!-- Africa -->
+          <path d="M250,130 Q260,125 275,130 L290,135 Q300,140 305,155 Q310,175 305,200 Q300,220 285,235 Q270,245 260,240 Q250,230 248,210 Q245,190 248,170 Q250,150 250,140Z" stroke="var(--border)" stroke-width="1" fill="var(--accent-glow)"/>
+          <!-- Asia -->
+          <path d="M310,88 Q330,80 360,78 Q390,75 420,80 L460,85 Q490,90 510,100 Q520,110 515,125 Q510,140 495,150 Q480,155 460,150 Q440,145 420,140 Q400,138 380,135 Q360,130 340,128 Q320,125 310,115Z" stroke="var(--border)" stroke-width="1" fill="var(--accent-glow)"/>
+          <!-- Americas -->
+          <path d="M70,100 Q60,90 50,95 Q40,100 35,115 L30,140 Q25,170 35,190 Q45,200 40,215 Q35,230 45,245 Q55,255 50,265" stroke="var(--border)" stroke-width="1" fill="none"/>
+          <path d="M120,110 Q130,100 140,105 L148,110 Q155,115 152,125 L148,135 Q145,140 140,138 L130,130 Q122,120 120,115Z" stroke="var(--border)" stroke-width="1" fill="var(--accent-glow)"/>
+          <!-- Australia -->
+          <path d="M440,200 Q460,190 480,195 Q500,200 510,215 Q515,230 505,240 Q490,248 470,245 Q455,240 445,225 Q440,215 440,205Z" stroke="var(--border)" stroke-width="1" fill="var(--accent-glow)"/>
+
+          <!-- Fertile Crescent marker -->
+          <circle cx="310" cy="115" r="6" fill="var(--accent)" opacity="0.8"/>
+          <text x="318" y="112" font-family="var(--sans)" font-size="7" fill="var(--accent)" font-weight="600">肥沃新月带</text>
+
+          <!-- Wheat spread dots (animated via JS) -->
+          <g id="wheatDots">
+            ${[
+              {cx:310,cy:115,year:-10000},{cx:295,cy:108,year:-9000},{cx:280,cy:105,year:-8000},
+              {cx:265,cy:102,year:-7500},{cx:250,cy:100,year:-7000},{cx:320,cy:120,year:-8500},
+              {cx:340,cy:118,year:-7000},{cx:360,cy:110,year:-6500},{cx:380,cy:105,year:-6000},
+              {cx:400,cy:100,year:-5500},{cx:420,cy:95,year:-5000},{cx:440,cy:100,year:-4500},
+              {cx:460,cy:110,year:-4000},{cx:300,cy:130,year:-7000},{cx:280,cy:140,year:-6000},
+              {cx:270,cy:160,year:-5000},{cx:260,cy:180,year:-3000},{cx:255,cy:120,year:-6500},
+              {cx:240,cy:115,year:-6000},{cx:250,cy:95,year:-5500},{cx:260,cy:90,year:-5000},
+              {cx:270,cy:88,year:-4500},{cx:280,cy:92,year:-4000},{cx:240,cy:100,year:-5000},
+              {cx:480,cy:115,year:-3500},{cx:500,cy:125,year:-3000},{cx:490,cy:140,year:-2500},
+              {cx:130,cy:115,year:-1500},{cx:140,cy:120,year:-1000},{cx:100,cy:140,year:-500},
+              {cx:80,cy:160,year:500},{cx:60,cy:120,year:1000},{cx:50,cy:140,year:1200},
+              {cx:40,cy:160,year:1500},{cx:450,cy:210,year:1800},{cx:470,cy:220,year:1850}
+            ].map((d,i) => `<circle class="wheat-dot" cx="${d.cx}" cy="${d.cy}" r="4" data-year="${d.year}"/>`).join('')}
+          </g>
+        </svg>
+      </div>
+      <input type="range" class="wheat-scrubber" id="wheatScrubber" min="-10000" max="2000" value="-10000" step="100">
+      <div class="wheat-year-display" id="wheatYearDisplay">公元前 10000 年</div>
+      <div class="wheat-coverage" id="wheatCoverage">小麦种植面积: <b>0</b> km²</div>
+    </div>`;
 }
 
 
@@ -2454,6 +3290,22 @@ function initScrollSystem() {
   }, { threshold: 0.5 });
   document.querySelectorAll('[data-count-to]').forEach(el => countObs.observe(el));
 
+  // Timeline observer
+  const tlObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateTimeline(); tlObs.unobserve(e.target); } });
+  }, { threshold: 0.2 });
+  const tlEl = document.getElementById('timelineTrack');
+  if (tlEl) tlObs.observe(tlEl);
+
+  // Population counter observer
+  const popObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animatePopCounter(); popObs.unobserve(e.target); } });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('[data-pop-counter]').forEach(el => popObs.observe(el));
+
+  // Wheat map scrubber
+  initWheatScrubber();
+
   // Scroll handler — palette + progress + nav
   let currentPalette = 'hero';
   let ticking = false;
@@ -2465,6 +3317,12 @@ function initScrollSystem() {
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       progressBar.style.width = (scrollTop / docHeight * 100) + '%';
       nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
+
+      // Hero parallax
+      const heroTitle = document.getElementById('heroTitle');
+      if (heroTitle && scrollTop < window.innerHeight) {
+        heroTitle.style.transform = `translateY(${scrollTop * 0.15}px)`;
+      }
 
       // Determine active scene
       const viewMid = scrollTop + window.innerHeight * 0.45;
@@ -2642,6 +3500,7 @@ function animateCompBars(section) {
 // ═══════════════════════════════════════════════════════════════
 // EXTINCTION ANIMATIONS
 // ═══════════════════════════════════════════════════════════════
+let extBodyTotal = 0;
 function animateExtRegion(region) {
   const delay = parseInt(region.dataset.delay) || 0;
   setTimeout(() => {
@@ -2649,10 +3508,145 @@ function animateExtRegion(region) {
     fill.style.width = fill.dataset.target + '%';
     const counter = region.querySelector('[data-ext-counter]');
     animateCounter(counter, 0, parseInt(counter.dataset.target), 1500, '');
-    region.querySelectorAll('[data-ext-species]').forEach((icon, i) => {
-      setTimeout(() => icon.classList.add('extinct'), 800 + (parseInt(icon.dataset.delay) || 0));
+    const speciesIcons = region.querySelectorAll('[data-ext-species]');
+    speciesIcons.forEach((icon, i) => {
+      setTimeout(() => {
+        icon.classList.add('extinct');
+        extBodyTotal++;
+        const bodyNum = document.getElementById('extBodyNum');
+        if (bodyNum) bodyNum.textContent = extBodyTotal;
+      }, 800 + (parseInt(icon.dataset.delay) || 0));
     });
   }, delay);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// TIMELINE ANIMATION
+// ═══════════════════════════════════════════════════════════════
+function animateTimeline() {
+  const fill = document.getElementById('timelineLineFill');
+  if (fill) {
+    setTimeout(() => { fill.style.width = '100%'; }, 300);
+  }
+  document.querySelectorAll('.timeline-milestone').forEach((ms, i) => {
+    setTimeout(() => {
+      ms.style.opacity = '1';
+      ms.style.transform = 'translateY(0)';
+    }, 300 + i * 150);
+  });
+  // Set initial styles
+  document.querySelectorAll('.timeline-milestone').forEach(ms => {
+    ms.style.opacity = '0';
+    ms.style.transform = 'translateY(20px)';
+    ms.style.transition = 'all 0.6s var(--ease-out)';
+  });
+
+  // Click to activate
+  document.querySelectorAll('.timeline-milestone').forEach(ms => {
+    ms.addEventListener('click', () => {
+      document.querySelectorAll('.timeline-milestone').forEach(m => m.classList.remove('active'));
+      ms.classList.toggle('active');
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// POPULATION COUNTER ANIMATION
+// ═══════════════════════════════════════════════════════════════
+function animatePopCounter() {
+  const popNum = document.getElementById('popNumber');
+  const popGrid = document.getElementById('popGrid');
+  const barUp = document.getElementById('popBarUp');
+  const barDown = document.getElementById('popBarDown');
+  const barUpVal = document.getElementById('popBarUpVal');
+  const barDownVal = document.getElementById('popBarDownVal');
+  if (!popNum) return;
+
+  const dots = popGrid ? popGrid.querySelectorAll('.pop-dot') : [];
+  const stages = [
+    { pop: 5000000, label:'500万', dots: 10, barUp: 10, barDown: 90, quality:'极高' },
+    { pop: 10000000, label:'1000万', dots: 30, barUp: 20, barDown: 75, quality:'高' },
+    { pop: 50000000, label:'5000万', dots: 60, barUp: 40, barDown: 55, quality:'中等' },
+    { pop: 100000000, label:'1亿', dots: 90, barUp: 55, barDown: 40, quality:'较低' },
+    { pop: 250000000, label:'2.5亿', dots: 140, barUp: 75, barDown: 25, quality:'低' },
+    { pop: 500000000, label:'5亿', dots: 180, barUp: 90, barDown: 15, quality:'极低' },
+  ];
+
+  let stageIdx = 0;
+  function showStage() {
+    if (stageIdx >= stages.length) return;
+    const s = stages[stageIdx];
+    popNum.textContent = s.label;
+    for (let i = 0; i < dots.length; i++) {
+      dots[i].classList.toggle('visible', i < s.dots);
+    }
+    if (barUp) barUp.style.height = s.barUp + '%';
+    if (barDown) barDown.style.height = s.barDown + '%';
+    if (barUpVal) barUpVal.textContent = s.label;
+    if (barDownVal) barDownVal.textContent = s.quality;
+    stageIdx++;
+    if (stageIdx < stages.length) {
+      setTimeout(showStage, 800);
+    }
+  }
+  setTimeout(showStage, 500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WHEAT MAP SCRUBBER
+// ═══════════════════════════════════════════════════════════════
+function initWheatScrubber() {
+  const scrubber = document.getElementById('wheatScrubber');
+  const yearDisplay = document.getElementById('wheatYearDisplay');
+  const coverage = document.getElementById('wheatCoverage');
+  if (!scrubber) return;
+
+  function updateWheatMap(year) {
+    // Update year display
+    if (year < 0) {
+      yearDisplay.textContent = `公元前 ${Math.abs(year)} 年`;
+    } else {
+      yearDisplay.textContent = `公元 ${year} 年`;
+    }
+
+    // Show/hide dots based on year
+    let visibleCount = 0;
+    document.querySelectorAll('.wheat-dot').forEach(dot => {
+      const dotYear = parseInt(dot.dataset.year);
+      if (dotYear <= year) {
+        dot.classList.add('spread');
+        dot.setAttribute('r', '5');
+        visibleCount++;
+      } else {
+        dot.classList.remove('spread');
+        dot.setAttribute('r', '4');
+      }
+    });
+
+    // Calculate approximate coverage area
+    const maxArea = 2250000; // 225万 km²
+    const totalDots = document.querySelectorAll('.wheat-dot').length;
+    const area = Math.round(maxArea * visibleCount / totalDots);
+    if (coverage) {
+      coverage.innerHTML = `小麦种植面积: <b>${area.toLocaleString()}</b> km²`;
+    }
+  }
+
+  scrubber.addEventListener('input', () => {
+    updateWheatMap(parseInt(scrubber.value));
+  });
+  updateWheatMap(-10000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEEP DIVE CLICK TRACKING
+// ═══════════════════════════════════════════════════════════════
+function initDDClickTracking() {
+  document.addEventListener('click', e => {
+    const trigger = e.target.closest('.dd-trigger');
+    if (trigger) trigger.classList.add('clicked');
+  });
 }
 
 
@@ -2722,6 +3716,7 @@ function initKeyboardNav() {
 // ═══════════════════════════════════════════════════════════════
 renderApp();
 initKeyboardNav();
+initDDClickTracking();
 </script>
 </body>
 </html>
