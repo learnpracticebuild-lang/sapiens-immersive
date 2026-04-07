@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>沉浸式深度导读 · Immersive Book Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F0E8;
+  --fg: #1A1A1A;
+  --fg-secondary: #5C5546;
+  --accent: #B8860B;
+  --accent-dim: rgba(184,134,11,0.08);
+  --border: rgba(0,0,0,0.06);
+  --serif: 'Noto Serif SC', 'Songti SC', Georgia, serif;
+  --sans: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+::selection { background: var(--accent); color: #fff; }
+
+/* ── Header ── */
+.header {
+  text-align: center;
+  padding: clamp(4rem, 12vw, 8rem) 2rem clamp(2rem, 6vw, 4rem);
+  max-width: 700px;
+}
+
+.header-overline {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  opacity: 0;
+  animation: fadeUp 0.8s var(--ease-out) 0.2s forwards;
+}
+
+.header-title {
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 7vw, 4rem);
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  opacity: 0;
+  animation: fadeUp 0.8s var(--ease-out) 0.4s forwards;
+}
+
+.header-sub {
+  font-size: 0.85rem;
+  color: var(--fg-secondary);
+  line-height: 1.9;
+  max-width: 500px;
+  margin: 0 auto;
+  opacity: 0;
+  animation: fadeUp 0.8s var(--ease-out) 0.6s forwards;
+}
+
+.header-count {
+  display: inline-block;
+  margin-top: 1.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  padding: 0.4rem 1rem;
+  background: var(--accent-dim);
+  border-radius: 20px;
+  opacity: 0;
+  animation: fadeUp 0.8s var(--ease-out) 0.7s forwards;
+}
+
+/* ── Book Grid ── */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+  max-width: 900px;
+  width: 100%;
+  padding: 0 2rem 6rem;
+}
+
+.book-card {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--border);
+  transition: transform 0.5s var(--ease-out), box-shadow 0.5s var(--ease-out);
+  text-decoration: none;
+  color: var(--fg);
+  opacity: 0;
+  animation: fadeUp 0.8s var(--ease-out) forwards;
+}
+
+.book-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+}
+
+.book-card-banner {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.book-card-banner::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to top, #fff, transparent);
+}
+
+.book-card-emoji {
+  font-size: 4rem;
+  filter: saturate(0.7);
+  opacity: 0.15;
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.book-card-part {
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0.8;
+  position: relative;
+  z-index: 1;
+}
+
+.book-card-banner-title {
+  font-family: var(--serif);
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 0 2rem;
+  line-height: 1.3;
+}
+
+.book-card-body {
+  padding: 1.5rem 1.8rem 1.8rem;
+}
+
+.book-card-title {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.book-card-author {
+  font-size: 0.7rem;
+  color: var(--fg-secondary);
+  margin-bottom: 1rem;
+}
+
+.book-card-desc {
+  font-size: 0.78rem;
+  line-height: 1.85;
+  color: var(--fg-secondary);
+  margin-bottom: 1.2rem;
+}
+
+.book-card-meta {
+  display: flex;
+  gap: 1.2rem;
+  font-size: 0.65rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.book-card-tag {
+  padding: 0.25rem 0.6rem;
+  background: var(--accent-dim);
+  border-radius: 4px;
+}
+
+.book-card-arrow {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  font-size: 0.9rem;
+  transition: all 0.3s var(--ease-out);
+}
+
+.book-card:hover .book-card-arrow {
+  background: var(--accent);
+  color: #fff;
+  transform: translateX(3px);
+}
+
+/* ── Coming Soon ── */
+.book-card.coming-soon {
+  opacity: 0;
+  animation: fadeUp 0.8s var(--ease-out) forwards;
+}
+.book-card.coming-soon:hover { transform: none; box-shadow: none; }
+.book-card.coming-soon .book-card-banner { opacity: 0.5; }
+.book-card.coming-soon .book-card-body { opacity: 0.5; }
+.book-card.coming-soon .book-card-arrow { display: none; }
+.book-card.coming-soon { pointer-events: none; }
+
+/* ── Footer ── */
+.shelf-footer {
+  text-align: center;
+  padding: 2rem;
+  font-size: 0.65rem;
+  color: var(--fg-secondary);
+  opacity: 0.4;
+  line-height: 2;
+}
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .book-grid {
+    grid-template-columns: 1fr;
+    padding: 0 1rem 4rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-overline">Immersive Book Engine</div>
+  <h1 class="header-title">沉浸式深度导读</h1>
+  <p class="header-sub">将经典书籍拆解为沉浸式的滚动体验——<br>不是摘要，不是书评，而是完整的逻辑链重建。<br>每一本书，都值得被这样阅读。</p>
+  <div class="header-count">已收录 12 本书</div>
+</header>
+
+<main class="book-grid">
+
+  <a class="book-card" href="./antifragile/" style="animation-delay: 0.6s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #0E0808 0%, #6A1A1A 50%, #C43A2A 100%);">
+      <span class="book-card-emoji">🦎</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">ANTIFRAGILE: Things That Gain from Disorder</div>
+        <div class="book-card-banner-title">反脆弱</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">反脆弱</div>
+      <div class="book-card-author">纳西姆·尼古拉斯·塔勒布 · Nassim Nicholas Taleb</div>
+      <p class="book-card-desc">脆弱的反义词不是坚固，而是反脆弱。塔勒布用13个场景论证：在波动性、随机性和不确定性中获益的系统，才是这个世界的真正赢家。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">13 场景</span>
+        <span class="book-card-tag">5 部分</span>
+        <span class="book-card-tag">14 深度解析</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./beginning-of-infinity/" style="animation-delay: 0.8s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #0A0A20 0%, #1A3A5C 50%, #4A90D9 100%);">
+      <span class="book-card-emoji">\u267E\uFE0F</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">THE BEGINNING OF INFINITY</div>
+        <div class="book-card-banner-title">无穷的开始</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">无穷的开始</div>
+      <div class="book-card-author">大卫·德意志 · David Deutsch</div>
+      <p class="book-card-desc">一切进步的源头是什么？德意志用10个场景论证：好的解释是宇宙中最强大的力量——从量子多重宇宙到人类文明的无穷未来。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">10 场景</span>
+        <span class="book-card-tag">4 部分</span>
+        <span class="book-card-tag">12 深度解析</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./beyond-greed-fear/" style="animation-delay: 1s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #1A0F28 0%, #4A2C6E 50%, #7B52AB 100%);">
+      <span class="book-card-emoji">📈</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">BEYOND GREED AND FEAR</div>
+        <div class="book-card-banner-title">超越恐惧与贪婪</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">超越恐惧与贪婪</div>
+      <div class="book-card-author">赫什·舍夫林 · Hersh Shefrin</div>
+      <p class="book-card-desc">行为金融学奠基之作。舍夫林揭示投资者如何被偏见、情绪和认知捷径所左右——以及这些心理陷阱如何系统性地扭曲市场价格。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">9 场景</span>
+        <span class="book-card-tag">4 部分</span>
+        <span class="book-card-tag">深度不均匀</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./common-sense/" style="animation-delay: 1.2000000000000002s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #1A1428 0%, #8B2500 50%, #CD4F39 100%);">
+      <span class="book-card-emoji">🗽</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">COMMON SENSE</div>
+        <div class="book-card-banner-title">常识</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">常识</div>
+      <div class="book-card-author">托马斯·潘恩 · Thomas Paine</div>
+      <p class="book-card-desc">1776年改变世界的小册子。潘恩用最朴素的语言论证为什么美洲必须独立——这不仅是政治宣言，更是关于自由与治理的永恒哲学思考。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">8 场景</span>
+        <span class="book-card-tag">4 部分</span>
+        <span class="book-card-tag">8 深度解析</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./competition-demystified/" style="animation-delay: 1.4s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #0A1420 0%, #2E8B57 50%, #1B6B4D 100%);">
+      <span class="book-card-emoji">🏰</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">COMPETITION DEMYSTIFIED</div>
+        <div class="book-card-banner-title">竞争优势</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">竞争优势</div>
+      <div class="book-card-author">布鲁斯·格林沃尔德 · Bruce Greenwald & Judd Kahn</div>
+      <p class="book-card-desc">波特的五力模型过于复杂，格林沃尔德将竞争战略简化为一个核心问题：进入壁垒是否存在？如果存在，它的来源是什么？如果不存在，忘掉战略，专注效率。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">10 场景</span>
+        <span class="book-card-tag">3 部分</span>
+        <span class="book-card-tag">护城河分析</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./excellence-genes/" style="animation-delay: 1.6s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #0D1118 0%, #B8860B 50%, #8B6914 100%);">
+      <span class="book-card-emoji">🧬</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">EXCELLENCE GENES</div>
+        <div class="book-card-banner-title">卓越基因</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">卓越基因</div>
+      <div class="book-card-author">吉姆·柯林斯 · Jim Collins</div>
+      <p class="book-card-desc">柯林斯用长达25年的实证研究回答了商业世界最根本的问题：为什么有些公司能实现从优秀到卓越的跨越，而大多数公司不能？答案不是天才领导者、不是伟大战略、不是技术革命——而是一组反直觉的"卓越基因"。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">10 场景</span>
+        <span class="book-card-tag">3 部分</span>
+        <span class="book-card-tag">实证研究</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./guns-germs-steel/" style="animation-delay: 1.8000000000000003s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #2C1810 0%, #6B4423 50%, #A0784C 100%);">
+      <span class="book-card-emoji">🔫</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">GUNS, GERMS, AND STEEL: The Fates of Human Societies</div>
+        <div class="book-card-banner-title">枪炮、病菌与钢铁</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">枪炮、病菌与钢铁</div>
+      <div class="book-card-author">贾雷德·戴蒙德 · Jared Diamond</div>
+      <p class="book-card-desc">为什么是欧洲人征服了新大陆，而不是反过来？戴蒙德用14个场景拆解环境决定论——从耶利的问题到人类社会命运的终极解答。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">14 场景</span>
+        <span class="book-card-tag">4 部分</span>
+        <span class="book-card-tag">14 深度解析</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./how-to-read/" style="animation-delay: 2s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #2C2418 0%, #8B6914 50%, #D4A017 100%);">
+      <span class="book-card-emoji">📖</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">How to Read a Book</div>
+        <div class="book-card-banner-title">如何阅读一本书</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">如何阅读一本书</div>
+      <div class="book-card-author">莫提默·J. 艾德勒 / 查尔斯·范多伦 · Mortimer J. Adler & Charles Van Doren</div>
+      <p class="book-card-desc">阅读的元技能——四个层次、十五条规则、与作者达成共识的艺术。从被动消费者变为主动思想家的完整方法论。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">11 场景</span>
+        <span class="book-card-tag">4 部分</span>
+        <span class="book-card-tag">方法论入口</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./intelligent-investor/" style="animation-delay: 2.2s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #0C1824 0%, #2E6B4A 50%, #D4A843 100%);">
+      <span class="book-card-emoji">💰</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">THE INTELLIGENT INVESTOR</div>
+        <div class="book-card-banner-title">聪明的投资者</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">聪明的投资者</div>
+      <div class="book-card-author">本杰明·格雷厄姆 · Benjamin Graham</div>
+      <p class="book-card-desc">格雷厄姆写给普通投资者的终极指南——从防御型到进取型，从市场先生到安全边际，用20章构建完整的价值投资实践框架。Jason Zweig的现代评注让经典焕发新生。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">13 场景</span>
+        <span class="book-card-tag">4 部分</span>
+        <span class="book-card-tag">20 章浓缩</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./sapiens/" style="animation-delay: 2.4s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #2C2416 0%, #8B6914 50%, #D4A845 100%);">
+      <span class="book-card-emoji">🧬</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">SAPIENS: A Brief History of Humankind</div>
+        <div class="book-card-banner-title">人类简史</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">人类简史</div>
+      <div class="book-card-author">尤瓦尔·赫拉利 · Yuval Noah Harari</div>
+      <p class="book-card-desc">从认知革命到AI时代，18个场景完整拆解智人七万年的旅程。每一个"虚构的秩序"、每一次"奢侈品陷阱"，都在今天的世界中精确重演。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">18 场景</span>
+        <span class="book-card-tag">4 部分</span>
+        <span class="book-card-tag">36 深度解析</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./security-analysis/" style="animation-delay: 2.6s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #0A1628 0%, #1B4D3E 50%, #C9A84C 100%);">
+      <span class="book-card-emoji">📊</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">SECURITY ANALYSIS</div>
+        <div class="book-card-banner-title">证券分析</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">证券分析</div>
+      <div class="book-card-author">本杰明·格雷厄姆 & 大卫·多德 · Benjamin Graham & David Dodd</div>
+      <p class="book-card-desc">价值投资的圣经——格雷厄姆用52章构建从内在价值到安全边际的完整分析体系，包含数百个真实案例与量化标准。本导读以22个场景忠实还原全部核心方法论。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">22 场景</span>
+        <span class="book-card-tag">7 部分</span>
+        <span class="book-card-tag">52 章浓缩</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <a class="book-card" href="./thinking-fast-slow/" style="animation-delay: 2.8000000000000003s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #1A2A3A 0%, #2E7D8C 50%, #4ABCD0 100%);">
+      <span class="book-card-emoji">🧠</span>
+      <div style="text-align:center;">
+        <div class="book-card-part">THINKING, FAST AND SLOW</div>
+        <div class="book-card-banner-title">思考，快与慢</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">思考，快与慢</div>
+      <div class="book-card-author">丹尼尔·卡尼曼 · Daniel Kahneman</div>
+      <p class="book-card-desc">系统1与系统2的认知对决。从锚定效应到前景理论，从过度自信到峰终定律——一场关于人类判断与决策的深度解剖。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">12 场景</span>
+        <span class="book-card-tag">5 部分</span>
+        <span class="book-card-tag">24 深度解析</span>
+      </div>
+    </div>
+    <div class="book-card-arrow">→</div>
+  </a>
+
+  <div class="book-card coming-soon" style="animation-delay: 3.0000000000000004s;">
+    <div class="book-card-banner" style="background: linear-gradient(135deg, #333 0%, #666 100%);">
+      <div style="text-align:center;">
+        <div class="book-card-part">COMING SOON</div>
+        <div class="book-card-banner-title">即将上线</div>
+      </div>
+    </div>
+    <div class="book-card-body">
+      <div class="book-card-title">更多书籍，敬请期待</div>
+      <div class="book-card-author">持续更新中</div>
+      <p class="book-card-desc">每一本改变认知的经典，都将被重建为沉浸式的交互体验。如果你有想看的书，欢迎提出建议。</p>
+      <div class="book-card-meta">
+        <span class="book-card-tag">? 场景</span>
+        <span class="book-card-tag">待定</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="shelf-footer">
+  沉浸式深度导读 · Immersive Book Engine<br>
+  用交互重建逻辑，用滚动取代翻页
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,3327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聪明的投资者 · 沉浸式深度导读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   IMMERSIVE BOOK ENGINE — Shared Stylesheet
+   Layered architecture for multi-book rendering engine.
+   Each book injects its own styles into @layer book-custom.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base, layout, components, interactive, animation, book-custom, utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE LAYER
+   Root variables, reset, body defaults, texture overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+
+  /* ── Root CSS Variables (unified superset) ── */
+  :root {
+    /* Palette */
+    --bg: #F5F0E8;
+    --bg-secondary: #EDE7DA;
+    --fg: #1A1A1A;
+    --fg-secondary: #5C5546;
+    --accent: #B8860B;
+    --accent-dim: rgba(184, 134, 11, 0.12);
+    --accent-mid: rgba(184, 134, 11, 0.35);
+    --accent-glow: rgba(184, 134, 11, 0.06);
+    --border: rgba(0,0,0,0.06);
+    --glass-bg: rgba(245, 240, 232, 0.72);
+    --glass-border: rgba(255,255,255,0.3);
+    --card-bg: rgba(255,255,255,0.7);
+    --muted-fg: #7A7062;
+
+    /* Typography */
+    --serif: 'Noto Serif SC', 'Songti SC', Georgia, serif;
+    --sans: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Easing */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background-color: var(--bg);
+    color: var(--fg);
+    overflow-x: hidden;
+    line-height: 1.9;
+    transition: background-color 1.4s var(--ease-smooth),
+                color 1.4s var(--ease-smooth);
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Noise/Grain Texture Overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT LAYER
+   Progress bar, scene navigation, hero, scenes, footer
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer layout {
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 9999;
+    width: 0%;
+    transition: width 0.15s linear;
+  }
+  /* Enhanced: gradient shimmer */
+  .progress-bar {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent)) !important;
+    background-size: 200% 100%;
+    animation: progressShimmer 3s ease infinite;
+    height: 3px !important;
+  }
+
+  /* ── Scene Nav (right-side dots) ── */
+  .scene-nav {
+    position: fixed;
+    right: 2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.8s var(--ease-smooth);
+  }
+  .scene-nav.visible { opacity: 1; }
+  .scene-nav a {
+    display: block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--fg);
+    opacity: 0.15;
+    transition: all 0.5s var(--ease-out);
+    position: relative;
+    text-decoration: none;
+  }
+  .scene-nav a.active {
+    background: var(--accent);
+    opacity: 1;
+    transform: scale(1.6);
+    box-shadow: 0 0 12px var(--accent-mid);
+  }
+  .scene-nav a::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%) translateX(4px);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: all 0.3s var(--ease-out);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+  }
+  .scene-nav a:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+  /* Enhanced: glass tooltip */
+  .scene-nav a::after {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  /* ── Hero Section ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+  }
+  .hero-overline {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 3rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 0.3s forwards;
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(3.5rem, 12vw, 8rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(40px);
+    animation: fadeUp 1.4s var(--ease-out) 0.6s forwards;
+    will-change: transform;
+  }
+  .hero-subtitle {
+    font-family: var(--serif);
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 300;
+    color: var(--fg-secondary);
+    max-width: 500px;
+    letter-spacing: 0.1em;
+    margin-bottom: 4rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 1.2s var(--ease-out) 1s forwards;
+  }
+  .hero-part {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    border: 1px solid var(--accent-mid);
+    padding: 0.6rem 2rem;
+    border-radius: 100px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 1.3s forwards;
+  }
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    animation: fadeUp 1s var(--ease-out) 2s forwards;
+  }
+  .hero-scroll-hint span {
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: var(--fg-secondary);
+    text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px;
+    height: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .scroll-line::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--accent));
+    animation: scrollDrop 2s ease-in-out infinite;
+  }
+  .hero-scroll-hint .scroll-arrow {
+    font-size: 1.2rem;
+    color: var(--accent);
+    animation: bounceArrow 2s var(--ease-out) infinite;
+    opacity: 0.6;
+  }
+
+  /* ── Scene Sections ── */
+  .scene {
+    min-height: 100vh;
+    padding: 12rem 2rem 8rem;
+    position: relative;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 100vh;
+  }
+  .scene-inner {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .scene-number {
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+  }
+  .scene-title {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .scene-subtitle {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    margin-bottom: 6rem;
+    text-transform: uppercase;
+  }
+
+  /* ── Gradient Mesh Backgrounds for Scenes ── */
+  .scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background:
+      radial-gradient(ellipse at 20% 20%, var(--accent-glow) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, var(--accent-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 100%);
+    z-index: -1;
+  }
+
+  /* ── Hero Quote (cinematic, massive) ── */
+  .hero-quote-wrap {
+    margin: 2rem 0 6rem;
+    padding: 4rem 0;
+    position: relative;
+  }
+  .hero-quote-wrap::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote-wrap::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2.6rem);
+    line-height: 1.7;
+    font-weight: 300;
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--accent);
+    z-index: 1;
+  }
+  /* Enhanced: quote decoration marks */
+  .hero-quote-wrap .quote-deco {
+    position: absolute;
+    font-family: var(--serif);
+    font-size: clamp(6rem, 15vw, 12rem);
+    font-weight: 900;
+    color: var(--accent);
+    opacity: 0.06;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-quote-wrap .quote-deco-open {
+    top: -0.5em;
+    left: -0.3em;
+  }
+  .hero-quote-wrap .quote-deco-close {
+    bottom: -0.8em;
+    right: -0.1em;
+  }
+  /* Animated underline highlight on hero quote */
+  .hero-quote-highlight {
+    background: linear-gradient(120deg, var(--accent-dim) 0%, var(--accent-mid) 100%);
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+    background-position: 0 100%;
+    transition: background-size 1.8s var(--ease-out);
+    padding: 0.1em 0;
+  }
+  .reveal-wipe.revealed .hero-quote-highlight {
+    background-size: 100% 100%;
+  }
+
+  /* ── Narrative Paragraphs ── */
+  .narrative { margin-bottom: 2rem; }
+  .narrative p {
+    font-size: 1.05rem;
+    line-height: 2.1;
+    margin-bottom: 2.5rem;
+    color: var(--fg);
+    opacity: 0.82;
+  }
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  /* Enhanced: bold marker highlight */
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+    background: linear-gradient(120deg, var(--accent-dim) 0%, transparent 100%);
+    padding: 0.05em 0.2em;
+    border-radius: 3px;
+  }
+  /* Enhanced: drop cap */
+  .narrative p.drop-cap-p::first-letter {
+    font-family: var(--serif);
+    font-size: 3.5em;
+    font-weight: 900;
+    float: left;
+    line-height: 0.8;
+    margin-right: 0.08em;
+    margin-top: 0.1em;
+    color: var(--accent);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 10rem 2rem 6rem;
+  }
+  .footer-title {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+  }
+  .footer-text {
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    max-width: 460px;
+    margin: 0 auto;
+    line-height: 2;
+    opacity: 0.7;
+  }
+  .footer-next {
+    margin-top: 3rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .footer-bookshelf {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+    padding: 0.75rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--fg-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: all 0.4s var(--ease-out);
+    background: var(--accent-glow);
+  }
+  .footer-bookshelf:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .footer-bookshelf .arrow {
+    transition: transform 0.3s var(--ease-out);
+  }
+  .footer-bookshelf:hover .arrow {
+    transform: translateX(-4px);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENTS LAYER
+   Data viz, big numbers, deep-dive triggers, modals, comparisons,
+   knowledge maps, stat pills, keyboard hint
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Data Viz Container ── */
+  .data-viz {
+    margin: 4rem 0;
+    padding: 3rem 0;
+    position: relative;
+  }
+  .data-viz-title {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .svg-container {
+    width: 100%;
+    overflow: visible;
+  }
+  .svg-container svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  /* SVG path draw animation */
+  .draw-path {
+    stroke-dasharray: var(--path-length, 1000);
+    stroke-dashoffset: var(--path-length, 1000);
+    transition: stroke-dashoffset 2.5s var(--ease-out);
+  }
+  .draw-path.drawn {
+    stroke-dashoffset: 0;
+  }
+  /* Enhanced: corner accents */
+  .data-viz::before,
+  .data-viz::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: var(--accent-mid);
+    border-style: solid;
+  }
+  .data-viz::before {
+    top: 0;
+    left: 0;
+    border-width: 2px 0 0 2px;
+  }
+  .data-viz::after {
+    bottom: 0;
+    right: 0;
+    border-width: 0 2px 2px 0;
+  }
+
+  /* ── Comparison Table ── */
+  .comparison-table-viz .viz-title {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .comparison-table-viz .viz-desc {
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .comparison-table-viz .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+  .comp-table th {
+    text-align: left;
+    padding: 0.65rem 0.8rem;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent-mid);
+    white-space: nowrap;
+  }
+  .comp-table td {
+    padding: 0.6rem 0.8rem;
+    color: var(--fg);
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-table tbody tr:hover {
+    background: var(--accent-dim);
+  }
+  .comparison-table-viz .viz-note {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--fg-secondary);
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid var(--accent-mid);
+    background: var(--accent-glow);
+    line-height: 1.6;
+  }
+
+  /* ── Big Number Counter ── */
+  .big-number {
+    font-family: var(--serif);
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-shadow: 0 0 40px var(--accent-dim), 0 0 80px var(--accent-glow);
+  }
+  .big-number-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--fg-secondary);
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+  .number-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin: 3rem 0;
+    text-align: center;
+  }
+
+  /* ── Deep Dive Triggers ── */
+  .dd-trigger-section {
+    margin-top: 5rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+  }
+  .dd-trigger-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+  .dd-trigger-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .dd-trigger-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .dd-trigger {
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    /* Enhanced: 3D tilt */
+    perspective: 800px;
+    transform-style: preserve-3d;
+    transition: all 0.4s var(--ease-out), transform 0.3s var(--ease-out);
+  }
+  .dd-trigger::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-dim), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .dd-trigger:hover {
+    border-color: var(--accent-mid);
+    transform: translateY(-4px) rotateX(2deg) rotateY(-2deg);
+    box-shadow: 0 12px 40px var(--accent-dim), 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .dd-trigger:hover::before { opacity: 1; }
+  .dd-trigger-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-content {
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-title {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+  }
+  .dd-trigger-hint {
+    font-size: 0.6rem;
+    color: var(--fg-secondary);
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+  }
+  .dd-trigger-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--accent);
+    transition: transform 0.3s var(--ease-out);
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger:hover .dd-trigger-arrow {
+    transform: translateX(4px);
+  }
+  /* Breathing pulse before first click */
+  .dd-trigger:not(.clicked) {
+    animation: ddPulse 3s ease-in-out infinite;
+  }
+  .dd-trigger.clicked {
+    animation: none;
+  }
+
+  /* ── Modal Overlay ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-smooth);
+  }
+  .modal-overlay.open {
+    pointer-events: all;
+    opacity: 1;
+  }
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  }
+  .modal-drawer {
+    position: relative;
+    width: min(580px, 92vw);
+    height: 100vh;
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border-left: 1px solid var(--glass-border);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.6s var(--ease-out);
+    box-shadow: -20px 0 80px rgba(0,0,0,0.1);
+  }
+  .modal-overlay.open .modal-drawer {
+    transform: translateX(0);
+  }
+  .modal-close {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    padding: 1.5rem 2rem 0;
+  }
+  .modal-close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--fg-secondary);
+    transition: all 0.3s;
+  }
+  .modal-close-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .modal-body {
+    padding: 2rem 2.5rem 4rem;
+  }
+  @media (max-width: 640px) {
+    .modal-body { padding: 1.5rem 1.5rem 3rem; }
+  }
+  .modal-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .modal-title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Logic Chain in Modal ── */
+  .logic-chain-modal {
+    position: relative;
+  }
+  .chain-step-modal {
+    position: relative;
+    padding-left: 2rem;
+    padding-bottom: 2.5rem;
+    border-left: 1.5px solid var(--accent-mid);
+  }
+  .chain-step-modal:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+  }
+  .chain-step-modal::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 0.2rem;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--glass-bg), 0 0 0 5px var(--accent-mid);
+  }
+  .chain-label-modal {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    display: inline-block;
+    padding: 0.2rem 0.75rem;
+    background: var(--accent-dim);
+    border-radius: 3px;
+  }
+  .chain-text-modal {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--fg);
+    opacity: 0.88;
+  }
+
+  /* ── Modal Stagger Animation ── */
+  .modal-stagger {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+  }
+  .modal-overlay.open .modal-stagger {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .modal-stagger-1 { transition-delay: 0.15s; }
+  .modal-stagger-2 { transition-delay: 0.35s; }
+  .modal-stagger-3 { transition-delay: 0.55s; }
+  .modal-stagger-4 { transition-delay: 0.75s; }
+  .modal-stagger-5 { transition-delay: 0.95s; }
+  .modal-stagger-6 { transition-delay: 1.15s; }
+
+  /* ── Active Recall Mask (triggerQuestion) ── */
+  .trigger-question {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-dim);
+    border-radius: 12px;
+  }
+  .trigger-question-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .trigger-question-text {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--fg);
+    margin-bottom: 1.2rem;
+  }
+  .recall-reveal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.8rem;
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+  }
+  .recall-reveal-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .logic-chain-modal {
+    transition: filter 0.6s var(--ease-out);
+  }
+  .logic-chain-modal.chain-masked {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ── Extended Reading (Collapsible Panel) ── */
+  .extended-reading {
+    margin: 1.5rem 0 3rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .extended-reading-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.3s;
+  }
+  .extended-reading-toggle::-webkit-details-marker { display: none; }
+  .extended-reading-toggle::after {
+    content: '›';
+    margin-left: auto;
+    font-size: 1.1rem;
+    transition: transform 0.3s var(--ease-out);
+  }
+  .extended-reading[open] .extended-reading-toggle::after {
+    transform: rotate(90deg);
+  }
+  .extended-reading-toggle:hover {
+    background: var(--accent-dim);
+  }
+  .extended-reading-content {
+    padding: 0 1.5rem 1.5rem;
+  }
+  .extended-reading-content p {
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--muted-fg);
+    margin-bottom: 1.2rem;
+    opacity: 0.85;
+  }
+  .extended-reading-content p:last-child { margin-bottom: 0; }
+
+  /* ── Key Term Inline Highlight ── */
+  .key-term {
+    color: var(--accent);
+    border-bottom: 1px dashed var(--accent-mid);
+    cursor: help;
+    transition: border-color 0.3s;
+  }
+  .key-term:hover {
+    border-bottom-style: solid;
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Glossary Floating Button ── */
+  .glossary-fab {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 450;
+    padding: 0.65rem 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .glossary-fab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-dim);
+  }
+
+  /* ── Glossary Drawer Content ── */
+  .glossary-header { margin-bottom: 2rem; }
+  .glossary-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .glossary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .glossary-item {
+    padding: 1.2rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.3s;
+  }
+  .glossary-item:hover { border-color: var(--accent-mid); }
+  .glossary-term {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .glossary-definition {
+    font-size: 0.88rem;
+    line-height: 1.9;
+    color: var(--fg-secondary);
+  }
+
+  /* ── Comparison Module ── */
+  .comparison-section {
+    margin: 5rem 0;
+    padding: 3rem 0;
+  }
+  .comparison-toggle {
+    display: inline-flex;
+    gap: 0;
+    margin-bottom: 3rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .toggle-btn {
+    padding: 0.65rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border: none;
+    background: transparent;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    min-height: 44px;
+    white-space: nowrap;
+  }
+  .toggle-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 100px;
+    box-shadow: 0 4px 15px var(--accent-mid);
+  }
+  .comparison-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .comp-row-label {
+    font-family: var(--serif);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+  .comp-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+  .comp-bar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .comp-bar-tag {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    width: 2.5rem;
+    text-align: right;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .comp-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .comp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.2s var(--ease-out);
+    width: 0%;
+  }
+  /* Enhanced: animated gradient fills */
+  .comp-bar-fill.amber {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+  }
+  .comp-bar-fill.grey {
+    background: linear-gradient(90deg, var(--fg-secondary), rgba(128,128,128,0.4), var(--fg-secondary));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+    opacity: 0.5;
+  }
+  .comp-bar-value {
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 2rem;
+    color: var(--fg-secondary);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .comp-text {
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--fg-secondary);
+    margin-top: 0.4rem;
+    opacity: 0.7;
+  }
+
+  /* ── Knowledge Map ── */
+  .knowledge-map {
+    margin: 4rem 0;
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+  .km-title {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--accent);
+  }
+  .km-center {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .km-connector {
+    width: 2px;
+    height: 2rem;
+    background: linear-gradient(to bottom, var(--accent-mid), transparent);
+    margin: 0 auto;
+  }
+  .km-branches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .km-branch {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: left;
+  }
+  .km-branch-title {
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .km-branch-title::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .km-leaves {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .km-leaf {
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: var(--fg-secondary);
+    padding-left: 1rem;
+    position: relative;
+  }
+  .km-leaf::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 6px;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+
+  /* ── Mind Map (Multi-level Tree) ── */
+  .mind-map {
+    margin: 4rem 0;
+    padding: 3rem 1.5rem;
+  }
+  .mm-title {
+    text-align: center;
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+  .mm-subtitle {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--fg-secondary);
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .mm-root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto 0.5rem;
+    padding: 0.7rem 1.8rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .mm-trunk {
+    width: 2px;
+    height: 1.5rem;
+    background: var(--accent-mid);
+    margin: 0 auto;
+  }
+  .mm-level1-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .mm-l1 {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    position: relative;
+  }
+  .mm-l1-title {
+    font-family: var(--serif);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.7rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .mm-l2 {
+    margin-left: 0.6rem;
+    padding-left: 0.9rem;
+    border-left: 1px solid var(--accent-mid);
+    margin-bottom: 0.5rem;
+  }
+  .mm-l2:last-child { margin-bottom: 0; }
+  .mm-l2-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.25rem;
+    position: relative;
+    padding-left: 0.7rem;
+  }
+  .mm-l2-title::before {
+    content: '';
+    position: absolute;
+    left: -0.95rem;
+    top: 0.5em;
+    width: 0.6rem;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+  .mm-l3-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-left: 0.7rem;
+    padding-left: 0.7rem;
+    border-left: 1px dashed var(--border);
+  }
+  .mm-l3 {
+    font-size: 0.7rem;
+    line-height: 1.55;
+    color: var(--fg-secondary);
+    position: relative;
+    padding-left: 0.6rem;
+  }
+  .mm-l3::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 0.55em;
+    width: 0.5rem;
+    height: 1px;
+    background: var(--border);
+  }
+  @media (max-width: 600px) {
+    .mm-level1-wrap { grid-template-columns: 1fr; }
+    .mm-root { font-size: 0.9rem; padding: 0.6rem 1.4rem; }
+  }
+
+  /* ── Stat Pill Badges ── */
+  .stat-pill {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85em;
+    padding: 0.1em 0.5em;
+    border-radius: 100px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Keyboard Nav Hint ── */
+  .kb-hint {
+    position: fixed;
+    bottom: 2rem;
+    right: 2.5rem;
+    z-index: 400;
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: var(--fg-secondary);
+    opacity: 0.4;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: opacity 0.8s var(--ease-smooth);
+    pointer-events: none;
+  }
+  .kb-hint.hidden { opacity: 0; }
+  .kb-hint kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--accent-glow);
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    line-height: 1;
+  }
+
+  /* ── Dark Scene Accents ── */
+  .scene.dark-scene .scene-title {
+    text-shadow: 0 0 60px var(--accent-dim);
+  }
+  .scene.dark-scene .big-number {
+    text-shadow: 0 0 40px var(--accent-mid), 0 0 80px var(--accent-dim);
+  }
+
+  /* ── Dark Particles (shared floating particle system) ── */
+  .dark-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .dark-particles .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    animation: particleFloat 12s ease-in-out infinite;
+    animation-play-state: paused;
+    will-change: transform, opacity;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTIVE LAYER
+   Empty placeholder — book-specific interactive styles injected at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer interactive {
+  /* Book-specific interactive widgets go here via custom.css */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATION LAYER
+   Reveal system, keyframes, reduced-motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer animation {
+
+  /* ── Reveal System ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.15s; }
+  .reveal-delay-2 { transition-delay: 0.3s; }
+  .reveal-delay-3 { transition-delay: 0.45s; }
+  .reveal-delay-4 { transition-delay: 0.6s; }
+
+  .reveal-wipe {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.6s var(--ease-out);
+  }
+  .reveal-wipe.revealed {
+    clip-path: inset(0 0% 0 0);
+  }
+
+  /* ── Keyframes ── */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollDrop {
+    0% { top: -100%; }
+    100% { top: 100%; }
+  }
+  @keyframes progressShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes bounceArrow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+  @keyframes ddPulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+  @keyframes barGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes particleFloat {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    50% { transform: translateY(-80px) translateX(30px); opacity: 0.2; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(-160px) translateX(-20px); opacity: 0; }
+  }
+
+  /* ── Reduced Motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal { opacity: 1; transform: none; }
+    .draw-path { stroke-dashoffset: 0 !important; }
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOOK-CUSTOM LAYER
+   Empty — each book injects its own styles at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer book-custom {
+  /* Populated by book-specific custom.css / custom.js */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITIES LAYER
+   Empty placeholder for utility classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Utility classes can be added here */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS (shared only — no book-specific selectors)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .scene { padding: 7rem 1.5rem 5rem; }
+  .scene-nav { display: none; }
+  .hero-quote { font-size: 1.2rem; }
+  .number-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .glossary-fab {
+    bottom: 1rem;
+    left: 1rem;
+    font-size: 0.6rem;
+    padding: 0.5rem 1rem;
+  }
+  .trigger-question { padding: 1rem; }
+  .trigger-question-text { font-size: 0.95rem; }
+  .extended-reading-toggle { padding: 0.8rem 1.2rem; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="scene-nav" id="sceneNav"></nav>
+<div id="app"></div>
+
+<div class="kb-hint" id="kbHint">
+  <kbd>Space</kbd> / <kbd>↓</kbd> 下一场景 &nbsp; <kbd>↑</kbd> 上一场景
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-drawer" id="modalDrawer">
+    <div class="modal-close">
+      <button class="modal-close-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// BookEngine — Component Registry, Plugin System & Shared Components
+// ═══════════════════════════════════════════════════════════════
+
+window.BookEngine = (function() {
+  // ── Registry ──
+  const vizRegistry = {};
+  const initQueue = [];
+  const plugins = [];
+  const hooks = {};
+
+  // ── Public API ──
+  const engine = {
+    // Register a visualization/component renderer
+    // Usage: BookEngine.registerViz('dunbar', { render: fn, init: fn })
+    registerViz(type, handler) {
+      vizRegistry[type] = handler;
+    },
+
+    // Register an init function to run after DOM render
+    registerInit(fn) {
+      initQueue.push(fn);
+    },
+
+    // Register a plugin with lifecycle hooks
+    // Plugin: { name, onInit, onRender, onScroll, onModalOpen, onModalClose, onDestroy }
+    registerPlugin(plugin) {
+      plugins.push(plugin);
+      // Register individual hooks
+      ['onInit','onRender','onScroll','onModalOpen','onModalClose','onDestroy'].forEach(hook => {
+        if (plugin[hook]) {
+          engine.registerHook(hook, plugin[hook]);
+        }
+      });
+    },
+
+    // Register a lifecycle hook
+    registerHook(hookName, fn) {
+      if (!hooks[hookName]) hooks[hookName] = [];
+      hooks[hookName].push(fn);
+    },
+
+    // Trigger all handlers for a hook
+    triggerHook(hookName, ...args) {
+      if (hooks[hookName]) {
+        hooks[hookName].forEach(fn => {
+          try { fn(...args); } catch(e) { console.warn(`[BookEngine] Hook ${hookName} error:`, e); }
+        });
+      }
+    },
+
+    // Render a visualization by type
+    renderViz(type, scene, config) {
+      const handler = vizRegistry[type];
+      if (!handler) {
+        console.warn(`[BookEngine] Unknown viz type: ${type}`);
+        return '';
+      }
+      return typeof handler.render === 'function' ? handler.render(scene, config) : '';
+    },
+
+    // Initialize a visualization by type (called after DOM render)
+    initViz(type) {
+      const handler = vizRegistry[type];
+      if (handler && typeof handler.init === 'function') {
+        handler.init();
+      }
+    },
+
+    // Run all init functions and plugin onInit hooks
+    runInits() {
+      initQueue.forEach(fn => {
+        try { fn(); } catch(e) { console.warn('[BookEngine] Init error:', e); }
+      });
+      engine.triggerHook('onInit');
+    },
+
+    // Inject custom CSS into the document (for book-specific styles)
+    injectCSS(cssString) {
+      if (!cssString) return;
+      const style = document.createElement('style');
+      style.textContent = cssString;
+      document.head.appendChild(style);
+    },
+
+    // ── Shared Component Renderers ──
+
+    // Render comparison toggle module
+    renderComparison(comp) {
+      // Accept both comp.rows and comp.dimensions
+      const rows = comp.rows || comp.dimensions;
+      if (!comp || !rows) return '';
+      const labels = comp.labels || ['采集', '农耕'];
+      const modes = comp.modes || ['foraging', 'farming'];
+      const triggerLabel = comp.triggerLabel || '生活质量对比 · Quality of Life';
+      // Support 2 or 3 buttons (original sapiens has 3: foraging, farming, compare)
+      const showCompare = comp.showCompare !== false;
+      let html = `
+        <div class="comparison-section reveal">
+          <div class="dd-trigger-label">${triggerLabel}</div>
+          <div class="comparison-toggle">
+            <button class="toggle-btn active" data-mode="${modes[0]}">${comp.btnLabels?.[0] || labels[0] + '生活'}</button>
+            <button class="toggle-btn" data-mode="${modes[1]}">${comp.btnLabels?.[1] || labels[1] + '生活'}</button>
+            ${showCompare ? `<button class="toggle-btn" data-mode="compare">对比</button>` : ''}
+          </div>
+          <div class="comparison-rows">`;
+      rows.forEach((row, i) => {
+        html += `
+            <div class="comp-row reveal reveal-delay-${Math.min(i+1,4)}" data-comp-row>
+              <div class="comp-row-label">${row.label}</div>
+              <div class="comp-bars">
+                <div class="comp-bar-wrapper" data-bar="${modes[0]}">
+                  <span class="comp-bar-tag">${labels[0]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill amber" data-score="${row[modes[0]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[0]].score}/10</span>
+                </div>
+                <div class="comp-bar-wrapper" data-bar="${modes[1]}" style="display:none;">
+                  <span class="comp-bar-tag">${labels[1]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill grey" data-score="${row[modes[1]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[1]].score}/10</span>
+                </div>
+              </div>
+              <div class="comp-text" data-text-${modes[0]}>${row[modes[0]].text}</div>
+              <div class="comp-text" data-text-${modes[1]} style="display:none;">${row[modes[1]].text}</div>
+            </div>`;
+      });
+      html += `</div></div>`;
+      return html;
+    },
+
+    // Render knowledge map
+    renderKnowledgeMap(map) {
+      if (!map) return '';
+      const centerText = map.center || map.centerNode || '';
+      const centerStyle = map.centerStyle ? ` style="${map.centerStyle}"` : '';
+      const branchesStyle = map.branchesStyle ? ` style="${map.branchesStyle}"` : '';
+      let html = `
+        <section class="knowledge-map" data-palette="${map.palette || 'hero'}">
+          <div class="km-title reveal">${map.title}</div>
+          <div class="km-center reveal reveal-delay-1"${centerStyle}>${centerText}</div>
+          <div class="km-connector reveal reveal-delay-1"></div>
+          <div class="km-branches"${branchesStyle}>`;
+      map.branches.forEach((branch, i) => {
+        const delay = i < 2 ? 2 : 3;
+        const items = branch.leaves || branch.items || [];
+        html += `
+            <div class="km-branch reveal reveal-delay-${delay}">
+              <div class="km-branch-title">${branch.title}</div>
+              <div class="km-leaves">
+                ${items.map(item => `<div class="km-leaf">${item}</div>`).join('')}
+              </div>
+            </div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // Render mind map (multi-level tree)
+    renderMindMap(map) {
+      if (!map || !map.branches) return '';
+      const renderL3 = (items) => {
+        if (!items || items.length === 0) return '';
+        return `<div class="mm-l3-list">${items.map(t => `<div class="mm-l3">${t}</div>`).join('')}</div>`;
+      };
+      const renderL2 = (children) => {
+        if (!children || children.length === 0) return '';
+        return children.map(c => {
+          if (typeof c === 'string') {
+            return `<div class="mm-l2"><div class="mm-l2-title">${c}</div></div>`;
+          }
+          return `<div class="mm-l2"><div class="mm-l2-title">${c.text}</div>${renderL3(c.children)}</div>`;
+        }).join('');
+      };
+      let html = `<section class="mind-map" data-palette="${map.palette || 'hero'}">`;
+      html += `<div class="mm-title reveal">${map.title}</div>`;
+      if (map.subtitle) html += `<div class="mm-subtitle reveal">${map.subtitle}</div>`;
+      html += `<div class="mm-root reveal reveal-delay-1">${map.root}</div>`;
+      html += `<div class="mm-trunk reveal reveal-delay-1"></div>`;
+      html += `<div class="mm-level1-wrap">`;
+      map.branches.forEach((b, i) => {
+        const delay = i < 2 ? 2 : 3;
+        html += `<div class="mm-l1 reveal reveal-delay-${delay}">`;
+        html += `<div class="mm-l1-title">${b.text}</div>`;
+        html += renderL2(b.children);
+        html += `</div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // ── Shared Initializers ──
+
+    // Initialize comparison toggle behavior
+    initComparison() {
+      document.querySelectorAll('.comparison-toggle').forEach(toggle => {
+        toggle.addEventListener('click', e => {
+          const btn = e.target.closest('.toggle-btn');
+          if (!btn) return;
+          toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const section = toggle.closest('.comparison-section');
+          engine.updateCompBars(btn.dataset.mode, section);
+        });
+      });
+    },
+
+    updateCompBars(mode, section) {
+      const modes = [];
+      section.querySelectorAll('.toggle-btn').forEach(b => {
+        if (b.dataset.mode !== 'compare') modes.push(b.dataset.mode);
+      });
+      const isCompare = mode === 'compare';
+      section.querySelectorAll('[data-comp-row]').forEach(row => {
+        modes.forEach(m => {
+          const bar = row.querySelector(`[data-bar="${m}"]`);
+          const text = row.querySelector(`[data-text-${m}]`);
+          if (bar) bar.style.display = (isCompare || m === mode) ? 'flex' : 'none';
+          if (text) text.style.display = (isCompare || m === mode) ? 'block' : 'none';
+        });
+      });
+      engine.animateCompBars(section);
+    },
+
+    animateCompBars(section) {
+      (section || document).querySelectorAll('.comp-bar-fill').forEach(bar => {
+        if (bar.closest('.comp-bar-wrapper').style.display === 'none') return;
+        bar.style.width = '0%';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.style.width = (parseInt(bar.dataset.score) / 10 * 100) + '%';
+        }));
+      });
+    },
+
+    // Animate counter (shared utility)
+    animateCounter(el, from, to, duration, suffix) {
+      const start = performance.now();
+      function formatVal(val) {
+        if (suffix === '万' || suffix === '%') return val;
+        if (val >= 1000000) return (val / 1000000).toFixed(0) + 'M';
+        if (val >= 10000 && !suffix) return Math.round(val / 1000) + 'K';
+        return val;
+      }
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = Math.round(from + (to - from) * eased);
+        el.textContent = formatVal(val) + (p >= 1 && suffix ? suffix : (p < 1 && suffix === '+' ? '' : ''));
+        if (p >= 1) el.textContent = formatVal(to) + (suffix || '');
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    },
+
+    // Animate SVG data viz bars
+    animateDataViz(container) {
+      const bars = container.querySelectorAll('.draw-bar');
+      bars.forEach((bar, i) => {
+        const targetW = parseFloat(bar.dataset.targetW);
+        setTimeout(() => {
+          bar.style.transition = 'width 1.5s var(--ease-out)';
+          bar.style.width = targetW + 'px';
+        }, i * 300);
+      });
+      const labels = container.querySelectorAll('.bar-label');
+      labels.forEach((lbl, i) => {
+        setTimeout(() => {
+          lbl.style.transition = 'opacity 0.6s';
+          lbl.style.opacity = '1';
+        }, 800 + i * 300);
+      });
+    },
+
+    // Get registered viz types
+    getVizTypes() { return Object.keys(vizRegistry); },
+
+    // Get plugins
+    getPlugins() { return plugins.map(p => p.name); }
+  };
+
+  // ── Built-in Viz: comparison-table ──
+  engine.registerViz('comparison-table', {
+    render(scene, config) {
+      const d = config.data;
+      if (!d || !d.columns || !d.rows) return '';
+      let html = `<div class="data-viz comparison-table-viz reveal" data-viz="comparison-table">`;
+      if (config.title) html += `<h4 class="viz-title">${config.title}</h4>`;
+      if (config.description) html += `<p class="viz-desc">${config.description}</p>`;
+      html += `<div class="table-scroll"><table class="comp-table">`;
+      html += `<thead><tr>${d.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
+      html += `<tbody>`;
+      d.rows.forEach(row => {
+        html += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+      });
+      html += `</tbody></table></div>`;
+      if (d.note) html += `<p class="viz-note">${d.note}</p>`;
+      html += `</div>`;
+      return html;
+    }
+  });
+
+  return engine;
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// Immersive Book Engine — Core Rendering & Interaction System
+// ═══════════════════════════════════════════════════════════════
+
+(function() {
+  'use strict';
+
+  // ── DOM References ──
+  const app = document.getElementById('app');
+  const sceneNav = document.getElementById('sceneNav');
+
+  // ── Palette System ──
+  // Unified superset: 13 color variables
+  const PALETTE_KEYS = [
+    ['bg',          '--bg'],
+    ['bgSecondary', '--bg-secondary'],
+    ['fg',          '--fg'],
+    ['fgSecondary', '--fg-secondary'],
+    ['accent',      '--accent'],
+    ['accentDim',   '--accent-dim'],
+    ['accentMid',   '--accent-mid'],
+    ['accentGlow',  '--accent-glow'],
+    ['border',      '--border'],
+    ['glassBg',     '--glass-bg'],
+    ['glassBorder', '--glass-border'],
+    ['cardBg',      '--card-bg'],
+    ['mutedFg',     '--muted-fg']
+  ];
+
+  function applyPalette(name) {
+    const p = PALETTES[name];
+    if (!p) return;
+    const s = document.documentElement.style;
+    PALETTE_KEYS.forEach(([key, prop]) => {
+      // Fallback: cardBg → glassBg, mutedFg → fgSecondary, etc.
+      const val = p[key]
+        || (key === 'cardBg' ? p.glassBg : null)
+        || (key === 'mutedFg' ? p.fgSecondary : null)
+        || (key === 'bgSecondary' ? p.bg : null)
+        || (key === 'glassBorder' ? p.border : null);
+      if (val) s.setProperty(prop, val);
+    });
+    document.body.style.backgroundColor = p.bg;
+    document.body.style.color = p.fg;
+  }
+
+  // ── Render Engine ──
+  function renderApp() {
+    const { meta, scenes } = CONTENT_DATA;
+    const parts = meta.parts || [];
+    const knowledgeMaps = CONTENT_DATA.knowledgeMaps || [];
+    const mindMaps = CONTENT_DATA.mindMaps || [];
+    const aiReflection = CONTENT_DATA.aiReflection || null;
+    let html = '';
+
+    // Hero
+    html += `
+      <section class="hero" id="hero">
+        <div class="hero-overline">${meta.author || meta.authorEn || ''} · ${meta.titleEn || meta.bookSub || ''}</div>
+        <h1 class="hero-title" id="heroTitle">${meta.title || meta.book || ''}</h1>
+        <p class="hero-subtitle">${meta.subtitle || meta.partTitle || ''}</p>
+        <div class="hero-part">${meta.badge || (meta.part ? meta.part + (meta.partSub ? ' · ' + meta.partSub : '') : '')}</div>
+        <div class="hero-scroll-hint">
+          <span>向下滚动</span>
+          <div class="scroll-arrow">↓</div>
+          <div class="scroll-line"></div>
+        </div>
+      </section>`;
+
+    // Hero extra content (e.g., timeline explorer for sapiens)
+    if (typeof CONTENT_DATA.renderHeroExtra === 'function') {
+      html += CONTENT_DATA.renderHeroExtra();
+    }
+
+    // Determine dark scenes from data or palette analysis
+    const darkScenes = CONTENT_DATA.darkScenes || [];
+
+    // Render scenes
+    scenes.forEach((scene, idx) => {
+      const isDark = darkScenes.includes(scene.palette);
+
+      // Part divider BEFORE scene (declarative)
+      const partBefore = parts.find(p => p.beforeScene === scene.id);
+      if (partBefore && partBefore.number > 1) {
+        // Knowledge map for the previous part
+        const kmBefore = knowledgeMaps.find(km => km.afterPart === partBefore.number - 1);
+        if (kmBefore) {
+          html += BookEngine.renderKnowledgeMap(kmBefore);
+        }
+        // Mind map for the previous part
+        const mmBefore = mindMaps.find(mm => mm.afterPart === partBefore.number - 1);
+        if (mmBefore) {
+          html += BookEngine.renderMindMap(mmBefore);
+        }
+        // Part intro
+        const prevScene = idx > 0 ? scenes[idx - 1] : null;
+        const introPalette = scene.palette;
+        html += `
+          <section class="hero" id="part${partBefore.number}-intro" data-palette="${introPalette}" style="min-height:80vh;">
+            <div class="hero-overline reveal" style="animation:none;">第${numberToChinese(partBefore.number)}部分</div>
+            <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">${partBefore.title}</h1>
+            <p class="hero-subtitle reveal reveal-delay-2" style="animation:none;">${partBefore.titleEn || ''}</p>
+          </section>`;
+      }
+
+      // Scene section
+      html += `<section class="scene${isDark ? ' dark-scene' : ''}" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner" style="position:relative;z-index:1;">`;
+
+      // Dark mode particles
+      if (isDark && !scene.starField) {
+        html += `<div class="dark-particles">${Array.from({length:20}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, d = 8+Math.random()*16, delay = Math.random()*10;
+          return `<div class="particle" style="left:${x}%;top:${y}%;animation-duration:${d}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+      // Star field
+      if (scene.starField) {
+        html += `<div class="star-field">${Array.from({length:50}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, size = 1+Math.random()*2, delay = Math.random()*6, dur = 3+Math.random()*4;
+          return `<div class="star" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+
+      // Scene header
+      html += `
+        <div class="reveal scene-number">${scene.number || ('场景 ' + String(idx+1).padStart(2,'0'))}</div>
+        <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
+        <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle || ''}</div>`;
+
+      // Hero Quote
+      if (scene.heroQuote) {
+        html += `
+        <div class="hero-quote-wrap reveal-wipe">
+          <span class="quote-deco quote-deco-open">「</span>
+          <span class="quote-deco quote-deco-close">」</span>
+          <blockquote class="hero-quote"><span class="hero-quote-highlight">${scene.heroQuote}</span></blockquote>
+        </div>`;
+      }
+
+      // Narrative (with keyTerm highlighting)
+      if (scene.narrative?.length) {
+        const kt = CONTENT_DATA.meta.keyTerms || [];
+        html += `<div class="narrative">`;
+        scene.narrative.forEach((p, pi) => {
+          let text = p;
+          if (kt.length) {
+            kt.forEach(k => {
+              const escaped = k.term.replace(/[.*+?^${}()|[\]\\]/g, '\\<!-- ENGINE_JS -->');
+              text = text.replace(new RegExp(`(?:<[^>]*>.*?<\\/[^>]*>)|(?:${escaped})`, 'g'), match => {
+                if (match.startsWith('<')) return match; // inside HTML tag, skip
+                return `<span class="key-term" title="${k.definition}">${match}</span>`;
+              });
+            });
+          }
+          const cls = pi === 0 ? ' drop-cap-p' : '';
+          html += `<p class="reveal${cls}">${text}</p>`;
+        });
+        html += `</div>`;
+      }
+
+      // Extended Reading (collapsible background panel)
+      if (scene.extendedReading?.length) {
+        html += `
+          <details class="extended-reading reveal">
+            <summary class="extended-reading-toggle">📖 展开深度背景</summary>
+            <div class="extended-reading-content">
+              ${scene.extendedReading.map(p => `<p>${p}</p>`).join('')}
+            </div>
+          </details>`;
+      }
+
+      // Data Viz — dispatch to registry
+      if (scene.dataViz) {
+        const vizType = typeof scene.dataViz === 'string' ? scene.dataViz : scene.dataViz.type;
+        const vizConfig = typeof scene.dataViz === 'string' ? { type: vizType } : scene.dataViz;
+        html += BookEngine.renderViz(vizType, scene, vizConfig);
+      }
+
+      // Extra renderers for this scene (book-specific injections)
+      if (scene.extraRender) {
+        scene.extraRender.forEach(fn => {
+          if (typeof fn === 'function') html += fn(scene);
+          else if (typeof fn === 'string') html += fn;
+        });
+      }
+
+      // Comparison
+      if (scene.comparison) {
+        html += BookEngine.renderComparison(scene.comparison);
+      }
+
+      // Interactive module — dispatch to registry
+      if (scene.interactive) {
+        const intType = scene.interactive.type;
+        html += BookEngine.renderViz(intType, scene, scene.interactive);
+      }
+
+      // Deep Dives
+      if (scene.deepDives?.length) {
+        html += `<div class="dd-trigger-section reveal"><div class="dd-trigger-label">深度解析 · Deep Dive</div><div class="dd-trigger-grid">`;
+        scene.deepDives.forEach((dd, i) => {
+          html += `
+            <div class="dd-trigger reveal reveal-delay-${Math.min(i+1, 4)}" data-dd-idx="${idx}-${i}">
+              <span class="dd-trigger-icon">${dd.icon}</span>
+              <div class="dd-trigger-content">
+                <div class="dd-trigger-title">${dd.title}</div>
+                <div class="dd-trigger-hint">点击展开完整论证链</div>
+              </div>
+              <span class="dd-trigger-arrow">→</span>
+            </div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // Key Takeaway
+      if (scene.keyTakeaway) {
+        html += `<div class="reveal" style="margin-top:3rem;padding:1.5rem;background:var(--accent-glow);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:0.85rem;line-height:1.8;color:var(--fg-secondary);">
+          <strong style="color:var(--accent);font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;">核心收获</strong><br>${scene.keyTakeaway}</div>`;
+      }
+
+      html += `</div></section>`; // end scene-inner + scene
+    });
+
+    // Final knowledge map (after last part)
+    const lastPart = parts.length > 0 ? Math.max(...parts.map(p => p.number)) : 0;
+    knowledgeMaps.filter(km => km.afterPart >= lastPart || km.afterPart === 'final').forEach(km => {
+      html += BookEngine.renderKnowledgeMap(km);
+    });
+
+    // Final mind maps (after last part)
+    mindMaps.filter(mm => mm.afterPart >= lastPart || mm.afterPart === 'final').forEach(mm => {
+      html += BookEngine.renderMindMap(mm);
+    });
+
+    // AI Reflection / Epilogue
+    if (aiReflection) {
+      const epiloguePalette = aiReflection.palette || (scenes.length > 0 ? scenes[scenes.length - 1].palette : 'hero');
+      html += `
+        <section class="scene epilogue-section" id="epilogue" data-palette="${epiloguePalette}" style="min-height:auto; padding: clamp(4rem,10vw,8rem) 0;">
+          <div class="scene-inner">
+            <div class="reveal scene-number" style="opacity:0.4;">${aiReflection.label || '写在最后'}</div>
+            <h2 class="reveal scene-title reveal-delay-1" style="font-size:clamp(1.8rem,5vw,3rem);">${aiReflection.title}</h2>
+            <div class="reveal scene-subtitle reveal-delay-2">${aiReflection.subtitle || ''}</div>
+            ${aiReflection.heroQuote ? `
+            <div class="hero-quote-wrap reveal-wipe">
+              <blockquote class="hero-quote" style="font-size:clamp(1rem,2.5vw,1.4rem);">${aiReflection.heroQuote}</blockquote>
+            </div>` : ''}
+            <div class="narrative">
+              ${(aiReflection.paragraphs || []).map(p => `<p class="reveal">${p}</p>`).join('')}
+            </div>
+          </div>
+        </section>`;
+    }
+
+    // Glossary floating button (only if keyTerms exist)
+    if (CONTENT_DATA.meta.keyTerms?.length) {
+      html += `<button class="glossary-fab" id="glossaryFab" title="术语表">📖 术语表</button>`;
+    }
+
+    // Footer
+    html += `
+      <footer class="footer" data-palette="hero">
+        <div class="reveal footer-title">${CONTENT_DATA.footer?.title || '全书 · 终'}</div>
+        <p class="reveal footer-text reveal-delay-1">${CONTENT_DATA.footer?.text || ''}</p>
+        ${CONTENT_DATA.footer?.note ? `<div class="reveal footer-next reveal-delay-2" style="opacity:0.4;margin-top:3rem;font-size:0.7rem;">${CONTENT_DATA.footer.note}</div>` : ''}
+        <a href="../index.html" class="footer-bookshelf reveal reveal-delay-3"><span class="arrow">←</span> 返回书架</a>
+      </footer>`;
+
+    app.innerHTML = html;
+
+    // Build nav dots
+    let navHtml = '';
+    scenes.forEach(s => {
+      navHtml += `<a href="#${s.id}" data-scene="${s.id}" data-label="${s.title}"></a>`;
+    });
+    sceneNav.innerHTML = navHtml;
+
+    // Trigger hook
+    BookEngine.triggerHook('onRender');
+
+    // Init systems
+    initScrollSystem();
+    initDeepDiveModal();
+    BookEngine.initComparison();
+    BookEngine.runInits();
+  }
+
+  // ── Scroll System ──
+  function initScrollSystem() {
+    const scenes = document.querySelectorAll('.scene');
+    const navLinks = document.querySelectorAll('.scene-nav a');
+    const progressBar = document.getElementById('progressBar');
+    const nav = document.getElementById('sceneNav');
+
+    // Reveal observer
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => revealObs.observe(el));
+
+    // Data viz observer
+    const vizObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateDataViz(e.target);
+          vizObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('[data-viz]').forEach(el => vizObs.observe(el));
+
+    // Big number counter observer
+    const countObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const target = parseInt(e.target.dataset.countTo);
+          const suffix = e.target.dataset.suffix || '';
+          BookEngine.animateCounter(e.target, 0, target, 2000, suffix);
+          countObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count-to]').forEach(el => countObs.observe(el));
+
+    // Comparison observer
+    const compObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateCompBars();
+          compObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.comparison-section').forEach(el => compObs.observe(el));
+
+    // Custom observers (registered by books)
+    if (BookEngine._customObservers) {
+      BookEngine._customObservers.forEach(obs => obs());
+    }
+
+    // Scroll handler — palette + progress + nav
+    let currentPalette = 'hero';
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+        nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
+
+        // Hero parallax
+        const heroTitle = document.getElementById('heroTitle');
+        if (heroTitle && scrollTop < window.innerHeight) {
+          heroTitle.style.transform = `translateY(${scrollTop * 0.15}px)`;
+        }
+
+        // Determine active palette
+        const viewMid = scrollTop + window.innerHeight * 0.45;
+        let newPalette = 'hero';
+        document.querySelectorAll('[data-palette]').forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            newPalette = s.dataset.palette;
+          }
+        });
+        // Nav active dot
+        scenes.forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            navLinks.forEach(l => l.classList.toggle('active', l.dataset.scene === s.id));
+          }
+        });
+        // Footer reset
+        const footer = document.querySelector('.footer');
+        if (footer && viewMid >= footer.offsetTop) newPalette = 'hero';
+
+        if (newPalette !== currentPalette) {
+          currentPalette = newPalette;
+          applyPalette(newPalette);
+        }
+
+        // Plugin scroll hook
+        BookEngine.triggerHook('onScroll', { scrollTop, viewMid, currentPalette });
+
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // ── Deep Dive Modal ──
+  function initDeepDiveModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const backdrop = document.getElementById('modalBackdrop');
+    const closeBtn = document.getElementById('modalClose');
+    const body = document.getElementById('modalBody');
+
+    function openModal(sceneIdx, ddIdx) {
+      const dd = CONTENT_DATA.scenes[sceneIdx].deepDives[ddIdx];
+      if (!dd) return;
+
+      const hasQ = !!dd.triggerQuestion;
+      const s = (n) => `modal-stagger modal-stagger-${n}`;
+      const chainOffset = hasQ ? 1 : 0;
+
+      body.innerHTML = `
+        <div class="modal-icon ${s(1)}">${dd.icon}</div>
+        <h3 class="modal-title ${s(2)}">${dd.title}</h3>
+        ${hasQ ? `
+        <div class="trigger-question ${s(3)}">
+          <div class="trigger-question-label">主动回忆 · Active Recall</div>
+          <p class="trigger-question-text">${dd.triggerQuestion}</p>
+          <button class="recall-reveal-btn" id="recallReveal">💡 揭晓作者逻辑</button>
+        </div>` : ''}
+        <div class="logic-chain-modal${hasQ ? ' chain-masked' : ''}">
+          <div class="chain-step-modal ${s(3 + chainOffset)}">
+            <div class="chain-label-modal">前 提</div>
+            <div class="chain-text-modal">${dd.chain.premise}</div>
+          </div>
+          <div class="chain-step-modal ${s(4 + chainOffset)}">
+            <div class="chain-label-modal">证 据</div>
+            <div class="chain-text-modal">${dd.chain.evidence}</div>
+          </div>
+          <div class="chain-step-modal ${s(5 + chainOffset)}">
+            <div class="chain-label-modal">结 论</div>
+            <div class="chain-text-modal">${dd.chain.conclusion}</div>
+          </div>
+        </div>`;
+      body.offsetHeight; // force reflow
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      if (hasQ) {
+        const revealBtn = document.getElementById('recallReveal');
+        if (revealBtn) {
+          revealBtn.addEventListener('click', () => {
+            body.querySelector('.logic-chain-modal').classList.remove('chain-masked');
+            revealBtn.style.display = 'none';
+          });
+        }
+      }
+      BookEngine.triggerHook('onModalOpen', { sceneIdx, ddIdx, dd });
+    }
+
+    function openGlossary() {
+      const keyTerms = CONTENT_DATA.meta.keyTerms;
+      if (!keyTerms?.length) return;
+      body.innerHTML = `
+        <div class="glossary-header modal-stagger modal-stagger-1">
+          <div class="glossary-label">术语表 · Glossary</div>
+          <h3 class="modal-title">${CONTENT_DATA.meta.title} · 关键术语</h3>
+          <p style="font-size:0.8rem;color:var(--fg-secondary);margin-top:0.5rem;line-height:1.6;">以下术语按作者在书中的<strong>特定定义</strong>整理，可能与日常含义不同。</p>
+        </div>
+        <div class="glossary-list">
+          ${keyTerms.map((kt, i) => `
+            <div class="glossary-item modal-stagger modal-stagger-${Math.min(i + 2, 5)}">
+              <div class="glossary-term">${kt.term}</div>
+              <div class="glossary-definition">${kt.definition}</div>
+            </div>
+          `).join('')}
+        </div>`;
+      body.offsetHeight;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      BookEngine.triggerHook('onModalClose');
+    }
+
+    document.addEventListener('click', e => {
+      const trigger = e.target.closest('[data-dd-idx]');
+      if (trigger) {
+        const [sIdx, dIdx] = trigger.dataset.ddIdx.split('-').map(Number);
+        openModal(sIdx, dIdx);
+        trigger.classList.add('clicked');
+      }
+      if (e.target.closest('#glossaryFab')) {
+        openGlossary();
+      }
+    });
+    backdrop.addEventListener('click', closeModal);
+    closeBtn.addEventListener('click', closeModal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  }
+
+  // ── Keyboard Navigation ──
+  function initKeyboardNav() {
+    const kbHint = document.getElementById('kbHint');
+    let hintDismissed = false;
+
+    function dismissHint() {
+      if (!hintDismissed) {
+        hintDismissed = true;
+        kbHint.classList.add('hidden');
+        window.removeEventListener('wheel', dismissHint);
+        window.removeEventListener('touchstart', dismissHint);
+      }
+    }
+    window.addEventListener('wheel', dismissHint, { passive: true, once: true });
+    window.addEventListener('touchstart', dismissHint, { passive: true, once: true });
+
+    function getAnchors() {
+      const anchors = [document.getElementById('hero')];
+      CONTENT_DATA.scenes.forEach(s => {
+        const el = document.getElementById(s.id);
+        if (el) anchors.push(el);
+      });
+      return anchors;
+    }
+
+    function currentIdx(anchors) {
+      const scrollMid = window.scrollY + window.innerHeight * 0.4;
+      let idx = 0;
+      for (let i = anchors.length - 1; i >= 0; i--) {
+        if (scrollMid >= anchors[i].offsetTop) { idx = i; break; }
+      }
+      return idx;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('modalOverlay').classList.contains('open')) return;
+      const anchors = getAnchors();
+      const cur = currentIdx(anchors);
+
+      if (e.key === 'ArrowDown' || (e.key === ' ' && !e.shiftKey)) {
+        e.preventDefault();
+        const next = Math.min(cur + 1, anchors.length - 1);
+        anchors[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      } else if (e.key === 'ArrowUp' || (e.key === ' ' && e.shiftKey)) {
+        e.preventDefault();
+        const prev = Math.max(cur - 1, 0);
+        anchors[prev].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      }
+    });
+  }
+
+  // ── Utility: Number to Chinese ──
+  function numberToChinese(n) {
+    const map = ['零','一','二','三','四','五','六','七','八','九','十'];
+    return n <= 10 ? map[n] : String(n);
+  }
+
+  // ── Register observer for book-specific elements ──
+  BookEngine._customObservers = [];
+  BookEngine.registerObserver = function(setupFn) {
+    BookEngine._customObservers.push(setupFn);
+  };
+
+  // ── Main init (called by template after all scripts load) ──
+  BookEngine.init = function() {
+    // Inject custom CSS if defined
+    if (typeof CUSTOM_CSS !== 'undefined') {
+      BookEngine.injectCSS(CUSTOM_CSS);
+    }
+
+    // Register custom components if defined
+    if (typeof CUSTOM_COMPONENTS !== 'undefined') {
+      Object.entries(CUSTOM_COMPONENTS).forEach(([type, handler]) => {
+        BookEngine.registerViz(type, handler);
+      });
+    }
+
+    // Render
+    renderApp();
+    initKeyboardNav();
+  };
+
+  // Expose applyPalette for external use
+  BookEngine.applyPalette = applyPalette;
+
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// THE INTELLIGENT INVESTOR · DATA
+// 聪明的投资者 · Immersive Book Engine Data
+// Benjamin Graham · 修订版（Jason Zweig 评注）
+// 13 场景 · 4 部分 · 20 章浓缩
+// ═══════════════════════════════════════════════════════════════
+
+const PALETTES = {
+  // Hero: warm midnight blue with amber accent — accessible wisdom
+  hero: {
+    bg: '#0C1824', bgSecondary: '#122030', fg: '#E4DED4', fgSecondary: '#8E9AA8',
+    accent: '#D4A843', accentDim: 'rgba(212,168,67,0.12)', accentMid: 'rgba(212,168,67,0.35)',
+    accentGlow: 'rgba(212,168,67,0.06)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(12,24,36,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Part 1: 投资的基本原则
+  scene1: { // DARK — opening framework, investment vs speculation
+    bg: '#0E1A28', bgSecondary: '#142234', fg: '#E2DCD2', fgSecondary: '#8C9CAC',
+    accent: '#D4A843', accentDim: 'rgba(212,168,67,0.12)', accentMid: 'rgba(212,168,67,0.35)',
+    accentGlow: 'rgba(212,168,67,0.06)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(14,26,40,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene2: { // LIGHT — inflation and the investor
+    bg: '#F2EDE4', bgSecondary: '#E8E2D6', fg: '#1A2030', fgSecondary: '#586478',
+    accent: '#2E6B4A', accentDim: 'rgba(46,107,74,0.10)', accentMid: 'rgba(46,107,74,0.30)',
+    accentGlow: 'rgba(46,107,74,0.05)', border: 'rgba(26,32,48,0.07)',
+    glassBg: 'rgba(242,237,228,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene3: { // LIGHT — defensive investor's portfolio
+    bg: '#F0EBE2', bgSecondary: '#E6E0D4', fg: '#1C2234', fgSecondary: '#5C687A',
+    accent: '#8B6914', accentDim: 'rgba(139,105,20,0.10)', accentMid: 'rgba(139,105,20,0.30)',
+    accentGlow: 'rgba(139,105,20,0.05)', border: 'rgba(28,34,52,0.07)',
+    glassBg: 'rgba(240,235,226,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene4: { // DARK — enterprising investor's approach
+    bg: '#101822', bgSecondary: '#16202E', fg: '#DCD8D0', fgSecondary: '#7C8A9A',
+    accent: '#3A7CA5', accentDim: 'rgba(58,124,165,0.12)', accentMid: 'rgba(58,124,165,0.35)',
+    accentGlow: 'rgba(58,124,165,0.06)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(16,24,34,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Part 2: 股票与债券的选择
+  scene5: { // LIGHT — stock selection for defensive investor
+    bg: '#EDE8DF', bgSecondary: '#E2DDD0', fg: '#1A2030', fgSecondary: '#586478',
+    accent: '#1B5A3E', accentDim: 'rgba(27,90,62,0.10)', accentMid: 'rgba(27,90,62,0.30)',
+    accentGlow: 'rgba(27,90,62,0.05)', border: 'rgba(26,32,48,0.07)',
+    glassBg: 'rgba(237,232,223,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene6: { // LIGHT — growth stock dangers
+    bg: '#F4F0E6', bgSecondary: '#EAE4D8', fg: '#1E2030', fgSecondary: '#5E6878',
+    accent: '#A0522D', accentDim: 'rgba(160,82,45,0.10)', accentMid: 'rgba(160,82,45,0.30)',
+    accentGlow: 'rgba(160,82,45,0.05)', border: 'rgba(30,32,48,0.06)',
+    glassBg: 'rgba(244,240,230,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene7: { // DARK — convertible securities and warrants
+    bg: '#0E1520', bgSecondary: '#141E2E', fg: '#D8D4CC', fgSecondary: '#7A8A9C',
+    accent: '#CD4F39', accentDim: 'rgba(205,79,57,0.12)', accentMid: 'rgba(205,79,57,0.35)',
+    accentGlow: 'rgba(205,79,57,0.06)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(14,21,32,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Part 3: 市场先生与投资者心理
+  scene8: { // LIGHT — Mr. Market allegory
+    bg: '#F2EEE6', bgSecondary: '#E8E3D8', fg: '#182030', fgSecondary: '#586476',
+    accent: '#2E5A8C', accentDim: 'rgba(46,90,140,0.10)', accentMid: 'rgba(46,90,140,0.30)',
+    accentGlow: 'rgba(46,90,140,0.05)', border: 'rgba(24,32,48,0.07)',
+    glassBg: 'rgba(242,238,230,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene9: { // DARK — dollar-cost averaging and the investor's temperament
+    bg: '#0D1822', bgSecondary: '#14202E', fg: '#DCD8D0', fgSecondary: '#7E8C9C',
+    accent: '#D4A843', accentDim: 'rgba(212,168,67,0.12)', accentMid: 'rgba(212,168,67,0.35)',
+    accentGlow: 'rgba(212,168,67,0.06)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(13,24,34,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Part 4: 安全边际与终极智慧
+  scene10: { // LIGHT — case studies (GEICO, etc.)
+    bg: '#EEE9E0', bgSecondary: '#E2DDD0', fg: '#1C2032', fgSecondary: '#5A667A',
+    accent: '#1B6B4D', accentDim: 'rgba(27,107,77,0.10)', accentMid: 'rgba(27,107,77,0.30)',
+    accentGlow: 'rgba(27,107,77,0.05)', border: 'rgba(28,32,50,0.07)',
+    glassBg: 'rgba(238,233,224,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene11: { // LIGHT — dividend policy and management
+    bg: '#F0ECE4', bgSecondary: '#E6E1D6', fg: '#1A1E2C', fgSecondary: '#586070',
+    accent: '#8B6914', accentDim: 'rgba(139,105,20,0.10)', accentMid: 'rgba(139,105,20,0.30)',
+    accentGlow: 'rgba(139,105,20,0.05)', border: 'rgba(26,30,44,0.07)',
+    glassBg: 'rgba(240,236,229,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene12: { // DARK — margin of safety
+    bg: '#0A1628', bgSecondary: '#0F1E35', fg: '#E0DCD4', fgSecondary: '#8A9AAE',
+    accent: '#2E8B57', accentDim: 'rgba(46,139,87,0.12)', accentMid: 'rgba(46,139,87,0.35)',
+    accentGlow: 'rgba(46,139,87,0.06)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(10,22,40,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene13: { // DARK — final synthesis
+    bg: '#0C1420', bgSecondary: '#121C2C', fg: '#E2DED6', fgSecondary: '#8C98AA',
+    accent: '#D4A843', accentDim: 'rgba(212,168,67,0.12)', accentMid: 'rgba(212,168,67,0.35)',
+    accentGlow: 'rgba(212,168,67,0.06)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(12,20,32,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// CONTENT DATA
+// ═══════════════════════════════════════════════════════════════
+
+const CONTENT_DATA = {
+  meta: {
+    title: '聪明的投资者',
+    titleEn: 'THE INTELLIGENT INVESTOR',
+    subtitle: '修订版 · Jason Zweig 评注 · 价值投资的实战圣经',
+    badge: '沉浸式深度导读 · THE INTELLIGENT INVESTOR · COMPLETE',
+    author: '本杰明·格雷厄姆',
+    authorEn: 'Benjamin Graham',
+    type: 'practical',
+    shelf: {
+      emoji: '💰',
+      gradient: 'linear-gradient(135deg, #0C1824 0%, #2E6B4A 50%, #D4A843 100%)',
+      description: '格雷厄姆写给普通投资者的终极指南——从防御型到进取型，从市场先生到安全边际，用20章构建完整的价值投资实践框架。Jason Zweig的现代评注让经典焕发新生。',
+      stats: ['13 场景', '4 部分', '20 章浓缩']
+    },
+    coreThesis: '投资的核心不在于击败市场，而在于控制自己。聪明的投资者不是智商最高的人，而是最有纪律、最有耐心、最愿意独立思考的人。安全边际是一切投资智慧的根基。',
+    authorProblem: '1949年初版时，格雷厄姆面对的问题是：普通人如何在不成为全职分析师的情况下，安全而有效地参与股票市场？《证券分析》是写给专业人士的工具书，而华尔街的建议充斥着利益冲突。普通投资者需要一本能帮助他们建立正确框架、抵御市场情绪、并且不需要高深财务知识也能执行的实战指南。',
+    bookStructure: '全书的逻辑是"从外到内、从防守到进攻"。第一部分（第1-8章）建立基本框架：区分投资与投机，理解通胀影响，然后分别为防御型和进取型投资者设计完整的资产配置和选股策略。第二部分（第9-15章）深入股票分析：从市场波动的本质（市场先生寓言）到具体的估值方法，再到不同类型证券的比较分析。第三部分（第16-19章）处理实务问题：可转换证券的陷阱、股息政策、四组真实公司的比较案例。第四部分（第20章）以"安全边际"作为全书的终极总结——这一章被巴菲特称为"有史以来关于投资最重要的文字"。',
+    readerQuestions: [
+      '如果你只有10万元可投资，格雷厄姆会建议你把多少放在股票里、多少放在债券里？在什么情况下应该调整这个比例？',
+      '你能用格雷厄姆的七条标准筛选出一只合格的防御型投资股票吗？当前A股/美股中有多少公司能同时满足所有七条？',
+      '格雷厄姆的"市场先生"寓言如何改变你对股价波动的心理反应？下次看到你持有的股票暴跌30%时，你会怎么做？',
+      '"安全边际"是一个具体的数字还是一种思维方式？在实际操作中，你如何量化它？',
+      'Jason Zweig在2003年的评注中用哪些现代案例（安然、dot-com泡沫）证明格雷厄姆1949年的原则依然成立？'
+    ],
+    critique: '《聪明的投资者》有三个主要局限。（1）具体数字的时代局限：格雷厄姆建议的P/E < 15、P/B < 1.5等量化标准基于20世纪中期的市场环境，当时整体估值水平远低于今天。在21世纪的低利率环境和科技驱动经济中，严格套用这些数字会排除几乎所有优质公司。（2）对成长型投资的偏见：格雷厄姆对"成长股"持系统性怀疑态度，这让他的框架难以解释巴菲特后期对可口可乐、苹果等以合理价格买入优秀公司的成功实践。（3）对市场效率的低估：格雷厄姆时代净流动资产折价股（"烟蒂股"）遍地可拾，但随着信息技术的进步和机构投资者的增加，这类机会已极为罕见。尽管如此，本书的核心教诲——投资者应该管理自己的情绪而非预测市场、安全边际是对无知的保险、价格终将回归价值——在任何市场环境中都不会过时。',
+    keyTerms: [
+      { term: '市场先生', definition: '格雷厄姆最著名的寓言。想象你有一个叫"市场先生"的合伙人，他每天给你报一个价格，要么买你的股份，要么把他的卖给你。他的情绪极不稳定——有时欣喜若狂给出高价，有时极度悲观给出低价。聪明的投资者利用他的愚蠢，而不是被他的情绪传染。' },
+      { term: '安全边际', definition: '买入价格与内在价值之间的差额。格雷厄姆认为这是"投资中最重要的概念"——它是对分析错误、运气不好、和未来不确定性的综合保险。差额越大，投资越安全。' },
+      { term: '防御型投资者', definition: '以保护本金和获取合理回报为首要目标的投资者。格雷厄姆为其设计了严格的选股标准（P/E < 15、P/B < 1.5等），核心策略是分散化、低成本、和最少的决策频率。' },
+      { term: '进取型投资者', definition: '愿意投入更多时间和精力来换取超额回报的投资者。格雷厄姆强调"进取"不是承担更多风险，而是做更多研究——在净流动资产折价股、特殊情况套利等领域寻找机会。' },
+      { term: '内在价值', definition: '由公司的资产、盈利、股息和确定前景所决定的合理价值。格雷厄姆强调它是一个"范围"而非精确数字——关键是判断市场价格是否显著偏离这个范围。' },
+      { term: '投资与投机', definition: '投资是基于深入分析、保障本金安全、并获取满意回报的操作。不满足这三个条件的就是投机。格雷厄姆不反对投机，但要求投资者清楚自己在做什么，永远不要把投机的钱和投资的钱混在一起。' },
+      { term: '美元成本平均法', definition: '每月投入固定金额买入股票或基金，不管市场涨跌。价格高时自动少买，价格低时自动多买。格雷厄姆认为这是防御型投资者最有效的策略之一。' },
+      { term: '净流动资产价值', definition: '流动资产减去全部负债（包括长期负债）。当股价低于此值时，意味着你在以低于公司清算价值的价格买入——格雷厄姆最偏爱的"捡烟蒂"策略。' },
+      { term: '75/25规则', definition: '格雷厄姆建议投资者将股票配置比例保持在25%-75%之间，债券占另一端。当市场极度低迷时股票可达75%，极度高涨时降至25%。永远不要全仓股票或全仓债券。' }
+    ],
+    parts: [
+      { number: 1, title: '投资的基本原则', titleEn: 'GENERAL APPROACHES TO INVESTMENT', beforeScene: 'scene-1' },
+      { number: 2, title: '股票与债券的选择', titleEn: 'STOCK AND BOND SELECTION', beforeScene: 'scene-5' },
+      { number: 3, title: '市场先生与投资者心理', titleEn: 'MR. MARKET AND THE INVESTOR\'S TEMPERAMENT', beforeScene: 'scene-8' },
+      { number: 4, title: '安全边际与终极智慧', titleEn: 'MARGIN OF SAFETY AND ULTIMATE WISDOM', beforeScene: 'scene-10' }
+    ]
+  },
+
+  darkScenes: ['scene1', 'scene4', 'scene7', 'scene9', 'scene12', 'scene13'],
+
+  scenes: [
+
+    // ═════════════════════════════════════════════════════════════
+    // PART I · 投资的基本原则 · GENERAL APPROACHES TO INVESTMENT
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 1: 投资与投机的分界 [ANCHOR]
+    // Chapters 1-2: 投资与投机的区别, 通胀与投资者
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-1', number: '第一部分 · 场景 01', palette: 'scene1',
+      title: '投资与投机——你到底在做什么',
+      subtitle: 'INVESTMENT VS. SPECULATION: WHAT ARE YOU REALLY DOING',
+      heroQuote: '投资运作是这样一种行为：经过深入的分析，承诺本金安全以及回报率令人满意。不符合这些条件的操作则是投机。',
+      keyTakeaway: '投资的第一步不是选股，而是认清自己在做什么——投资还是投机。如果你的决策过程不满足"深入分析+本金安全+满意回报"三个条件中的任何一个，你就是在投机。承认这一点，是保护自己的起点。',
+      extendedReading: [
+        '格雷厄姆区分投资与投机的框架，直接影响了美国证券法的后续发展。1933年《证券法》和1934年《证券交易法》的核心假设——公众需要被保护以免受不当推销的侵害——与格雷厄姆的三个条件（尤其是"深入分析"的要求）在逻辑上是一致的。SEC的信息披露制度本质上是在帮助投资者满足格雷厄姆的第一个条件。',
+        '75/25规则的心理学基础比表面看起来更深。行为金融学后来的研究表明，投资者在极端市场环境中的决策质量会急剧下降——不是因为他们的分析能力变差了，而是因为情绪劫持了认知系统。75/25规则通过预先设定的机械化范围来限制情绪驱动的决策——本质上是一种"提前做好决定"的纪律系统。',
+        '格雷厄姆本人的投资生涯其实包含一个很少被提及的投机教训。在1929年大崩盘中，他的投资合伙企业Graham-Newman Corporation遭受了约70%的损失——部分原因是他当时在杠杆操作上越过了自己后来设定的纪律线。正是这次惨痛经历促使他在《聪明的投资者》中如此严格地区分投资与投机。他的原则不是来自书本，而是来自真金白银的教训。'
+      ],
+      narrative: [
+        '1949年，格雷厄姆出版《聪明的投资者》时，距离1929年大崩盘已过去二十年。但他知道，人类的记忆是短暂的——新一代投资者正在涌入市场，他们没有经历过道琼斯指数从381点跌到41点的恐怖。格雷厄姆写这本书的目的非常明确：在下一次灾难到来之前，给普通人一套能保命的投资原则。',
+        '全书的第一个区分就是最重要的：<b>什么是投资，什么是投机？</b>格雷厄姆的定义简洁而严格：投资必须满足三个条件——（1）基于深入的分析，（2）保证本金安全，（3）获取满意的回报。不满足其中任何一条的操作，无论你买的是蓝筹股还是国债，都是投机。他特别警告：最危险的投机者不是那些知道自己在赌博的人，而是那些自以为在"投资"的人。',
+        '格雷厄姆然后转向一个常被忽视的敌人：<b>通货膨胀</b>。他用1915-1970年的数据证明，即使是"安全"的债券和储蓄账户，在通胀面前也会被缓慢地吞噬购买力。美国在1946-1970年间的年均通胀率约为2.5%，看似温和，但25年后你的购买力已缩水超过40%。这意味着"不承担任何风险"本身就是一种风险——通胀风险。因此，即使是最保守的投资者也需要在组合中配置一定比例的股票。',
+        '但股票配置多少？格雷厄姆给出了他著名的<b>75/25规则</b>：股票在投资组合中的比例应该在25%到75%之间浮动，债券占据另一端。普通情况下，50/50的均衡配置是合理的起点。当股市经历大幅下跌、估值变得诱人时，可以将股票比例提高到75%；当市场过热、估值偏高时，应将股票比例降至25%。格雷厄姆的关键洞见是：<b>永远不要100%全仓股票，也永远不要100%全仓债券</b>——前者在崩盘时会让你恐慌卖出，后者在通胀时会让你的财富被缓慢侵蚀。',
+        'Jason Zweig在2003年的评注中用dot-com泡沫完美验证了这一原则。1999年底，美国散户投资者平均将75%以上的资金投入股票（许多人更高），因为"这次不一样"。到2002年底，纳斯达克从5048点跌至1114点（跌幅78%），那些全仓科技股的投资者损失了大部分身家。而那些遵循格雷厄姆50/50规则的投资者，债券部分不仅保值还有正收益（2000-2002年债券大涨），整体组合跌幅被显著缓冲。'
+      ],
+      deepDives: [
+        {
+          title: '投资的三重标准：一个自我检测框架', icon: '🎯',
+          triggerQuestion: '你上一次买股票时，是否满足了格雷厄姆的三个条件？你做了"深入分析"吗——还是只是看了几篇推文？你有"本金安全"的保障吗——还是全凭"涨了就跑"？',
+          chain: {
+            premise: '华尔街最大的骗局不是某个具体的欺诈案件，而是对"投资"这个词的系统性滥用。当每一个买入股票的行为——无论是基于深入研究还是朋友的一条微信消息——都被冠以"投资"之名时，这个词就失去了保护功能。格雷厄姆要把它的含义钉死。',
+            evidence: '格雷厄姆的三个条件构成一个递进的筛选器。<b>条件一：深入的分析。</b>这不是指阅读了公司的年报就够了，而是要系统评估公司的财务状况、竞争地位、行业前景、管理层品质。格雷厄姆估算，对一只股票的合格分析至少需要数小时的工作。如果你对一家公司的了解不超过它的名字和最近的股价走势，你就没有做到"深入分析"。<b>条件二：本金安全。</b>这不是保证不亏损——世界上没有这种保证。而是指在你的分析框架内，你有合理的信心认为即使情况变坏，本金也不会遭受永久性的重大损失。如果一只股票的全部投资理由是"它还会涨"，那么一旦它不涨了，本金安全就不存在。<b>条件三：满意的回报。</b>格雷厄姆特意用了"满意"而非"最大化"这个词。他认为追求最大回报是投机的特征；投资者应该追求与风险相称的合理回报。',
+            conclusion: '这三个条件的真正力量在于它们的否定形式：如果你的操作不满足这三个条件中的任何一个，你就是在投机——<b>而承认自己在投机，是保护自己的第一步</b>。格雷厄姆不反对投机，但他要求你：（1）永远知道自己什么时候在投机，（2）把投机的钱和投资的钱严格分开，（3）投机的金额永远不要超过你能承受损失的上限。Zweig补充：2000年dot-com泡沫中，数百万"投资者"实际上是在投机——他们买入的公司没有盈利、没有合理估值、没有安全边际——但他们拒绝承认这一点，直到亏掉了大部分积蓄。'
+          }
+        },
+        {
+          title: '通胀：隐形的财富杀手', icon: '📉',
+          chain: {
+            premise: '大多数人认为"不投资"是最安全的选择——把钱存在银行，至少不会亏。但格雷厄姆指出，这种"安全感"是一种错觉，因为它忽略了通货膨胀对购买力的持续侵蚀。',
+            evidence: '格雷厄姆用半个世纪的美国数据来说明这一点。1900年的1美元，到1970年的购买力只剩约0.25美元。更具体的例子：1940年代持有美国国债的投资者，名义上获得了2-3%的年收益率，但扣除同期的通胀后，实际回报为负数——他们的"安全"投资实际上让他们变得更穷了。即使是1950-1970年间相对温和的年均3%通胀率，20年后也会让100元的购买力缩水到约55元。格雷厄姆因此得出结论：任何长期投资计划都必须包含一定比例的股票——不是因为股票"更好"，而是因为企业能够通过提高产品价格来部分对冲通胀，而固定收益工具不能。Zweig在评注中补充了一个惊人的数据：1926-2002年间，美国股票的年均实际回报率（扣除通胀后）约为7%，而国债仅为2.4%，通胀率3%。全仓债券的投资者在76年间的实际购买力增长了5.8倍，而全仓股票的投资者增长了146倍——差距25倍。',
+            conclusion: '格雷厄姆的结论不是"全仓股票"——那样在某些年份（如1929-1932、2000-2002）会遭受毁灭性打击。他的结论是<b>必须在股票和债券之间找到平衡</b>，这就是75/25规则的根基：用债券部分对冲股市崩盘的风险，用股票部分对冲通胀侵蚀购买力的风险。两种风险都不能忽视，因此两种资产都不能缺席。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 2: 75/25法则——资产配置的智慧 [BRIDGE]
+    // Chapters 3-4: 防御型投资者的资产配置
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-2', number: '第一部分 · 场景 02', palette: 'scene2',
+      title: '75/25法则——资产配置的智慧',
+      subtitle: 'THE 75/25 RULE: ASSET ALLOCATION WISDOM',
+      heroQuote: '投资者应该将其资金在股票和债券之间进行分配，两者的比例都不应低于25%或高于75%。',
+      keyTakeaway: '75/25规则的真正天才不在于数学最优性——它远不是最优策略。它的天才在于：它是一个普通人在恐慌中仍然能执行的系统。一个你100%执行的简单规则，长期远胜你只能执行50%的复杂模型。格雷厄姆设计的不是最优投资策略，而是最优人类策略。',
+      extendedReading: [
+        '75/25规则的思想渊源可以追溯到格雷厄姆1929年的惨痛经历。当年他的合伙企业几乎全仓股票（加上杠杆），在大崩盘中损失约70%。这个"永远不全仓"的规则，是用真金白银的惨痛教训换来的。有趣的是，格雷厄姆一生中最保守的时期——1930年代——恰恰是他投资回报率最高的时期之一，因为极端低配股票让他在1932年的市场底部有充足的弹药去买入。',
+        '现代投资组合理论（MPT）的创始人哈里·马科维茨在1952年发表了均值-方差优化框架，从数学角度证明了"分散化"能在不降低期望回报的前提下减小风险。但马科维茨本人在被问到自己的退休金如何配置时坦承：他用的是50/50简单配置，而非自己的优化模型——"我不想在晚年后悔当初的复杂计算出了错。"这几乎是对格雷厄姆75/25规则的学术背书。',
+        '行为经济学家理查德·塞勒（Richard Thaler）的"心理账户"理论为75/25规则提供了另一层解释。人们天然倾向于将资金分成不同的"心理账户"——消费账户、储蓄账户、风险账户。75/25规则顺应了这个心理倾向，将资金明确分为"安全账户"（债券）和"增长账户"（股票），使投资者在股市暴跌时不会感到"全部身家都在水里"，从而降低了恐慌卖出的概率。'
+      ],
+      dataViz: {
+        type: 'comparison-table',
+        title: '75/25规则 vs 全仓策略：历史极端期表现对比',
+        description: '格雷厄姆的75/25规则在牛市中不会是最佳策略——但在熊市中它会救你的命。以下数据说明了为什么"不是最优"的策略反而是"最好"的策略。',
+        data: {
+          columns: ['时期', '全仓股票', '50/50配置', '全仓债券', '最优策略的代价'],
+          rows: [
+            ['1929-1932 大崩盘', '-86%', '-40%', '+15%', '全仓股票者中超过半数再也没有回到市场'],
+            ['1973-1974 滞胀', '-48%', '-18%', '+8%', '恐慌卖出者错过了1975年38%的反弹'],
+            ['2000-2002 科技泡沫', '-49%', '-16%', '+25%', '2000年初全仓科技股的投资者永久损失超60%'],
+            ['2008 金融危机', '-57%', '-22%', '+5%', '2009年3月买入者3年内翻倍，但多数人已在低点清仓'],
+            ['2020.2-2020.3 新冠', '-34%', '-12%', '+3%', '3周暴跌后5个月完全收复，恐慌者错过全部反弹']
+          ],
+          note: '数据基于美国标普500指数与美国国债的简单50/50组合。格雷厄姆的核心洞见：全仓股票的"最优"回报毫无意义，如果你在暴跌时已经恐慌清仓。50/50配置的真正优势不是数学上的，而是心理上的——它让你在最困难的时刻依然能坚持持有。'
+        }
+      },
+      narrative: [
+        '格雷厄姆的资产配置原则极其简洁：<b>股票占25%-75%，债券占另一端</b>。默认起点是50/50。这个规则看似过于简单，但它背后蕴含着深刻的心理学洞见——大多数投资者的问题不是不知道买什么，而是在市场极端时做出了错误的决定。',
+        '当股市大涨、所有人都在谈论股票时，人性会推动你把越来越多的钱投入股市。当股市暴跌、新闻充满恐慌时，人性会推动你把所有股票卖光。<b>75/25规则的本质是一个自动纠偏机制</b>：市场涨了，你的股票比例超过75%，就卖出一些股票买入债券；市场跌了，你的股票比例低于25%，就卖出一些债券买入股票。这迫使你在高位减仓、在低位加仓——与人性的本能完全相反。',
+        '格雷厄姆进一步区分了两类投资者的配置策略。<b>防御型投资者</b>应该坚持简单的50/50配置，每半年或一年进行一次再平衡，除此之外不做任何调整。<b>进取型投资者</b>可以根据市场估值水平在25%-75%之间灵活调整——但格雷厄姆警告，这种调整的依据必须是"估值水平"而非"市场趋势"。也就是说，你应该在市场便宜时增加股票（因为安全边际大），而不是在市场上涨时增加股票（因为"趋势向上"）。',
+        'Zweig的评注提供了一个生动的历史验证。2000年初，美国股市的整体P/E达到44倍（以S&P 500衡量），是历史均值的近3倍。如果一个投资者在那个时点遵循格雷厄姆的原则，他应该把股票配置降到25%附近。到2002年底，标普500跌去了49%——但这个投资者的组合只损失了约12%（25% x 49%），而全仓股票的投资者损失了近一半身家。',
+        '<b>批判性分析：</b>75/25规则的优雅不应掩盖它的一个重要局限——它没有告诉你<b>如何判断何时调整</b>。格雷厄姆说"当市场估值偏高时减少股票配置"，但多高算高？P/E 20还是30？不同的答案在2010年代会导致截然不同的结果——如果你在2015年P/E达到25时就把股票降到25%，你会错过随后四年超过60%的涨幅。这揭示了格雷厄姆框架中一个始终存在的张力：<b>他的原则在事后看来总是正确的，但在事前执行时需要投资者做出格雷厄姆本人没有完全规范化的判断。</b>这也是为什么他晚年转向推荐固定比例（50/50）+指数基金——从需要判断的动态策略退回到不需要判断的机械策略。'
+      ],
+      deepDives: [
+        {
+          title: '再平衡的心理学：为什么简单规则胜过复杂模型', icon: '⚖️',
+          triggerQuestion: '75/25规则看起来太简单了——它怎么可能比华尔街的复杂量化模型更有效？',
+          chain: {
+            premise: '格雷厄姆的75/25规则不是一个优化回报的策略——它是一个优化行为的策略。它的真正竞争对手不是最优投资理论，而是你在恐慌和贪婪中会做出的真实决策。',
+            evidence: 'Dalbar公司对美国共同基金投资者行为的年度研究提供了惊人的数据。在1984-2003年的20年间，标普500的年化回报率为<b>12.2%</b>，但美国股票基金投资者的实际年化回报率只有<b>2.6%</b>——差距近10个百分点。原因不是他们选错了基金，而是他们在错误的时间买入和卖出：在市场高点（牛市末期）大量涌入，在市场低点（熊市底部）恐慌性撤出。75/25规则用一个机械性的纪律来对抗这种行为模式。当你的股票配置因为牛市而超过75%时，规则要求你卖出股票——这在心理上是反直觉的（市场在涨，为什么要卖？），但在数学上是合理的（你在高位锁定了部分利润）。当你的股票配置因为熊市而低于25%时，规则要求你买入股票——这更加反直觉（市场在跌，为什么要买？），但这恰恰是历史上回报率最高的时机。<b>格雷厄姆的天才不在于这个公式的数学最优性，而在于它的心理可执行性</b>——足够简单以至于你在恐慌中仍然能遵守它。',
+            conclusion: '75/25规则揭示了投资领域一个深层悖论：<b>最佳理论策略和最佳实际策略往往不是同一个</b>。理论上，你应该根据复杂的估值模型动态调整配置。但实际上，大多数人在复杂模型面前会犹豫、质疑、最终放弃——然后回到"追涨杀跌"的本能。一个你能100%执行的简单规则，在长期中会远远胜过一个你只能执行50%的复杂模型。格雷厄姆理解这一点，因此他设计的不是最优数学策略，而是最优人类策略。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 3: 防御型投资者的完整策略 [ANCHOR]
+    // Chapters 5-7: 防御型投资者的选股原则
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-3', number: '第一部分 · 场景 03', palette: 'scene3',
+      title: '防御型投资者的七条铁律',
+      subtitle: 'SEVEN RULES FOR THE DEFENSIVE INVESTOR',
+      heroQuote: '投资的艺术有一个特点不被人广泛认知：对于普通投资者来说，一个不费力的、几乎不需要什么能力的投资成绩，是完全可以实现的；但要在这个容易达到的水平上做出哪怕一点点改善，都需要非凡的知识和技能。',
+      keyTakeaway: '格雷厄姆的七条标准不是"选股系统"——它是"排除系统"。它的设计目的不是找到最好的股票，而是系统性地排除所有可能让你亏损的股票。这个区别至关重要：好的投资者不是靠选对赢的，而是靠不选错来赢。P/E × P/B < 22.5 这个组合公式是两个独立安全维度的乘法融合——价格和资产质量必须同时在安全区间内。',
+      extendedReading: [
+        '格雷厄姆的七条标准在学术上被称为"价值投资因子"的原型。1992年法玛和弗伦奇（Fama & French）发表了著名的三因子模型论文，用统计方法证明了"账面市值比"（本质上就是格雷厄姆的P/B标准）和"公司规模"（本质上就是格雷厄姆的规模标准）是解释股票回报差异的关键因子。格雷厄姆凭直觉和经验发现的东西，在四十年后被学术界用大数据证实了。',
+        '格雷厄姆在1976年最后一次公开访谈中承认了一个微妙的转变：他不再推荐个人投资者使用七条标准进行个股选择，而是建议直接买入低成本指数基金。他的理由是：随着信息技术的进步和机构投资者的增加，满足所有七条标准的个股越来越少，而且市场对这类机会的反应速度越来越快。指数基金实现了七条标准的核心意图——最大分散化、最低成本、最少决策——而不需要个人执行复杂的筛选过程。',
+        '2003年Zweig做了一个实验：用格雷厄姆的七条标准筛选标普500的成分股。结果只有极少数（不到5%）能同时满足所有条件。这引发了一个深刻问题：是标准过时了，还是市场整体估值过高了？如果我们把格雷厄姆的标准视为"基于半个世纪数据的安全阈值"，那么满足条件的股票稀少本身就是一个市场信号——它告诉你当前市场可能系统性地偏贵了。从这个角度看，七条标准不仅是选股工具，它还是一个隐性的市场估值温度计。'
+      ],
+      dataViz: {
+        type: 'comparison-table',
+        title: '格雷厄姆的防御型投资者七条选股标准',
+        description: '这七条标准构成一个严格的筛选系统——每一条都有明确的量化门槛，目的是从市场上数千只股票中筛出真正安全的少数。',
+        data: {
+          columns: ['标准', '具体要求', '背后逻辑'],
+          rows: [
+            ['1. 企业规模', '年销售额 > 1亿美元（工业）/ 总资产 > 5000万美元（公用事业）', '大公司抗风险能力强，不容易突然倒闭'],
+            ['2. 财务状况', '流动比率 > 2:1；长期负债 < 净流动资产', '充足的流动性是企业安全的基础'],
+            ['3. 盈利稳定性', '过去10年每年都有正盈利', '一年亏损可以是意外，多年亏损说明商业模式有问题'],
+            ['4. 股息记录', '过去20年连续分红', '连续分红是财务健康和管理层股东意识的信号'],
+            ['5. 盈利增长', '过去10年每股盈利增长至少33%（用首尾三年均值比较）', '确保公司不是在原地踏步'],
+            ['6. 市盈率', 'P/E < 15（基于过去三年平均盈利）', '避免为乐观预期支付过高价格'],
+            ['7. 市净率', 'P/B < 1.5 或 P/E × P/B < 22.5', '确保你没有为无形资产支付太多溢价']
+          ],
+          note: '格雷厄姆强调：这七条标准必须同时满足。放松任何一条都会显著降低安全性。P/E × P/B < 22.5这个组合标准意味着：如果P/B高一些（比如2.5），P/E就必须低（低于9）——这保证了总体估值始终在安全区间。'
+        }
+      },
+      narrative: [
+        '格雷厄姆对防御型投资者的建议是本书最实用的部分之一。他从一个反直觉的洞见出发：<b>对于大多数人来说，投资中最大的敌人不是无知，而是过度自信。</b>普通投资者花在选股上的时间越多，结果往往越差——因为他们缺乏专业分析师的信息和工具，却有着同样强烈的过度交易倾向。',
+        '因此格雷厄姆给防御型投资者设计了一套<b>"最少决策"策略</b>。核心思路是：用严格的量化标准替代主观判断，把选股变成一个几乎机械化的筛选过程。他给出了七条具体标准，每一条都有明确的数字门槛——不是"公司应该有良好的财务状况"这种模糊建议，而是"流动比率必须大于2:1"这种可以直接计算的规则。',
+        '这七条标准的设计逻辑是层层叠加的安全网。前两条（规模和财务状况）确保公司不会轻易倒闭；第三四条（盈利稳定性和股息记录）确保公司有持续创造现金的能力；第五条（盈利增长）确保公司不是在衰退；最后两条（P/E和P/B限制）确保你不会为以上品质支付过高的价格。<b>关键是"同时满足"——放松任何一条都会削弱整个系统的保护力。</b>',
+        '格雷厄姆还建议防御型投资者持有至少10只、不超过30只符合标准的股票，以实现充分的分散化。他的研究表明，一个由10-30只符合上述标准的股票组成的组合，长期表现通常优于大多数共同基金——而投资者几乎不需要做任何后续管理，每年检查一次是否仍然满足标准即可。',
+        'Zweig在评注中指出了一个残酷的现实：在2003年的美国市场中，能够同时满足格雷厄姆全部七条标准的股票屈指可数。这不是因为标准过严，而是因为整体市场的估值水平已远高于格雷厄姆时代。Zweig建议现代投资者可以通过低成本指数基金来实现格雷厄姆的核心意图——广泛分散、低费用、最少的主动决策。'
+      ],
+      deepDives: [
+        {
+          title: 'P/E × P/B < 22.5：格雷厄姆公式的数学之美', icon: '🔢',
+          triggerQuestion: '为什么格雷厄姆把P/E和P/B的上限乘积设定为22.5？这个看似随意的数字背后有什么逻辑？如果一只股票P/E是20但P/B只有1.0，它是否通过了测试？',
+          chain: {
+            premise: 'P/E和P/B是衡量股票估值的两个最基本指标，但单独使用任何一个都有盲区。高P/E可能意味着盈利被暂时压低（周期股在利润低谷时P/E很高），高P/B可能反映品牌价值等无形资产（消费品公司通常P/B较高）。格雷厄姆需要一个能同时约束两个维度的综合指标。',
+            evidence: '格雷厄姆设定的上限是P/E < 15且P/B < 1.5。将两者相乘：15 × 1.5 = 22.5。这个组合标准的巧妙之处在于它提供了灵活性：如果一只股票的P/B高于1.5（比如2.0），那么P/E就必须低于11.25（22.5 ÷ 2.0）来补偿；反之，如果P/E高于15（比如18），P/B就必须低于1.25（22.5 ÷ 18）。这意味着你可以在一个维度上"借用"安全空间，但总的估值水平始终被锁定在一个保守的范围内。以格雷厄姆时代的数据验证：1950-1970年间，满足P/E × P/B < 22.5的股票组合的年均回报率约为15%，显著跑赢整体市场。关键不是买到了最好的公司，而是避免了为任何公司支付过高的价格。',
+            conclusion: '22.5这个数字不是拍脑袋的产物，而是格雷厄姆将两个独立安全标准通过乘法融合后的自然结果。它的实践意义是：<b>不存在"只要足够便宜就可以忽略质量"的情况，也不存在"只要质量够好就可以忽略价格"的情况</b>——两者必须同时在安全区间内。回答前面的问题：P/E = 20、P/B = 1.0，乘积 = 20 < 22.5——技术上通过了组合测试，但P/E = 20已超过15的单项上限，格雷厄姆原本会将其排除。这种边界案例需要投资者自己判断。'
+          }
+        },
+        {
+          title: '指数基金：格雷厄姆理想的现代实现', icon: '📊',
+          chain: {
+            premise: '格雷厄姆在1949年为防御型投资者设计了一套手工选股系统。但到了21世纪，市场环境发生了根本变化：信息更透明、竞争更激烈、满足所有七条标准的个股越来越少。是否存在一种更好的方式来实现格雷厄姆的核心意图？',
+            evidence: '格雷厄姆本人在1976年去世前的最后一次访谈中给出了答案。他承认，随着市场效率的提高，个人投资者通过选股击败市场变得越来越困难。他的建议是：普通投资者应该买入覆盖整个市场的低成本指数基金。这个建议在当时几乎是异端——1976年先锋集团的第一只指数基金刚刚成立，管理资产仅1100万美元（目标是1.5亿），被华尔街嘲笑为"格雷厄姆的蠢主意"。但历史证明格雷厄姆是对的。1976-2023年间，标普500指数基金的累计回报率超过了80%以上的主动管理基金。Zweig在评注中计算：如果1976年投入1万美元到先锋500指数基金，到2003年已增长到超过42万美元，而同期大多数主动基金的表现远逊于此。费用是关键差异——指数基金年费0.1-0.2%，主动基金通常1-2%，复利几十年后的差距是毁灭性的。',
+            conclusion: '指数基金完美实现了格雷厄姆为防御型投资者设计的三个核心原则：<b>最大程度的分散化</b>（持有数百甚至数千只股票）、<b>最低的成本</b>（年费仅0.03-0.2%）、<b>最少的决策</b>（买入并持有，不需要选股）。它不是格雷厄姆七条标准的替代品——它是格雷厄姆哲学在现代市场环境中最忠实的实现。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 4: 进取型投资者的策略 [ANCHOR]
+    // Chapters 6-7: 进取型投资者的组合策略
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-4', number: '第一部分 · 场景 04', palette: 'scene4',
+      title: '进取型投资者——更多研究而非更多风险',
+      subtitle: 'THE ENTERPRISING INVESTOR: MORE RESEARCH, NOT MORE RISK',
+      heroQuote: '进取型投资者的标志不是他愿意承担比别人更多的风险，而是他愿意投入比别人更多的时间和精力来做分析工作。',
+      keyTakeaway: '"进取"不是承担更多风险——而是投入更多智力劳动。格雷厄姆的GEICO投资暴露了他理论与实践之间最有趣的张力：他最赚钱的投资几乎不符合自己的量化标准。这个矛盾恰恰催生了巴菲特的进化——从"以低价买平庸公司"到"以合理价格买优秀公司"。如果你没有时间做真正的深度分析，就做纯粹的防御型投资者——"半吊子"的进取型比两者都危险。',
+      extendedReading: [
+        '格雷厄姆的三个"猎场"（被忽视的大公司、净流动资产折价股、特殊情况套利）在学术上对应了后来被发现的三种系统性超额回报来源：价值溢价（value premium）、规模溢价（size premium）和事件驱动溢价（event-driven premium）。这三者至今仍是对冲基金行业的核心策略分类——说明格雷厄姆在1949年就通过经验识别出了金融学界到1980年代才正式命名的现象。',
+        '格雷厄姆的"烟蒂股"策略有一个经常被忽视的前提条件：它在美国1930-1960年代之所以有效，部分原因是当时的信息不对称极其严重——大多数投资者甚至没有能力阅读资产负债表。格雷厄姆的"深入分析"在那个年代几乎等于超能力。随着SEC信息披露制度的完善和计算机筛选工具的普及，这种信息优势在1980年代之后急剧缩小。巴菲特在2014年股东信中明确表示："如果我今天管理小资金，我不会再用格雷厄姆的烟蒂股策略——因为竞争太激烈了。"',
+        'GEICO案例中有一个鲜为人知的讽刺：SEC强制格雷厄姆-纽曼公司分拆GEICO股份时，格雷厄姆的客户们大多在收到GEICO股票后立即卖出——因为他们不理解保险行业，而格雷厄姆的教育让他们习惯了只买"看得懂"的低估值股票。唯一保留了全部GEICO股份的人是一个叫沃伦·巴菲特的年轻人——他不仅保留了，后来还在1976年GEICO濒临破产时大量追加买入。这个故事完美体现了格雷厄姆框架的力量和局限：框架教你如何不亏钱，但真正的大机会需要超越框架的判断力。'
+      ],
+      dataViz: {
+        type: 'comparison-table',
+        title: '防御型 vs 进取型投资者：核心差异',
+        description: '格雷厄姆把投资者分为两类——区别不在于风险偏好或资金量，而在于你愿意投入多少时间和精力。',
+        data: {
+          columns: ['维度', '防御型投资者', '进取型投资者'],
+          rows: [
+            ['核心目标', '保护本金 + 合理回报', '合理基础上追求超额回报'],
+            ['时间投入', '每年数小时（年度检查）', '每周数小时（持续研究）'],
+            ['股票配置', '50/50固定配置或指数基金', '25-75%灵活调整'],
+            ['选股方法', '七条量化标准机械筛选', '深度分析 + 特殊机会挖掘'],
+            ['持股数量', '10-30只分散持有', '更集中，但每只都经过深入研究'],
+            ['交易频率', '每年再平衡一次', '根据估值机会灵活调整'],
+            ['可买入范围', '大型蓝筹 + 指数基金', '净流动资产折价股、特殊情况套利、被低估的中小盘'],
+            ['预期超额回报', '与市场持平或略高', '年化高于市场2-3个百分点'],
+            ['最大风险', '错过大涨（机会成本）', '分析错误 + 过度自信']
+          ],
+          note: '格雷厄姆的关键警告：如果你没有时间或能力成为真正的进取型投资者，就不要试图成为"半吊子"的进取型——那比做一个纯粹的防御型投资者要危险得多。"半吊子"的结果通常是既没有防御型的安全性，也没有进取型的超额回报。'
+        }
+      },
+      narrative: [
+        '格雷厄姆对"进取型投资者"的定义是反直觉的。在华尔街的语境中，"进取"通常意味着承担更多风险——买高波动股票、使用杠杆、频繁交易。格雷厄姆完全否定了这种理解。在他看来，<b>进取型投资者不是风险偏好更高的人，而是愿意投入更多智力劳动的人</b>。',
+        '进取型投资者的三个主要猎场：第一，<b>被忽视的大公司</b>——那些因为暂时的坏消息而股价大跌的蓝筹股。格雷厄姆举例：1947年的GEICO（政府雇员保险公司）是一个不起眼的小公司，但其商业模式——直接向政府雇员销售汽车保险、省去代理人佣金——赋予了它巨大的成本优势。格雷厄姆的合伙基金以每股约$27买入了GEICO的大量股份，这笔投资后来增值了200多倍。',
+        '第二，<b>净流动资产折价股</b>（"烟蒂股"）。格雷厄姆最具标志性的策略：寻找股价低于净流动资产价值（流动资产减去全部负债）的公司。这意味着你以低于公司清算价值的价格买入——即使公司关门卖掉所有东西，你也能拿回更多的钱。格雷厄姆在其30年的投资生涯中，买入了数百只这样的"烟蒂股"，平均年化回报约20%。',
+        '第三，<b>特殊情况套利</b>——公司合并、收购、重组等事件创造的确定性价差机会。例如，当公司A宣布以$25/股收购公司B，而B的市价还在$23，这$2的差价就是一个年化回报可能高达40%的机会（假设三个月完成交割）。格雷厄姆认为这种操作更接近"科学"而非"投机"，因为利润不依赖于市场方向，而依赖于特定事件的完成。',
+        '但格雷厄姆严厉警告：<b>如果你没有时间、能力或兴趣去做真正深入的分析，就不要试图成为进取型投资者。</b>做一个纯粹的防御型投资者远比做一个"半吊子"的进取型要好。因为后者既享受不到防御型的安全保护（他们会忍不住偏离七条标准），又缺乏进取型的分析深度（他们的研究不足以支撑自信的判断）。结果往往是两头落空。'
+      ],
+      deepDives: [
+        {
+          title: 'GEICO：格雷厄姆最伟大的投资', icon: '🏆',
+          triggerQuestion: '格雷厄姆自己严格遵守安全边际原则和量化标准，但他最赚钱的一笔投资——GEICO——几乎不符合这些标准的任何一条。这是否意味着他自己的理论是错误的？',
+          chain: {
+            premise: '1948年，格雷厄姆-纽曼公司（Graham-Newman Corporation）以大约71.25万美元买入了GEICO（政府雇员保险公司）约50%的股份。这是格雷厄姆投资生涯中单笔利润最大的交易——到格雷厄姆1956年退休时，这笔投资的价值已超过数百万美元。',
+            evidence: 'GEICO并不符合格雷厄姆典型的量化选股标准：它不是一个净流动资产折价股，也不是一个低P/E的价值股。它之所以吸引格雷厄姆，是因为其商业模式的卓越性。GEICO只向政府雇员销售汽车保险——这些人出事故的概率远低于一般人——而且通过邮件直销省去了保险代理人15%以上的佣金成本。双重优势意味着GEICO可以提供更低的保费、同时赚取更高的利润率。格雷厄姆认识到，这种结构性的成本优势使GEICO具有巨大的增长空间，而市场对此严重低估。事实证明他是对的：GEICO的保费收入从1948年的800万美元增长到1970年代的超过10亿美元。讽刺的是，SEC后来要求格雷厄姆-纽曼公司分拆GEICO的持股（理由是投资公司不能持有保险公司的控股权益），格雷厄姆是被迫卖出的——否则回报会更惊人。',
+            conclusion: '巴菲特从这个案例中学到了比格雷厄姆自己总结的更多：<b>最好的投资不一定是最便宜的，而是最具竞争优势的</b>。格雷厄姆买GEICO的真正原因——即使他自己可能不完全承认——不是因为它便宜，而是因为它的商业模式优越到足以创造巨大的内在价值增长。巴菲特后来将这个洞见发展为"以合理价格买入优秀公司"的哲学，这是他从老师那里继承并超越的最重要的一步。'
+          }
+        },
+        {
+          title: '烟蒂股策略：以清算价打折购买', icon: '🚬',
+          chain: {
+            premise: '格雷厄姆在《聪明的投资者》中反复回到一个简单但强大的概念：如果一家公司的股价低于它的净流动资产价值——即使把公司关掉、清算掉所有资产、偿还所有债务，股东也能拿回更多的钱——那么以这个价格买入几乎是不可能亏损的。',
+            evidence: '格雷厄姆在1930-1956年间系统性地执行了这个策略。他的方法非常机械：（1）计算净流动资产价值 = 流动资产 - 全部负债（含长期负债）；（2）寻找股价低于净流动资产价值2/3的公司；（3）买入一篮子这样的股票（通常同时持有数十只）；（4）持有1-2年等待价格回归。格雷厄姆报告的结果是：在30年的实践中，这个策略的年化回报率约为20%，且极少有单只股票造成重大损失——因为当你以低于清算价买入时，下行空间是有限的。他举了一个具体的例子：1957年的伯灵顿工业（Burlington Industries），股价约$50，但每股净流动资产超过$75。市场认为纺织行业前景黯淡，但格雷厄姆不在乎——他买的是资产，不是故事。两年后，股价回升到了$75以上。',
+            conclusion: '烟蒂股策略是格雷厄姆"安全边际"理念最纯粹的体现：<b>当你以低于破产价值的价格买入一家还在正常经营的公司时，你实际上获得了"免费"的经营价值</b>。但Zweig提醒现代读者：这种机会在21世纪已极为罕见。信息技术让市场更有效，对冲基金的计算机24小时扫描这类机会。格雷厄姆若活到今天，很可能会建议大多数人买指数基金——但他的烟蒂股框架依然是理解"安全边际"最好的教学工具。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART II · 股票与债券的选择 · STOCK AND BOND SELECTION
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 5: 防御型投资者的股票选择 [ANCHOR]
+    // Chapters 9-11
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-5', number: '第二部分 · 场景 05', palette: 'scene5',
+      title: '选股实战——防御型投资者',
+      subtitle: 'STOCK SELECTION IN PRACTICE: THE DEFENSIVE INVESTOR',
+      heroQuote: '防御型投资者的目标不是做出出色的选择，而是避免做出糟糕的选择。',
+      keyTakeaway: '"好公司"≠"好股票"。通用电气是1972年美国最优秀的公司之一，但以P/E 25倍买入的投资者在随后几年损失惨重。格雷厄姆的关键区分是：公司的品质是一回事，你为这个品质支付的价格是另一回事。大部分投资灾难不是因为买了坏公司，而是因为为好公司支付了太多。',
+      extendedReading: [
+        '格雷厄姆在本书中反复使用道琼斯30成分股做案例分析，这个选择本身就暗含了一个方法论判断：他认为投资者应该从"最好的起点"开始筛选，而不是从"最便宜的起点"。这与他早期的烟蒂股策略形成了有趣的张力——烟蒂股策略是从垃圾堆里找宝贝，而防御型策略是从精品店里挑打折货。两种方法的逻辑不同，但安全边际的核心理念是一致的。',
+        '美元成本平均法在格雷厄姆的框架中有一个经常被忽视的角色：它不仅是一种买入策略，更是一种"承认无知"的策略。格雷厄姆深知大多数投资者（包括专业人士）无法准确预测市场走向。DCA本质上是在说："我不知道明天市场是涨还是跌，所以我选择不做预测，而是系统性地买入。"这种对自身局限的诚实认知，是格雷厄姆投资哲学中最被低估的维度。',
+        '格雷厄姆对"基金经理无法持续跑赢指数"的观察，在1949年时属于异端邪说——当时华尔街的整个商业模式建立在"专业管理能创造超额回报"的前提上。但后来的数据完全站在了格雷厄姆这边：标普SPIVA报告显示，在任何15年的滚动周期中，超过90%的主动管理基金跑输了对应的指数基金。费用差异是主要原因——1%的年管理费在30年复利下会吞掉你近30%的终值。'
+      ],
+      narrative: [
+        '格雷厄姆在理论框架之后转向了具体操作。他用一系列真实案例来演示防御型投资者应该如何选股——更准确地说，应该如何排除不合格的股票。因为防御型投资者的核心策略不是"找到最好的"，而是"排除最差的"。',
+        '他以道琼斯工业平均指数的30只成分股为起点，逐一检验它们是否满足七条标准。结果令人震惊：即使在这30只被认为是美国最优质的蓝筹股中，也有相当一部分无法通过全部七条筛选。<b>有些公司P/E过高（通用电气1972年P/E超过25倍），有些公司盈利波动太大（克莱斯勒在60年代经历了巨额亏损），有些公司股息记录不够稳定。</b>',
+        '格雷厄姆通过这个练习传递了一个重要信息：<b>不要以为"好公司"就等于"好股票"</b>。一家公司可以是行业领导者、拥有优秀的管理团队和强大的品牌——但如果你为这些品质支付了过高的价格，它就不是一个好的投资。通用电气是一家伟大的公司，但在1972年以P/E 25倍买入的投资者在接下来几年中遭受了严重的损失。',
+        '对于实在不愿意做个股分析的防御型投资者，格雷厄姆推荐了一种更简单的方法：直接买入道琼斯指数或类似的蓝筹股组合，并通过美元成本平均法（每月固定金额买入）来降低择时风险。他强调这种"无脑"策略的长期表现不会比大多数专业基金经理差，因为基金经理的高管理费会吞噬掉他们大部分的超额回报（如果有的话）。'
+      ],
+      deepDives: [
+        {
+          title: '七条标准的深层逻辑：为什么每一条都不可删减', icon: '🔬',
+          triggerQuestion: '格雷厄姆的七条筛选标准看似是一组独立的规则，但实际上它们构成了一个互锁的防御体系。删除任何一条，整个系统的防护力就会产生裂缝——为什么？',
+          chain: {
+            premise: '格雷厄姆为防御型投资者制定的七条标准并非随意拼凑的清单，而是一个经过几十年市场灾难检验的逻辑系统。每一条标准都是针对特定类型的投资灾难而设计的"断路器"。理解每条标准背后的灾难场景，比记住标准本身重要得多。',
+            evidence: '<b>标准一：足够的规模（年营收不低于1亿美元）。</b>这条排除了小公司。格雷厄姆的理由不是"大公司更好"，而是小公司在经济衰退中的存活率显著更低——1929-1932年间，年营收低于5000万美元的上市公司中有40%以上最终破产或被强制重组。<b>标准二：强劲的财务状况（流动比率>2，长期债务<净流动资产）。</b>这条直接针对流动性危机。Penn Central铁路1970年破产时资产规模排全美第六——但它的流动比率仅0.31，短期根本无法偿债。<b>标准三：连续20年发放股息。</b>这条不仅是收入保障，更是管理层纪律的信号——能连续20年分红意味着公司穿越了至少2-3个经济周期而不中断现金回报。<b>标准四：过去10年无亏损年份。</b>这条筛除周期性极强的公司。克莱斯勒在1960年代的巨额亏损正是格雷厄姆的反面教材——即使它后来复苏，亏损年份暴露了其商业模式的脆弱性。<b>标准五：10年盈利增长至少33%。</b>这条确保公司没有在停滞或衰退——但注意阈值极低（年化仅约2.9%），格雷厄姆不追求高增长，只要求最低限度的生命力。<b>标准六：P/E不超过15倍。</b>这条直接提供安全边际——以P/E 15买入，即使盈利零增长，你的盈利收益率（6.7%）仍然显著高于债券。<b>标准七：P/B不超过1.5倍（或P/E × P/B < 22.5）。</b>这条提供了资产层面的"楼底价"——即使公司盈利恶化，你的买入价格仍然接近可以通过清算回收的资产价值。',
+            conclusion: '七条标准的深层逻辑可以概括为三层防线：<b>生存层（标准1-4）</b>确保你买入的公司不会在下次经济危机中消失；<b>价值层（标准5-7）</b>确保你不会为幸存下来的公司支付过高的价格；<b>组合层</b>——格雷厄姆要求持有至少10只通过全部七条标准的股票——确保即使有个别公司出了意外，你的整体组合依然安全。这三层防线环环相扣：生存层保证你选的公司活得下来，价值层保证你买的价格不离谱，组合层保证个别意外不会毁掉全局。删除任何一条标准，就等于在其中一层防线上开了口子——也许99%的时候没事，但那1%的灾难就是通过这些口子涌进来的。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 6: 成长股的陷阱 [ANCHOR]
+    // Chapters 11-12: 对成长股的质疑
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-6', number: '第二部分 · 场景 06', palette: 'scene6',
+      title: '成长股的致命诱惑',
+      subtitle: 'THE DEADLY TEMPTATION OF GROWTH STOCKS',
+      heroQuote: '市场对高增长的热情总是让人们忘记一个简单的算术事实：一家公司的增长速度越快，其增长率回归平均水平的概率就越大。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '成长股的数学陷阱：P/E溢价如何吞噬回报',
+        description: '假设你以不同P/E买入一只每年盈利增长15%的股票，持有10年后以P/E 15倍卖出——你的年化回报率是多少？',
+        data: {
+          columns: ['买入P/E', '买入价', '10年后盈利', '10年后合理价（P/E 15）', '年化回报率', '评价'],
+          rows: [
+            ['15x', '$15', '$4.05', '$60.7', '15.0%', '你获得了企业增长的全部回报'],
+            ['25x', '$25', '$4.05', '$60.7', '9.3%', '增长的40%被估值压缩吞噬'],
+            ['40x', '$40', '$4.05', '$60.7', '4.3%', '不如买国债，但你承担了全部股票风险'],
+            ['60x', '$60', '$4.05', '$60.7', '0.1%', '10年零回报——增长完全被溢价吞噬'],
+            ['80x', '$80', '$4.05', '$60.7', '-2.7%', '亏损！你为"伟大公司"等了10年']
+          ],
+          note: '这个表格揭示了格雷厄姆最深刻的洞见之一：企业增长和投资回报是两件不同的事。一家公司可以持续15%增长十年（这已经极为罕见），但如果你以P/E 80倍买入，你的投资回报仍然是负的。安全边际的反面就是"增长溢价"——而增长溢价几乎总是被高估的。'
+        }
+      },
+      keyTakeaway: '以P/E 80倍买入一只年增长20%的"伟大公司"，10年后你的年化回报率可能还不如国债。问题不在于公司不够好，而在于你为这份"好"支付了太多。安全边际的反面就是"增长溢价"——而增长溢价几乎总是被高估的。',
+      extendedReading: [
+        '格雷厄姆对成长股的怀疑在他与巴菲特之间制造了投资史上最有趣的师生分歧。巴菲特在查理·芒格的影响下，从1970年代开始系统性地偏离格雷厄姆的框架：他以P/E 15倍买入可口可乐、以P/E 20倍买入苹果——这些操作在格雷厄姆看来都属于"为增长支付溢价"。但巴菲特的关键创新是认识到：某些公司的竞争优势（"护城河"）如此强大，以至于它们的增长持续性远超格雷厄姆时代的历史经验值。以合理价格买入这类公司，隐含的安全边际来自于企业品质本身，而不仅仅来自于价格折扣。',
+        '"漂亮五十"的覆灭（1972-1974）和dot-com泡沫的破裂（2000-2002）呈现了几乎完全相同的模式：（1）叙事取代分析——"这些公司太好了，任何价格都是合理的"；（2）新指标替代旧指标——1999年的"眼球数""页面浏览量"和1972年的"品牌力"一样，都是用来绕过传统估值标准的借口；（3）历史被嘲笑——"这次不一样"成为每次泡沫的标志性口号。格雷厄姆的框架之所以能跨越时代，正是因为它针对的不是某种特定的泡沫，而是驱动所有泡沫的共同心理机制。',
+        '格雷厄姆对"均值回归"的论断在统计上被大量研究证实。Werner De Bondt和Richard Thaler在1985年的经典论文《股市是否过度反应？》中发现：过去3-5年表现最好的股票在随后的3-5年中系统性地跑输市场，而过去表现最差的股票则系统性地跑赢。这种"逆转效应"本质上就是格雷厄姆所说的"增长率回归平均"的市场层面表现。投资者为过去的高增长支付溢价，然后在增长不可避免地放缓时遭受损失——这个模式在1949年和2024年一样有效。'
+      ],
+      narrative: [
+        '格雷厄姆对"成长股"投资持有系统性的怀疑态度——这也是他与后来的巴菲特产生分歧的关键领域。他的怀疑并非针对成长本身（优秀公司当然会增长），而是针对<b>为成长支付溢价的投资策略</b>。',
+        '他的核心论点是"均值回归"：<b>高增长率几乎不可能长期维持。</b>1960年代，华尔街最热门的概念是"漂亮五十"（Nifty Fifty）——一组被认为"只涨不跌"的成长股，包括宝丽来、施乐、雅芳等。它们的P/E高达50-80倍，投资者的理由是："只要增长持续，任何价格都是合理的。"格雷厄姆反复警告这种逻辑的危险。',
+        '历史证明了他的判断。宝丽来在1972年达到了$143的高点（P/E超过90倍），到1974年跌至$14——跌幅90%。施乐从$171跌至$49。这些公司的业务并没有崩溃——它们仍然在盈利——但当增长速度不可避免地放缓时，市场对增长的溢价瞬间蒸发。<b>一只P/E 80倍的股票，即使公司盈利翻倍，如果P/E回归到正常的15倍，股价还是会跌掉62%。</b>',
+        '格雷厄姆用数学来解释为什么成长股的定价如此危险。假设一只股票当前每股盈利$1，市场预期未来10年年增长15%。如果你以P/E 40倍（$40）买入，你需要公司在未来10年保持15%的年增长率才能在10年后以合理的P/E 15倍（$61/$4.05）卖出——获得53%的总回报（年化仅4.3%）。但如果增长率只是从15%降到10%——这在竞争加剧时完全可能——10年后的每股盈利为$2.59，以P/E 15倍计算仅值$39，你的回报为负数。<b>也就是说，你以40倍P/E买入一只盈利持续增长的公司，10年后还是亏了——这就是为成长支付过高价格的代价。</b>',
+        'Zweig用2000年的思科（Cisco）完美印证了这一点。2000年3月，思科市值一度达到5550亿美元，P/E超过200倍。即使以最乐观的增长预期——未来25年保持15%的增速——其股价也远超任何合理估值。到2002年底，思科股价从$82跌至$13。至今（Zweig写作的2003年）股价仍远低于2000年高点。公司本身没有问题——思科至今仍是网络设备的领导者——但为无限增长预期支付无限溢价的投资者遭受了毁灭性的打击。'
+      ],
+      deepDives: [
+        {
+          title: '漂亮五十的覆灭：增长的数学陷阱', icon: '📐',
+          triggerQuestion: '如果你在1972年以P/E 80倍买入一只年盈利增长20%的股票，持有10年后以P/E 15倍卖出，你的年化回报率是多少？答案可能会让你震惊。',
+          chain: {
+            premise: '1960年代末到1970年代初，华尔街发明了一种叫"一决策股"（One-Decision Stock）的概念——这些公司如此优秀，你只需要做一个决策：买入，然后永远不卖。宝丽来、可口可乐、施乐、IBM、强生、迪士尼、麦当劳等公司被冠以这个称号，P/E从40倍一路攀升到80-90倍。',
+            evidence: '让我们做格雷厄姆式的数学计算。以1972年的宝丽来为例：每股盈利约$1.60，股价$143，P/E约90倍。假设最乐观的情况——宝丽来未来10年每年盈利增长20%（极高但短期内看似可能）。10年后每股盈利 = $1.60 × (1.20)^10 = $9.90。如果P/E回归到合理的20倍（对一个增长放缓的公司来说已经慷慨），股价 = $198。你的年化回报率 = (198/143)^(1/10) - 1 = 约3.3%。<b>你为一只"伟大的成长股"等了10年，年化回报还不如国债。</b>但实际情况更糟：宝丽来的增长根本没有维持20%。即时成像技术遭遇了柯达的激烈竞争，1975年宝丽来的盈利已开始下滑。到1980年，股价仅约$19。以$143买入的投资者损失了87%——持有了一家"伟大的公司"八年。',
+            conclusion: '格雷厄姆的教训不是"不要买成长股"，而是<b>"永远不要为成长支付你承担不起的溢价"</b>。当P/E超过25-30倍时，你实质上是在赌公司能够维持非凡的增长率长达10-20年——而这在商业史上极为罕见。即使公司真的做到了（如可口可乐1972-1982年），P/E的压缩依然可能抵消掉大部分盈利增长带来的收益。格雷厄姆的结论：对于防御型投资者，P/E不要超过15倍；对于进取型投资者，P/E不要超过25倍——即使面对最诱人的成长故事。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 7: 可转换证券与权证——华尔街的伪装术 [ANCHOR]
+    // Chapters 15-16
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-7', number: '第二部分 · 场景 07', palette: 'scene7',
+      title: '可转换证券与权证——华尔街的伪装术',
+      subtitle: 'CONVERTIBLES AND WARRANTS: WALL STREET\'S DISGUISES',
+      heroQuote: '我们的总体看法是：可转换证券从整体上看是不利于投资者的。',
+      keyTakeaway: '金融产品的复杂性与投资者利益呈反比关系——这是格雷厄姆在1949年发现的铁律，后来被CDO、MBS、结构性存款、分级基金反复验证。如果你无法在5分钟内向一个外行人解释清楚一个产品怎么赚钱，那你就不应该买它。复杂性本身不是中性的——在金融领域，它几乎总是被用来隐藏对买方不利的条款。',
+      extendedReading: [
+        '格雷厄姆对可转债的批判揭示了金融行业一个深层的结构性利益冲突：承销商的利润与产品复杂性正相关。简单产品（如指数基金）的费用极低（年费0.03%），复杂产品（如结构性票据）的费用可达2-5%。这意味着金融机构有系统性的激励去创造更复杂的产品，即使这些产品对投资者不利。格雷厄姆的建议——坚持简单工具——直接威胁了华尔街最赚钱的业务线。',
+        '2008年金融危机是格雷厄姆"复杂性警告"的终极验证。CDO（担保债务凭证）的复杂性达到了这样的程度：一个典型的CDO-squared（CDO的CDO）涉及数千笔底层贷款、数百页法律文件、以及连创建它的银行家都无法完全理解的风险关联。摩根大通的一位高管后来承认："我们卖出的产品，我们自己的风险模型也无法准确定价。"最终，这些"精密金融工程"产品造成了全球超过4万亿美元的损失。',
+        '中国市场也有自己的"复杂性陷阱"案例。2015年A股的分级基金B份额就是一个典型——下折机制的复杂性让大量散户在不理解杠杆风险的情况下买入，最终在股灾中遭受了毁灭性损失。2020年原油宝事件同样如此——产品的"展期换月"机制超出了大多数买家的理解范围，导致了前所未有的负油价穿仓事件。格雷厄姆在七十年前的警告，在中国当代金融市场中同样有着震撼人心的现实意义。'
+      ],
+      narrative: [
+        '格雷厄姆用了两章来分析一类华尔街特别喜欢推销的产品：可转换债券和股票权证。他的结论简洁而尖锐——<b>这些产品通常有利于发行公司、有利于承销商，但不利于买家。</b>',
+        '可转换债券表面上看是"两全其美"的产品：它提供债券的稳定利息，同时如果股票上涨，持有者可以将其转换为股票获取上涨收益。听起来是"保底+上涨"的完美组合。但格雷厄姆指出了其中的陷阱：正因为可转换债券有转换权这个"甜头"，发行公司会设定更低的利息率（通常比同等级普通债券低1-3个百分点）。<b>你为获得"上涨可能性"支付了确定的利息损失——这是一种隐性成本。</b>',
+        '更微妙的问题在于转换时机。格雷厄姆观察到一个反复出现的模式：当股价大涨、可转换债券变得有利可图时，公司通常会行使"赎回条款"强制转换——迫使债券持有者在公司选择的时点转换为股票，而非在投资者最优的时点。当股价下跌时，可转换债券的债券特性提供了一些保护，但远不如普通债券——因为你接受了更低的利率。',
+        '至于股票权证（warrants），格雷厄姆的态度更加严厉。他认为权证是"纯粹的投机工具"——它本质上是一个有固定期限的看涨期权，不提供任何利息或股息，价值完全取决于股价上涨。格雷厄姆举了一个极端案例：美国电话电报公司（AT&T）发行的权证在到期前最后几天变得一文不值——那些把权证当作"便宜的股票替代品"的投资者血本无归。',
+        '格雷厄姆的核心观点是：<b>华尔街总是在用复杂性来掩盖对投资者不利的条款。</b>产品越复杂，投资者越难评估其真实成本，也越容易被表面的"好处"所吸引。聪明的投资者应该坚持简单的投资工具——普通股和高等级债券——而把复杂金融产品留给专业人士。'
+      ],
+      deepDives: [
+        {
+          title: '复杂性即利润：从可转债到CDO的掠夺逻辑', icon: '🎭',
+          triggerQuestion: '格雷厄姆在1949年就警告"华尔街用复杂性掩盖不利条款"——这个警告在2008年金融危机中以什么样的形式被灾难性地验证了？',
+          chain: {
+            premise: '格雷厄姆对可转换证券的批判不仅仅是关于一种金融产品的技术分析——它揭示了一个更深层的产业结构问题：<b>华尔街的利润与产品复杂性正相关，但投资者的回报与产品复杂性负相关。</b>这种利益冲突内嵌于整个金融产业的商业模式之中。',
+            evidence: '让我们追溯这条逻辑链。可转换债券的隐性成本结构是这样的：假设同等级普通公司债利率为6%，可转债因为附带转换权，利率被压低到4%。表面看，你"只"损失了2%的利息去换取上涨可能性。但精算这个交易：如果转换权在30%的情况下有价值，那么你每年损失的2%利息就是你为这30%的可能性支付的"保费"。折算下来，这个"期权"的定价远高于同等参数的场内期权。承销商赚取了这个价差。<b>投资者为什么没有察觉？因为隐性成本被结构复杂性掩盖了。</b>这个模式在2008年被放大到了系统性灾难的级别。CDO（担保债务凭证）本质上是格雷厄姆所批评的"复杂性掠夺"的终极形态：把数千笔次级房贷打包，切割成不同层级（tranches），让评级机构给最高层级打上AAA评级，然后以略高于国债的利率卖给养老基金和保险公司。产品的复杂性确保了几乎没有买家真正理解底层资产的质量。摩根士丹利的一份内部备忘录显示，一个典型的CDO涉及超过150页的法律文件和数百页的贷款数据——即使是专业分析师也平均需要1,000小时才能完全理解一个CDO的结构。结果是：华尔街在2003-2007年间通过CDO及相关产品赚取了超过500亿美元的承销费，而CDO的最终买家（养老基金、银行、保险公司）在2008年损失了超过5000亿美元。',
+            conclusion: '格雷厄姆的可转债警告本质上是一条永恒的投资原则：<b>如果你无法在5分钟内向一个聪明的外行人解释清楚一个金融产品是怎么赚钱的，那你就不应该买它。</b>复杂性本身不是中性的——在金融领域，它几乎总是被用来隐藏对买方不利的条款。从1960年代的可转换债券到2000年代的CDO，从结构性存款到分级基金，模式始终一致：创造足够复杂的产品结构，让隐性成本无法被直觉感知，然后用"两全其美"的营销话术来吸引投资者。格雷厄姆对此的回应同样始终一致：坚持简单、透明、你能完全理解的投资工具。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART III · 市场先生与投资者心理 · MR. MARKET AND TEMPERAMENT
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 8: 市场先生——全书最伟大的寓言 [ANCHOR]
+    // Chapter 8: 市场波动
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-8', number: '第三部分 · 场景 08', palette: 'scene8',
+      title: '市场先生——全书最伟大的寓言',
+      subtitle: 'MR. MARKET: THE GREATEST ALLEGORY IN INVESTMENT HISTORY',
+      heroQuote: '想象你有一个合伙人叫"市场先生"。他每天来找你，给你的股份报一个价格，要么买你的，要么把他的卖给你。他的情绪极不稳定——有时欣喜若狂，有时悲观绝望。你完全可以忽略他，或者利用他的愚蠢。但如果你让他的情绪影响了你的判断，那你就不适合做投资。',
+      keyTakeaway: '市场先生不是你的导师——他是你的仆人。当他恐慌时，你应该考虑买入；当他狂热时，你应该考虑卖出；大部分时候，你应该完全忽略他。你的投资决策应该基于企业的内在价值，而不是市场先生今天的情绪。',
+      extendedReading: [
+        '市场先生寓言的思想源头可以追溯到格雷厄姆在哥伦比亚大学的教学。他的学生沃尔特·施洛斯（Walter Schloss）回忆，格雷厄姆经常在课堂上用这个故事来说明市场波动的本质——但直到《聪明的投资者》1949年版，他才把这个口头教学工具正式写入书中。施洛斯本人后来运用这个框架，在1956-2002年的46年中取得了年化15.3%的回报率（同期标普500为11.5%），从不使用电脑、很少与管理层交流——他说"市场先生是我唯一需要的分析工具"。',
+        '巴菲特对"市场先生"的推崇不只是理论上的。2008年10月，在雷曼兄弟破产一个月后、市场恐慌达到顶峰时，巴菲特在《纽约时报》发表了一篇文章，标题是"Buy American. I Am."他写道："恐惧正在蔓延，甚至抓住了经验丰富的投资者……就我个人而言，我一直遵循一个简单的规则：在别人贪婪时恐惧，在别人恐惧时贪婪。"这几乎是市场先生寓言的直接引用。',
+        '现代行为金融学为市场先生寓言提供了神经科学基础。fMRI研究表明，当投资者看到自己的投资组合下跌20%时，大脑杏仁核（恐惧中枢）的活动模式与面对生命威胁时几乎相同。这意味着"在下跌时保持理性"不只是意志力的问题——它要求你对抗一个有数百万年进化历史的神经回路。格雷厄姆的寓言之所以有效，正是因为它提供了一个认知框架来重新标记这种生理恐惧反应："这不是危险，这只是市场先生犯病了。"'
+      ],
+      narrative: [
+        '第八章是全书的核心，也是巴菲特反复推荐的一章。格雷厄姆在这里构建了投资史上最著名的寓言——"市场先生"。它的力量在于，它一劳永逸地改变了你看待股价波动的方式。',
+        '寓言的内容很简单。<b>想象你和一个叫"市场先生"的人合伙经营一家企业。</b>每天，市场先生都会找到你，给你的股份报一个价格——他要么愿意以这个价格买下你的股份，要么愿意以这个价格把他的股份卖给你。市场先生的特点是：他的情绪极不稳定。有时候他极度乐观，觉得企业前途无量，给出的价格高得离谱；有时候他极度悲观，觉得企业一文不值，给出的价格低得荒谬。<b>但企业本身——它的工厂、产品、员工、客户——并没有随着市场先生的情绪变化而变化。</b>',
+        '格雷厄姆问了一个关键问题：面对这样一个不稳定的合伙人，你该怎么做？答案显而易见：<b>当他报出荒谬的低价时，你应该买下他的股份；当他报出荒谬的高价时，你应该把你的股份卖给他；其余时间，你应该完全忽略他。</b>你绝不应该因为市场先生今天心情不好就也跟着恐慌——他的情绪与企业的真实价值毫无关系。',
+        '这个寓言的力量在于它颠覆了一个根深蒂固的认知框架。大多数人看到股价下跌30%时的本能反应是："出了什么问题？我是不是该卖？"格雷厄姆的框架让你重新解读同一信息："市场先生今天又犯病了，他在以七折价出售我那份好生意——这是一个买入的机会。"<b>同样的事件——股价下跌30%——在格雷厄姆的框架下从"危险信号"变成了"购买信号"。</b>',
+        'Zweig在评注中用1987年10月19日（"黑色星期一"）来说明这一点。那天道琼斯指数单日暴跌22.6%——有史以来最大的单日跌幅。全世界都在恐慌。但美国经济的基本面——GDP增长、企业盈利、消费支出——在那一天没有发生任何变化。如果你是一个格雷厄姆式的投资者，你会认识到：这不是"世界末日"，这是"市场先生今天严重犯病了"。在黑色星期一买入的投资者，在接下来的两年内获得了超过50%的回报。巴菲特在2001年的股东信中说："市场先生对我的帮助远超过任何商学院的教授。第八章——以及第二十章关于安全边际——是有史以来关于投资最重要的文字。"'
+      ],
+      deepDives: [
+        {
+          title: '市场先生的心理学：为什么大多数人做不到', icon: '🧠',
+          triggerQuestion: '如果"市场先生"寓言如此简单，为什么大多数人仍然在高位追涨、在低位割肉？是什么心理机制让人们明知道应该逆向操作却做不到？',
+          chain: {
+            premise: '格雷厄姆的"市场先生"寓言在逻辑上无懈可击：在别人恐惧时贪婪，在别人贪婪时恐惧。但如果这个原则如此简单，为什么绝大多数投资者——包括许多专业基金经理——仍然无法做到？答案在于人类心理的三个系统性缺陷。',
+            evidence: '<b>缺陷一：损失厌恶。</b>行为经济学研究表明，损失带来的痛苦是等量收益带来的快乐的2-2.5倍。当你持有的股票下跌30%时，你经历的心理痛苦远超过它上涨30%时的快乐。这种不对称使得人们在恐惧时倾向于"止损"——但按照格雷厄姆的框架，这恰恰是应该买入的时候。<b>缺陷二：从众效应。</b>当周围所有人都在恐慌卖出时，保持冷静买入需要与人类的社会本能作斗争。进化让我们倾向于"跟着群体跑"——在草原上看到所有人都在逃跑时跟着跑是明智的，但在股市中跟着"群体"卖出通常是灾难性的。<b>缺陷三：近因偏差。</b>人类倾向于过度重视最近发生的事情。当股市刚刚暴跌20%时，你的大脑会自动预期"它还会继续跌"——即使所有的历史数据都表明，大幅下跌之后的5年期回报通常远高于平均水平。Zweig引用了一个研究：1926-2002年间，在标普500跌幅超过20%后的12个月内买入的投资者，平均获得了24%的回报率。',
+            conclusion: '格雷厄姆的"市场先生"寓言不仅是一个投资理论——<b>它是一个对抗人类心理弱点的认知工具</b>。每当你想要在恐慌中卖出时，你需要想象市场先生那张喜怒无常的脸，然后问自己：我是在基于企业的真实价值做决策，还是在被市场先生的情绪传染？如果答案是后者，那么正确的做法是关闭你的交易账户，去公园散个步。格雷厄姆说得好："投资者的主要问题——甚至是最大的敌人——很可能就是他自己。"'
+          }
+        },
+        {
+          title: '波动不是风险：重新定义"风险"', icon: '📊',
+          chain: {
+            premise: '华尔街用"波动率"（volatility）来衡量风险——股价波动越大，"风险"越高。格雷厄姆认为这个定义完全错误。它把价格的短期波动和投资的真正风险——本金的永久性损失——混为一谈。',
+            evidence: '格雷厄姆举了一个简洁的例子。假设你以每股$30买入了一家公司——它的净流动资产价值是$50，盈利稳定，财务健康。第二天，市场崩盘，股价跌到$20。按照华尔街的定义，你的投资"风险增加了"——因为波动更大了。但按照格雷厄姆的定义，你的投资<b>风险实际上降低了</b>——因为你现在能以更大的折扣买入一家价值$50的公司。真正的风险不是股价波动，而是：（1）你是否以过高的价格买入（缺乏安全边际）；（2）公司的内在价值是否正在恶化（盈利下降、债务增加）；（3）你是否会在低位被迫卖出（因为借了钱或心理崩溃）。如果这三个条件都不成立——你以合理的价格买入了一家基本面健康的公司，而且不会在低位被迫卖出——那么股价下跌50%对你来说就不是"风险"，而是"机会"。Zweig补充：学术界对风险的波动率定义来自1960年代的CAPM模型，它假设市场是完全有效的——但如果市场偶尔会犯严重错误（这是格雷厄姆的核心假设），那么波动率就不等于风险。',
+            conclusion: '格雷厄姆对风险的重新定义有深远的实践意义。<b>它意味着"高波动"的低估值股票可能比"低波动"的高估值股票安全得多。</b>2000年的思科"波动率"不高（它一直在涨），但以P/E 200倍买入的真正风险是灾难性的。1974年的优质蓝筹股"波动率"极高（它们在短期内暴跌），但以P/E 6-8倍买入的真正风险接近于零——随后几年的回报证明了这一点。不要让华尔街的"风险"定义误导你。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 9: 美元成本平均法与投资者的气质 [ANCHOR]
+    // Chapters 8 continued + investor temperament
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-9', number: '第三部分 · 场景 09', palette: 'scene9',
+      title: '纪律的力量——美元成本平均法',
+      subtitle: 'THE POWER OF DISCIPLINE: DOLLAR-COST AVERAGING',
+      heroQuote: '投资者最大的敌人不是股票市场，而是他自己。即使投资者拥有数学、金融和会计方面的超凡技能，如果他无法掌控自己的情绪，他就无法从投资中获利。',
+      keyTakeaway: '美元成本平均法的价值不在于它的数学优势（这个优势真实但有限），而在于它解决了一个更根本的问题：人类在择时上的系统性失败。Dalbar的数据持续30年证明：平均投资者的年化回报比基金本身低3-4个百分点——纯粹因为在错误的时间买卖。DCA是一个心理纪律工具，不是数学套利工具。投资成功靠气质，不靠智商。',
+      extendedReading: [
+        '美元成本平均法的数学本质揭示了一个优雅的对称性：固定金额投入产生的是价格的调和平均数（harmonic mean），而调和平均数在数学上永远小于或等于算术平均数。价格波动越大，调和平均与算术平均的差距越大——也就是说，DCA在波动剧烈的市场中"折扣"效应更明显。但这个数学优势有一个重要的限制：在持续单边上涨的市场中（如美股2009-2020年），一次性投入的期望回报高于DCA，因为DCA意味着部分资金以零回报"闲置"等待。Vanguard 2012年的研究发现，约2/3的情况下一次性投入优于DCA。',
+        '格雷厄姆关于"投资者气质"的论述与丹尼尔·卡尼曼后来的研究形成了惊人的呼应。卡尼曼在《思考，快与慢》中将人类决策系统分为"系统1"（快速、直觉、情绪化）和"系统2"（缓慢、理性、分析化）。格雷厄姆所说的"气质"问题，本质上就是：投资决策应该由系统2主导，但市场恐慌会激活系统1并劫持整个决策过程。DCA、75/25规则等机械化策略的真正功能是"预先绑定"系统2的决策——在你的系统1还没有被激活之前，用规则替代了判断。',
+        '格雷厄姆观察到的"聪明人投资反而差"现象在学术上被称为"过度自信偏差"（overconfidence bias）。2000年Brad Barber和Terrance Odean的经典研究发现：交易最频繁的投资者（通常自认为最懂市场）年化回报比买入持有策略低约6个百分点。格雷厄姆的处方——最少的决策、最简单的规则——恰好是治疗过度自信的最佳药方。聪明不是做出更多决策，而是做出更少但更正确的决策。'
+      ],
+      narrative: [
+        '格雷厄姆深知，对大多数投资者来说，正确的投资策略不是在于找到最好的股票或最佳的买入时机，而是在于<b>建立一套能对抗自身心理弱点的纪律系统</b>。美元成本平均法（Dollar-Cost Averaging）就是这样一个系统。',
+        '方法本身极其简单：<b>每月（或每季度）投入固定金额买入同一只股票或基金</b>，无论市场涨跌。当股价高时，固定金额买到的份额少；当股价低时，固定金额买到的份额多。长期来看，你的平均买入成本自然低于期间的平均价格——因为你在便宜的时候自动买了更多。',
+        '但格雷厄姆看重这个方法的原因不止于此。<b>它最大的价值是心理上的：它消除了"择时"的焦虑。</b>大多数投资者的灾难性错误不是选错了股票，而是在错误的时间做出了错误的决策——在市场顶部ALL IN，在市场底部全部抛出。美元成本平均法让你不需要做任何决策：每个月到了日子就买，不看新闻，不看股价，不听任何人的建议。这种"主动选择的被动"正是格雷厄姆为普通投资者设计的最大保护。',
+        'Zweig在评注中提供了一组令人信服的数据。假设一个投资者从1929年9月——历史上最差的起始时间——开始每月投入$100买入道琼斯指数。到1954年末（25年后），他的年化回报率约为7.8%——尽管起始点恰好是大崩盘的前夕。如果他在1929年9月一次性投入全部资金，他需要等到1954年才能回本。<b>同样的25年、同样的市场，美元成本平均法把一场灾难变成了一个不错的投资。</b>',
+        '格雷厄姆还强调了投资者"气质"（temperament）的重要性。他认为，投资成功所需要的品质不是高智商或深奥的金融知识，而是<b>情绪上的纪律、独立思考的能力、以及长期坚持的耐心</b>。他引用了一个有趣的观察：在他几十年的投资教学和实践中，他见过许多聪明绝顶但投资一塌糊涂的人，也见过许多普通人通过简单的纪律获得了出色的长期回报。区别不在智力，而在性格。'
+      ],
+      deepDives: [
+        {
+          title: 'DCA的数学本质：算术平均 vs 调和平均', icon: '📐',
+          triggerQuestion: '美元成本平均法"保证你的买入成本低于平均价格"——这听起来像是免费的午餐。它的数学原理到底是什么？在什么条件下这个"优势"反而会变成陷阱？',
+          chain: {
+            premise: '美元成本平均法的数学核心可以用一句话概括：<b>固定金额投入产生的是价格的调和平均数（harmonic mean），而调和平均数永远小于或等于算术平均数。</b>这就是DCA"买便宜"的数学来源。但这个看似免费的午餐背后有一个格雷厄姆没有展开、Zweig也只是暗示的重要限制条件。',
+            evidence: '先看数学。假设股价在三个月分别是$100、$50、$100。算术平均价格 = ($100+$50+$100)/3 = $83.33。现在假设你每月投入$300。第一月买3股，第二月买6股，第三月买3股。总投入$900，持有12股，平均成本 = $900/12 = $75。你的实际成本比平均价格低了$8.33——约10%的"免费折扣"。这个折扣来自于一个朴素的事实：<b>当价格低时，同样的金额自动买了更多的份额。</b>调和平均数的数学性质保证了这一点。但DCA有两个鲜少被讨论的边界条件。<b>边界一：DCA在持续上涨的市场中是次优策略。</b>如果你有一笔钱可以投资，而市场呈长期上升趋势（这是股市的历史常态——美股长期年化约10%），那么一次性投入的数学期望回报高于DCA。Vanguard在2012年的一项研究覆盖了1926-2011年的美国、英国、澳大利亚三个市场，结论是：在约2/3的12个月滚动期中，一次性投入（lump sum）的回报优于DCA。原因很简单：DCA意味着部分资金在等待期内以零回报"闲置"，在上涨市场中这是机会成本。<b>边界二：DCA在持续下跌且不回升的市场中不提供保护。</b>如果股价从$100一路跌到$10且永远不回来（如安然、雷曼兄弟），DCA只是让你在下跌过程中不断加仓，最终损失更多——这正是安然员工退休金计划中发生的惨剧：401(k)自动按月买入安然股票，从$90一路"平均"到$0。',
+            conclusion: '格雷厄姆推荐DCA的真正智慧不在于它的数学优势（这个优势真实但有限），而在于它解决了一个更根本的问题：<b>人类在择时上的系统性失败。</b>Dalbar的年度研究持续30年地证明，平均股票基金投资者的年化回报率比基金本身低3-4个百分点——纯粹因为他们在错误的时间买入和卖出。DCA的价值不是"买得更便宜"，而是"不让你在最贵的时候ALL IN，也不让你在最便宜的时候一股不买"。它是一个心理纪律工具，不是数学套利工具。但格雷厄姆的DCA建议有一个隐含前提：<b>你DCA买入的必须是分散化的指数或严格筛选后的股票组合</b>——而不是单一公司的股票。安然的教训表明，对单只股票DCA可以是自杀行为。'
+          }
+        },
+        {
+          title: '投资者气质测试：格雷厄姆的隐性筛选', icon: '🧊',
+          triggerQuestion: '格雷厄姆说投资成功靠"气质"而非"智力"——这不是心灵鸡汤式的废话吗？有没有具体的、可检验的气质标准来判断一个人是否适合自己管理投资？',
+          chain: {
+            premise: '格雷厄姆关于"气质"的论述确实被许多读者当作了心灵鸡汤而略过。但仔细阅读他在不同版次中的相关段落，可以提取出一组相当具体的行为预测指标——他本质上是在做一种非正式的心理筛选，判断你应该选择"完全被动的防御型策略"还是"可以尝试进取型策略"。',
+            evidence: '<b>测试一：2000年3月与2002年10月的假想情景。</b>假设你在2000年3月持有$100万的股票组合。到2002年10月，你的组合缩水到$50万。在这个时点上，你的真实反应更接近哪个？（A）"市场先生犯病了，我应该追加投资"——如果你真的追加了，你到2007年的回报将超过200%。（B）"我不能再看账户了，我需要卖掉一些来止血"——如果你在最低点附近卖出了30%的仓位，你永久性地锁定了那部分损失。Zweig引用的数据显示，超过80%的个人投资者在2002年底的行为更接近（B）。<b>测试二：你能否忽略他人的投资谈话？</b>格雷厄姆在1972年版中特别提到，1960年代末的一个典型现象是鸡尾酒会上人人都在谈论股票——你的牙医、你的邻居、你的出租车司机都在告诉你他们的股票赚了多少。在这种环境中保持不为所动需要真正的性格力量。彼得·林奇后来把这个观察发展成了著名的"鸡尾酒会指标"——当连你不懂投资的亲戚都开始给你推荐股票时，市场距离顶部就不远了。<b>测试三：你能否容忍"看起来愚蠢"？</b>这是最被低估的气质要求。1998-1999年，格雷厄姆式的价值投资者连续两年大幅跑输纳斯达克指数。Sequoia Fund（一只严格遵循格雷厄姆原则的基金）在1999年回报为-16%，同期纳斯达克涨了85%。基金经理面对客户的愤怒赎回和同行的嘲笑。但2000-2002年间，纳斯达克跌了78%，而Sequoia Fund则保全了几乎所有本金。能在人人都嘲笑你"跟不上时代"时坚持自己的方法论——这种气质比任何财务分析技能都稀缺。',
+            conclusion: '格雷厄姆的"气质论"可以被形式化为一个简单的决策树：<b>如果你在上述三个测试中有任何一个的反应接近"大多数人"，那么你应该选择完全被动的防御型策略</b>——指数基金+DCA+永不查看账户。这不是贬低——这是最理性的自我认知。格雷厄姆自己说："投资者的主要问题——甚至是最大的敌人——很可能就是他自己。"认识到自己是普通人并选择与之匹配的策略，本身就是一种智慧。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART IV · 安全边际与终极智慧 · MARGIN OF SAFETY
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 10: 四组公司比较——活生生的课堂 [ANCHOR]
+    // Chapters 18-19: 公司比较案例分析
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-10', number: '第四部分 · 场景 10', palette: 'scene10',
+      title: '四组公司比较——活的教科书',
+      subtitle: 'FOUR PAIRS OF COMPANIES: A LIVING TEXTBOOK',
+      heroQuote: '华尔街对未来过于关注，而对现在——尤其是资产负债表——关注太少。',
+      keyTakeaway: '当你遇到一家"好公司"时，先问：它的增长靠自有盈利还是靠借债？它的利润率在上升还是在下降？如果你需要一个复杂的故事来说服自己它值这个价——这个故事本身就是最大的警告信号。',
+      extendedReading: [
+        '格雷厄姆的"四组公司比较"方法论在现代投资教育中被称为"配对分析"（paired comparison），被哥伦比亚商学院和沃顿商学院的投资课程沿用至今。其精髓在于：通过对比两家表面相似但结果截然不同的公司，揭示驱动投资成败的真正因素。这种方法比抽象的理论讲授有效得多，因为它强迫学习者面对一个具体问题："如果你当时站在选择的岔路口，你会做出正确的判断吗？"',
+        '格雷厄姆案例中的AAA Enterprises——一家通过快速加盟扩张的公司在上市两年后破产——与中国投资者非常熟悉的"瑞幸咖啡"事件有惊人的相似性：增长数据炫目但基础脆弱，收入靠补贴推动而非真实需求，管理层的激励结构鼓励短期数据表现而非长期价值创造。格雷厄姆的简单标准——10年连续盈利、低负债率——会在第一步就将两者排除。',
+        '格雷厄姆反复强调"资产负债表比利润表更重要"——这个观点在2020年新冠危机中再次得到验证。那些拥有强健资产负债表（低负债、高现金储备）的公司不仅在暴跌中跌幅更小，而且在复苏中反弹更快——因为它们不需要在最糟糕的时刻被迫以不利条件融资。相比之下，那些依赖高杠杆驱动增长的公司（如Hertz租车、J.C. Penney）直接走向了破产。格雷厄姆在1949年就指出的道理，在2020年以数十亿美元的代价被再次证明。'
+      ],
+      narrative: [
+        '第十八章是全书最精彩的实战演练之一。格雷厄姆选取了四组真实的公司进行对比分析，每一组都包含一个"看似优秀但实际危险"的公司和一个"看似平庸但实际安全"的公司。这些案例生动地证明了一个道理：<b>华尔街的共识往往是错的，而格雷厄姆的量化标准能帮你避开陷阱。</b>',
+        '<b>第一组：Real Estate Investment Trust vs Realty Equities Corp.</b>两家看似相似的房地产公司。REIT稳健保守、负债率低、分红稳定；Realty Equities则通过高杠杆疯狂扩张，短期增长数据漂亮。华尔街追捧后者。结果：Realty Equities在1970年破产清算，投资者血本无归。格雷厄姆的标准（负债率、盈利稳定性）会在一开始就将它排除。',
+        '<b>第二组：AAA Enterprises vs McGraw-Hill。</b>AAA是一家1960年代的时髦特许经营公司，通过快速开设加盟店实现了惊人的增长。它以P/E 50倍上市，市值一度达到数亿美元。McGraw-Hill是一家"无聊的"出版公司，增长温和但利润稳定，P/E仅12倍。华尔街疯狂追捧AAA的"增长故事"。结果：AAA在上市两年后就申请了破产保护——它的增长完全靠牺牲品质来维持，一旦加盟商开始亏损，整个模式就瓦解了。McGraw-Hill继续稳健经营了几十年。',
+        '格雷厄姆通过这些案例传递的核心信息是：<b>价格和价值是两件不同的事</b>。一家股价高涨的公司不一定是好的投资，一家股价低迷的公司不一定是坏的投资。真正的分析师关注的不是股价的走势，而是资产负债表的健康度、盈利的可持续性、以及你支付的价格相对于这些基本面是否合理。',
+        '这些案例还揭示了一个更深层的模式：<b>华尔街对"增长"有系统性的过度定价倾向</b>。那些增长速度最快的公司——恰恰是定价最危险的公司。因为高增长率（1）几乎不可能长期维持，（2）吸引了大量竞争者，（3）诱使管理层做出冒险的决策来维持增长。格雷厄姆的量化标准——P/E < 15、P/B < 1.5、连续盈利——就像一个自动过滤器，把这些"有毒的增长"系统性地排除在你的投资组合之外。'
+      ],
+      deepDives: [
+        {
+          title: '如何一眼识别危险公司', icon: '🔍',
+          triggerQuestion: '格雷厄姆的四组案例中，危险公司有哪些共同特征？你能总结出一个"红旗清单"，让投资者在几分钟内就能识别出类似的陷阱吗？',
+          chain: {
+            premise: '格雷厄姆的比较分析不是随机挑选的——他特意选择了那些让华尔街"看走眼"的案例，因为这些案例中隐藏着投资者最常犯的系统性错误。',
+            evidence: '通过分析格雷厄姆四组案例中所有"失败"公司的共同特征，可以归纳出五个关键的红旗信号：<b>（1）高速增长依赖外部融资而非内部盈利。</b>AAA Enterprises和Realty Equities都是通过不断发行新股和新债来支撑扩张——这意味着增长的代价是稀释现有股东权益。真正健康的增长应该来自于企业的经营利润再投入。<b>（2）收入增长远快于利润增长。</b>许多"成长型"公司通过价格战或牺牲品质来推动收入增长，利润率实际上在下降。如果公司的收入五年增长了200%但利润只增长了50%，那么增长的质量值得严重怀疑。<b>（3）高管薪酬与股价挂钩而非与经营业绩挂钩。</b>这会激励管理层做出提升短期股价但损害长期价值的决策。<b>（4）资产负债表中无形资产和商誉占比过高。</b>这意味着公司为收购支付了巨额溢价，而这些溢价可能永远无法收回。<b>（5）华尔街分析师一致看好。</b>讽刺的是，当所有人都看好一只股票时，它的"安全边际"通常已经不存在了——所有乐观预期都已被价格计入。',
+            conclusion: '格雷厄姆的案例分析最终回到了一个简单的原则：<b>不要因为一家公司的"故事"好就忽略它的"数字"</b>。每一个Realty Equities在破产之前都有一个漂亮的增长故事；每一个AAA Enterprises在崩溃之前都被华尔街分析师追捧。你的保护不是来自于更好的故事判断（因为你永远竞争不过华尔街的叙事能力），而是来自于坚持格雷厄姆式的量化标准——那些标准可能让你错过一些精彩的涨幅，但它们会系统性地让你避开灾难。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 11: 股息政策与管理层 [ANCHOR]
+    // Chapters 16-17: 股东与管理层
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-11', number: '第四部分 · 场景 11', palette: 'scene11',
+      title: '股息、管理层与股东权利',
+      subtitle: 'DIVIDENDS, MANAGEMENT, AND SHAREHOLDERS\' RIGHTS',
+      heroQuote: '股东们在对待管理层时的怯懦和冷漠，是人类行为中最令人费解的现象之一。',
+      keyTakeaway: '格雷厄姆是股东权利运动的先驱——在"公司治理"这个词被发明之前几十年，他就发起了代理权大战。Northern Pipeline案例确立了一个原则：管理层是股东的受托人，不是公司的所有者。但他的核心诊断至今仍然成立：大多数股东从不行使自己的权利，而这种冷漠直接导致了CEO与普通员工薪酬比从21:1飙升到351:1。',
+      extendedReading: [
+        '格雷厄姆对股息政策的立场在现代金融理论中引发了一场持续半个世纪的争论。莫迪利亚尼和米勒（M&M定理，1961年）从理论上证明：在完美市场中，股息政策不影响公司价值——因为公司发放股息等于把钱从一个口袋移到另一个口袋。但格雷厄姆的观点不是基于完美市场假设，而是基于现实世界的"代理人问题"：管理层控制着公司的自由现金流，如果不强制分红，这些钱很可能被浪费在虚荣收购或过高薪酬上。后来的实证研究倾向于支持格雷厄姆：高股息率公司的长期回报显著优于低股息率公司（除了极少数真正需要资金再投入的高增长企业）。',
+        '格雷厄姆发起Northern Pipeline代理权大战的故事在华尔街历史上是开创性的。1926年，一个32岁的分析师挑战一家大公司的董事会，这在当时几乎是不可想象的。格雷厄姆的策略极其理性：他不是凭情绪发起攻击，而是用冰冷的数字证明——公司账上有每股$95的证券资产，但股价只有$65——管理层在浪费股东的钱。他赢了，但他也承认了一个令人沮丧的现实：绝大多数股东从不行使权利，这种集体冷漠是管理层权力膨胀的根源。',
+        '格雷厄姆的公司治理思想在2001年安然破产后得到了迟来的认可。安然的董事会充斥着利益冲突——审计委员会主席同时是安然关联实体的合伙人，多位董事接受了安然的咨询费。如果股东们按照格雷厄姆的建议积极审查管理层决策，这场灾难也许本可以避免。2002年的萨班斯-奥克斯利法案（SOX）本质上是在立法层面强制执行了格雷厄姆五十年前就提出的治理原则：独立审计、管理层对财务报告的个人责任、禁止关联交易等。'
+      ],
+      narrative: [
+        '格雷厄姆在投资思想上有一个常被忽视的维度：<b>他是股东权利运动的早期倡导者。</b>早在"公司治理"成为商学院热词的几十年前，他就反复呼吁股东积极行使权利，要求管理层对股东负责。',
+        '在股息政策上，格雷厄姆持有一个当时颇具争议但至今仍有深刻意义的立场：<b>公司应该将大部分盈利以股息的形式返还给股东。</b>他的理由是双重的。首先，股息是真金白银——它不依赖于市场情绪，不会因为股价波动而消失。其次，强制分红迫使管理层保持纪律——如果你必须把大部分利润分给股东，你就不太可能把钱浪费在虚荣的收购或奢华的总部上。',
+        '格雷厄姆对管理层与股东之间的权力失衡感到深深的不安。他观察到，大多数股东对公司的年度报告漠不关心，几乎从不参加股东大会，也不行使投票权。这种冷漠使得管理层能够给自己开出天价薪酬、做出损害股东利益的决策而不受任何约束。他甚至建议，当公司股价长期低于账面价值时，股东应该认真考虑要求清算或重组——因为这意味着公司的管理层在毁灭价值而非创造价值。',
+        'Zweig的评注将这个讨论延伸到了21世纪初的公司治理危机。安然（Enron）在2001年的崩溃就是股东冷漠的直接后果：公司高管通过复杂的表外实体隐藏了数十亿美元的债务，而股东们——甚至大型机构投资者——从未认真审查过财务报告。安然破产时，员工退休金账户中的安然股票一夜之间化为乌有。如果股东们像格雷厄姆建议的那样，对管理层保持质疑和警觉，也许这场灾难本可以避免。'
+      ],
+      deepDives: [
+        {
+          title: '格雷厄姆的股东激进主义：一场失败而伟大的战役', icon: '⚔️',
+          triggerQuestion: '格雷厄姆不仅是投资理论家——他亲自发起过代理权大战来挑战管理层。他最著名的一战是对Northern Pipeline的攻击。这场战役揭示了什么深层问题？',
+          chain: {
+            premise: '1926年，年仅32岁的格雷厄姆发现了一个惊人的事实：Northern Pipeline Company（一家管道公司）的账上持有价值约$95每股的高品质债券和其他投资性资产——但公司的股价仅$65。<b>换言之，即使你认为公司的管道业务一文不值，仅靠清算投资组合就能拿回$95，比股价高出46%。</b>更荒谬的是，管理层对这些闲置资产完全无所作为——既不分配给股东，也不用来扩展业务，就让它们在公司资产负债表上"睡觉"。',
+            evidence: '格雷厄姆首先尝试了礼貌的方式：他写信给Northern Pipeline的董事会，建议将多余的投资资产以特别股息的形式返还给股东。董事会的回复本质上是："我们是管理层，你是小股东，管好你自己的事。"这种傲慢激怒了格雷厄姆。他开始了长达两年的代理权大战（proxy fight）。他买入更多股票，亲自拜访其他大股东争取支持，向美国州际商务委员会（ICC）提交投诉。整个华尔街都觉得这个年轻人不自量力——在1920年代，小股东挑战管理层闻所未闻。但格雷厄姆的逻辑无法被反驳：<b>这些资产属于股东，管理层无权占用不属于其经营范围的资产。</b>1928年1月的股东大会上，格雷厄姆凭借自己积累的委托投票权赢得了两个董事会席位。最终Northern Pipeline在1928年分配了$70/股的特别股息——几乎是他发起战役时股价的全部。这场胜利的意义远超过一次成功的投资。它确立了一个原则：<b>管理层是股东的受托人（fiduciary），不是公司的所有者</b>——他们的职责是最大化股东的利益，而不是维护自己的帝国和舒适。格雷厄姆后来将这个原则写入了《聪明的投资者》，但他也承认了一个令人沮丧的现实：绝大多数股东从不行使这个权利。1972年，他估计美国上市公司股东大会的平均投票参与率不到30%，而其中绝大多数投票都是机械地支持管理层提案。',
+            conclusion: '格雷厄姆的Northern Pipeline之战在半个世纪后催生了两个重要的后继：<b>卡尔·伊坎（Carl Icahn）</b>在1980年代将"股东激进主义"发展为一种系统性的投资策略——买入管理不善的公司、推动变革、释放被压抑的价值；<b>ISS和Glass Lewis</b>等代理投票咨询机构的崛起则试图解决格雷厄姆发现的"股东冷漠"问题——为机构投资者提供独立的投票建议。但格雷厄姆的核心诊断至今仍然成立：大多数个人股东从不阅读年报、从不参加股东大会、从不质疑管理层的薪酬方案。<b>这种冷漠直接导致了一个系统性后果：管理层的薪酬在1965-2020年间增长了约1,322%（从CEO与普通工人薪酬比21:1到351:1），而同期普通工人的实际薪酬增长几乎为零。</b>格雷厄姆如果看到这个数字，一定会说：这就是股东放弃自己权利的代价。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 12: 安全边际——全书最重要的概念 [ANCHOR]
+    // Chapter 20: "安全边际"作为投资的核心概念
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-12', number: '第四部分 · 场景 12', palette: 'scene12',
+      title: '安全边际——投资最核心的概念',
+      subtitle: 'MARGIN OF SAFETY: THE CENTRAL CONCEPT OF INVESTMENT',
+      heroQuote: '如果要把稳健投资的秘密浓缩成四个字，那就是——安全边际。',
+      keyTakeaway: '安全边际不是保守——它是对不确定性的理性回应。就像桥梁工程师为设计承载力留出数倍冗余一样，聪明的投资者为自己的判断错误留出足够的缓冲空间。安全边际 + 分散化 = 格雷厄姆投资体系的两根支柱。',
+      extendedReading: [
+        '安全边际的概念可以追溯到格雷厄姆1929年大崩盘中的亲身经历。他的合伙企业在1929-1932年间损失了约70%——不是因为他不够聪明（他已经是华尔街最受尊敬的分析师之一），而是因为他低估了极端情况的可能性。这次教训让他认识到：<b>再好的分析也无法预见所有可能的坏结果，因此必须在价格中预留足够的缓冲。</b>安全边际不是一个投资技巧——它是对人类认知局限性的制度性回应。',
+        '塞思·卡拉曼（Seth Klarman）——当代最成功的价值投资者之一——直接以《安全边际》（Margin of Safety）为名写了一本书（1991年），至今绝版，二手市场价格超过$1000。卡拉曼在书中拓展了格雷厄姆的概念：他认为安全边际不仅来自于"低价买入"，还来自于"理解你不理解什么"。真正的安全边际存在于你诚实地评估自己的无知的那一刻——当你知道自己不知道什么时，你就不会把自己暴露在那些你无法评估的风险之下。',
+        '工程学中的"安全系数"概念与格雷厄姆的安全边际在数学上是同构的。航空工程通常使用1.5倍的安全系数（设计承载力是预期最大载荷的1.5倍），桥梁工程使用2-3倍。格雷厄姆建议的"以低于内在价值2/3的价格买入"实际上对应了约1.5倍的安全系数——与航空工程相当。这不是巧合：两者面对的根本问题是相同的——你的模型无法完美预测未来的所有载荷（或所有市场情况），因此必须通过冗余设计来吸收模型误差。'
+      ],
+      dataViz: {
+        type: 'comparison-table',
+        title: '安全边际在不同证券类型中的应用',
+        description: '安全边际不是单一的概念，它在不同类型的投资中以不同的形式存在——但核心逻辑始终相同：为你的判断错误留足缓冲空间。',
+        data: {
+          columns: ['证券类型', '安全边际的来源', '具体量化标准', '失效条件'],
+          rows: [
+            ['高等级债券', '利息保障倍数远超最低要求', '过去数年平均利息保障 > 4-5倍', '企业基本面发生根本性恶化'],
+            ['防御型股票', '盈利收益率（E/P）显著高于债券利率', 'E/P 至少比AAA级债券利率高1/3', '买入后企业盈利大幅下滑'],
+            ['成长股', '不存在可靠的安全边际', '格雷厄姆不建议防御型投资者买入', '增长故事本身就是最大的风险'],
+            ['净流动资产折价股', '股价低于破产清算价值', '股价 < 净流动资产价值的2/3', '公司持续亏损，流动资产不断消耗'],
+            ['分散化组合', '个股错误被组合其他成功项弥补', '至少10只以上不同行业的股票', '系统性风险（如全市场崩盘）']
+          ],
+          note: '格雷厄姆特别强调：安全边际的保护力量只在分散化投资中才能可靠地发挥作用。单一股票即使有巨大的安全边际也可能因为意外事件而失败——但一个由20-30只具有安全边际的股票组成的组合，整体失败的概率极低。'
+        }
+      },
+      narrative: [
+        '第二十章是全书的高潮——巴菲特称之为"有史以来关于投资最重要的文字"。格雷厄姆在这一章中将整本书的所有思想浓缩为一个终极概念：<b>安全边际</b>。',
+        '安全边际的定义简洁而深刻：<b>它是你买入价格与证券内在价值之间的差额</b>。你以$70买入一家内在价值$100的公司，安全边际就是$30——即使你对内在价值的估计有些偏差，即使公司的前景比预期差一些，这$30的缓冲依然能保护你的本金不受永久性损失。',
+        '格雷厄姆把安全边际类比为工程学中的"承载力冗余"。<b>一座桥梁的设计承载量不是刚好等于预期通行的最大重量——而是数倍于此。</b>不是因为工程师不会计算，而是因为未来的情况不可完全预测：桥梁可能遭遇超预期的暴风雨，材料可能存在肉眼不可见的缺陷，通行车辆可能比设计预期更重。安全边际就是投资中的"工程冗余"——它不是保守，而是对不确定性的理性回应。',
+        '格雷厄姆然后把安全边际与分散化联系起来。他指出，单一投资的安全边际可能因为意外事件而失效——例如，一只符合所有标准的股票可能因为管理层欺诈而暴跌。但如果你持有20-30只同样具有安全边际的股票，单一事件的打击就会被组合中其他投资的正常表现所吸收。<b>安全边际 + 分散化 = 格雷厄姆投资体系的两根支柱。</b>缺少任何一根，体系都不完整。',
+        '他还用债券投资来说明安全边际的运作原理。假设一只债券的发行公司过去7年的平均利息保障倍数为5倍（即公司盈利是债券利息的5倍）。这意味着即使公司盈利下降80%，它仍然能支付债券利息。这个80%的"缓冲"就是安全边际——它不是预测公司盈利会下降80%，而是在说："即使发生了极端的坏事，我的投资依然是安全的。"',
+        '格雷厄姆在这一章的最后做了一个意味深长的总结。他说，所有真正聪明的投资者都可以归结为两种人：一种人只投资于高等级债券和类似的安全证券（最保守的防御型）；另一种人在每一笔投资中都寻求足够的安全边际来覆盖可能的错误判断（进取型价值投资者）。<b>这两种人看似截然不同，但他们的核心逻辑完全相同——都是在为自己的无知和未来的不确定性买保险。</b>不买这份保险的人——那些以没有安全边际的价格买入证券的人——无论他们多么聪明，多么信息灵通，本质上都是在投机。'
+      ],
+      deepDives: [
+        {
+          title: '安全边际的实践：从理论到操作的桥梁', icon: '🛡',
+          triggerQuestion: '安全边际在理论上完美无缺——但在实际操作中，你如何判断一家公司的"内在价值"？如果内在价值本身就是一个不确定的估计，那安全边际的基础是不是也不确定？',
+          chain: {
+            premise: '安全边际的概念简洁优美，但它有一个明显的循环问题：安全边际 = 内在价值 - 买入价格。买入价格是确定的，但内在价值是一个估计值。如果估计错了，安全边际也就不存在了。格雷厄姆如何解决这个问题？',
+            evidence: '格雷厄姆的解决方案分三层。<b>第一层：使用多种方法交叉验证内在价值。</b>不要只用一种估值方法——分别用盈利价值（平均盈利 × 合理市盈率）、资产价值（净流动资产或账面价值）、股息价值（股息收益率与债券利率的比较）来估算，取三者中最保守的作为内在价值的下限。如果三种方法得出的结论一致（都显示低估），你的信心就大大增强了。<b>第二层：只在差距"明显"时行动。</b>格雷厄姆不要求精确计算内在价值——他要求差距大到即使估计有30%的误差，结论依然成立。如果你估计的内在价值是$100，你应该在$60-$70以下才买入，这样即使你高估了30%（内在价值其实只有$70），你的买入价格仍然低于真实价值。<b>第三层：用分散化对冲估值错误。</b>即使你在10只股票上的内在价值估计中有3只是完全错误的，另外7只的安全边际依然可以在组合层面保护你。格雷厄姆的历史记录证明了这一点：他的净流动资产折价股组合中确实有一些个股亏损甚至归零，但组合整体的年化回报率约为20%。',
+            conclusion: '安全边际的力量不在于它能保证每一笔投资都成功——<b>它保证的是在一系列投资中，成功的概率和成功的幅度都显著偏向你这一边。</b>格雷厄姆把投资比作保险公司：保险公司不知道哪一个客户会出事故，但它知道如果保费设定得足够高（安全边际足够大）、客户群体足够分散（分散化），它就能稳定盈利。投资者的安全边际就是他的"保费"，分散化就是他的"客户池"。'
+          }
+        },
+        {
+          title: '巴菲特对安全边际的继承与超越', icon: '🧬',
+          chain: {
+            premise: '巴菲特是格雷厄姆最著名的学生，也是安全边际概念最忠实的实践者。但他对这个概念的应用已经远远超越了老师的原始框架——从"以低价买入平庸公司"进化为"以合理价格买入优秀公司"。',
+            evidence: '格雷厄姆时代的安全边际主要来自"价格折扣"——以低于净流动资产的价格买入。巴菲特从1970年代开始认识到另一种安全边际的来源：<b>企业品质本身</b>。一家拥有强大品牌（如可口可乐）、高转换成本（如彭博终端）、或网络效应（如Visa支付网络）的公司，其未来盈利的可预测性远高于一般公司。这种可预测性本身就是一种安全边际——你对内在价值的估计更可靠，因此即使"价格折扣"较小，你的投资也可能同样安全。巴菲特1988年以平均P/E约15倍买入可口可乐——按格雷厄姆的标准这不算便宜——但可口可乐的盈利增长确定性如此之高，以至于15倍P/E实际上包含了巨大的安全边际。事实证明：这笔投资到2023年已增值超过20倍。巴菲特的另一个创新是"能力圈"概念——<b>只投资你真正理解的行业和公司</b>。这不是格雷厄姆的原创（格雷厄姆更依赖机械化的量化标准），但它是安全边际理念的自然延伸：你对一家公司理解得越深，你对其内在价值的估计就越准确，安全边际就越可靠。',
+            conclusion: '格雷厄姆和巴菲特的分歧不是原则层面的，而是应用层面的。<b>格雷厄姆的安全边际来自"价格"——以折扣价买入；巴菲特的安全边际来自"价格+品质"——以合理价格买入确定性高的企业。</b>对于普通投资者，格雷厄姆的方法更容易执行（因为它依赖于可量化的标准）；对于有深度分析能力的投资者，巴菲特的方法可能创造更高的长期回报（因为它允许你在"品质溢价"中发现隐藏的安全边际）。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 13: 终章——聪明投资者的品格 [ANCHOR]
+    // Final synthesis + Zweig's postscript
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-13', number: '第四部分 · 场景 13', palette: 'scene13',
+      title: '终章——什么是真正聪明的投资者',
+      subtitle: 'FINAL: WHAT MAKES AN INVESTOR TRULY INTELLIGENT',
+      heroQuote: '在投资领域，勇气是最高贵的美德——不是跟风的勇气，而是在所有人都在恐慌时保持理性的勇气，在所有人都在狂热时保持清醒的勇气。',
+      keyTakeaway: '聪明的投资者不是智商最高的人，而是最有纪律的人。五条原则环环相扣：区分投资与投机 → 75/25资产配置 → 七条选股标准 → 利用市场先生 → 坚守安全边际。你不需要发明新的方法——你需要的是在最困难的时刻坚持这些旧方法。',
+      extendedReading: [
+        '格雷厄姆的投资思想构成了一棵完整的"思想谱系树"。他的直接学生包括沃伦·巴菲特、沃尔特·施洛斯、欧文·卡恩（Irving Kahn）——他们三人共同创造了超过150年的出色投资业绩。巴菲特在1984年哥伦比亚大学的演讲《格雷厄姆-多德维尔的超级投资者》中列举了九位格雷厄姆学派投资者的长期业绩，证明了一个统计学上极不可能的事实：如果"价值投资只是运气"，那么这么多彼此独立的投资者同时获得超额回报的概率接近于零。',
+        '格雷厄姆框架在21世纪面临的最大挑战来自"无形资产经济"的崛起。1975年，标普500公司的市值中约83%可以用有形资产解释；到2020年，这个数字倒转为仅10%——其余90%是品牌、知识产权、网络效应等无形资产。格雷厄姆的P/B标准（< 1.5）基于有形资产估值框架，在无形资产主导的公司中可能系统性地低估价值。这是格雷厄姆框架需要"升级"而非"抛弃"的领域——核心逻辑（不为价值支付过高价格）不变，但"价值"的定义需要扩展。',
+        '格雷厄姆在全书最后一章做了一个很少被注意的哲学声明：他把投资比作一种"道德纪律"——要求诚实（承认自己的无知）、节制（不追求最大回报）、勇气（在恐惧时行动）和耐心（等待合适的机会）。这四种品质恰好对应了古典哲学的四大美德（cardinal virtues）。格雷厄姆本人是一位古典文学爱好者——他精通希腊语和拉丁语，翻译过西班牙语戏剧——这使得《聪明的投资者》不仅是一本投资指南，也是一部关于如何在不确定性中保持理性和美德的哲学著作。'
+      ],
+      narrative: [
+        '格雷厄姆在全书的最后做了一个回顾性的总结。他说，如果你从这本书中只能带走一个概念，那应该是安全边际。如果你能带走两个，第二个应该是：<b>市场是你的仆人，而不是你的主人</b>。如果你能带走三个，第三个应该是：<b>投资的核心在于管理自己，而不在于管理你的投资组合。</b>',
+        '回顾格雷厄姆的完整框架：一切从区分投资与投机开始——知道自己在做什么，是智慧的起点。然后是资产配置的纪律——75/25规则确保你在任何市场环境下都不会全军覆没。接着是选股的标准——七条量化铁律将情绪和偏见排除在决策之外。然后是对市场波动的正确态度——市场先生是你的仆人，不是你的导师。最后是安全边际——为你所有可能的判断错误买一份保险。<b>这五个要素环环相扣，缺一不可。</b>',
+        'Zweig在结语中写道，格雷厄姆的原则之所以能跨越半个多世纪依然成立，是因为它们针对的不是某个特定的市场环境，而是<b>人类永恒不变的心理弱点</b>——贪婪、恐惧、过度自信、从众、短视。这些弱点在1720年的南海泡沫中存在，在1929年的大崩盘中存在，在2000年的dot-com泡沫中存在，在2008年的金融危机中存在——它们会在未来的每一次市场危机中继续存在。',
+        '格雷厄姆最后给读者留下了一个终极的标准来衡量自己是否是一个"聪明的投资者"：<b>不是你的投资组合这一年涨了多少，而是你的投资决策过程是否合理。</b>如果你严格遵守了正确的原则，但市场在短期内恰好不认同你——不要怀疑自己的原则，要怀疑市场。如果你违背了原则却碰巧赚了钱——不要庆幸，要警惕，因为下一次你可能不会这么幸运。',
+        '全书最后一句话，也是格雷厄姆留给所有投资者最深刻的遗产：<b>"投资中最重要的事情，是在你最不想保持理性的时候保持理性。"</b>这个洞见不仅适用于投资——它适用于人生中的一切重大决策。在最困难的时刻保持清醒、在最喧嚣的时刻保持安静、在最恐惧的时刻保持勇气——这就是格雷厄姆所定义的"聪明"。'
+      ],
+      deepDives: [
+        {
+          title: '格雷厄姆框架的永恒与局限', icon: '⏳',
+          triggerQuestion: '格雷厄姆写于1949年的原则在2020年代还有效吗？如果市场环境已经发生了根本性变化——信息技术、被动投资、零利率——他的框架是否需要更新？',
+          chain: {
+            premise: '格雷厄姆的投资原则跨越了七十多年，期间市场经历了冷战、布雷顿森林体系瓦解、石油危机、日本泡沫、dot-com泡沫、2008年金融危机、新冠疫情等巨变。一个理论如果能在如此不同的环境中保持有效，它一定抓住了某些不变的东西——但它也不可能完美适用于每一个时代。',
+            evidence: '<b>依然成立的原则：</b>（1）安全边际——为判断错误留缓冲，这在任何市场环境中都是理性的。2008年以P/E 8倍买入的投资者和1974年以P/E 7倍买入的投资者有着同样出色的长期回报。（2）市场先生——市场在短期内由情绪驱动而非理性驱动，这一点从未改变。2020年3月标普500在三周内暴跌34%，然后在五个月内完全收复失地——如果企业价值真的在三周内消失了34%，它怎么可能在五个月后就回来？（3）投资者的气质比智商重要——行为金融学六十年的研究证实了格雷厄姆的直觉：投资者的情绪偏差是超额回报最持久的来源。<b>需要更新的部分：</b>（1）P/E < 15的绝对标准过于严格——在低利率环境下，P/E 20-25倍可能是合理的，因为替代品（债券）的回报更低。（2）净流动资产折价策略在现代市场中几乎无法执行——能满足条件的公司屈指可数，且大多有严重的基本面问题。（3）格雷厄姆对成长的怀疑在科技时代需要修正——网络效应和平台经济创造了格雷厄姆时代不存在的"赢者通吃"动态，某些公司的增长持续性远超历史经验。',
+            conclusion: '格雷厄姆框架的核心——<b>安全边际、情绪纪律、独立思考</b>——是永恒的。它的具体量化标准——P/E < 15、P/B < 1.5——需要根据市场环境灵活调整，但调整的方向应该是"适度放宽具体数字"而非"放弃安全边际的理念"。巴菲特自己总结得最好："格雷厄姆的方法有三个基本原则——一只股票是一家真实企业的一部分，市场先生为你服务而非指导你，以及安全边际。一百年后这仍然是投资的基石。"'
+          }
+        },
+        {
+          title: 'Zweig的现代启示录', icon: '🌐',
+          chain: {
+            premise: 'Jason Zweig在2003年为修订版撰写的评注不仅仅是脚注——它是一本嵌入另一本书中的独立著作，用21世纪的案例验证和更新了格雷厄姆的每一个核心原则。',
+            evidence: 'Zweig选择的案例是精准的。<b>安然（Enron）</b>——2001年12月破产，曾是美国第七大公司——完美说明了为什么不能信任管理层的叙事而忽视财务报表。安然的收入从1996年的133亿美元增长到2000年的1008亿美元（年增长66%），华尔街一致看好，分析师给出"强烈买入"评级。但格雷厄姆的简单标准——过去10年连续盈利、财务状况稳健——会在第一步就将安然排除：公司的负债率极高，盈利质量可疑（大量来自关联交易），自由现金流持续为负。<b>JDS Uniphase</b>——光纤设备制造商，2000年市值一度超过1000亿美元，P/E无限大（因为亏损）。到2002年股价跌去了99%。任何遵循格雷厄姆P/E < 15标准的投资者都不会碰它。<b>最有启发的案例是巴菲特本人的伯克希尔·哈撒韦</b>：2000-2002年间，纳斯达克跌了78%，但伯克希尔的股价累计上涨了约30%——因为巴菲特在泡沫期间坚持不买入高估值的科技股，并持有大量现金。格雷厄姆的"不随波逐流"原则在他最著名的学生身上得到了最完美的验证。',
+            conclusion: 'Zweig的评注最终传递了一个与格雷厄姆完全一致的信息：<b>市场的工具会变，参与者会变，但人类的心理弱点不会变。</b>1999年的散户投资者和1929年的散户投资者犯了完全相同的错误——被热门故事吸引、忽视基本面、在高位追涨。而那些在两个时代都遵循了格雷厄姆原则的投资者——在两个时代都获得了出色的长期回报。投资的"秘密"不在于发现新的方法，而在于坚持几个永恒的旧方法——但坚持本身，就是最难的部分。'
+          }
+        }
+      ]
+    }
+  ],
+
+  knowledgeMaps: [
+    {
+      afterPart: 2, palette: 'scene7',
+      title: '选股方法论知识地图', center: '价值投资<br>方法论',
+      branches: [
+        { title: '防御型策略', leaves: ['七条量化标准筛选', '至少10只分散持有', '美元成本平均法'] },
+        { title: '进取型策略', leaves: ['净流动资产折价股', '特殊情况套利', '需要更多时间和研究'] },
+        { title: '估值纪律', leaves: ['P/E不超过15倍', 'P/B不超过1.5倍', '盈利收益率高于债券利率'] },
+        { title: '成长股警惕', leaves: ['增长率均值回归', 'Nifty Fifty覆灭教训', 'P/E 80倍 = 隐性亏损'] },
+        { title: '复杂性陷阱', leaves: ['可转债：两全其美的幻觉', '华尔街用复杂性掩盖不利条款', '坚持简单透明的工具'] }
+      ]
+    },
+    {
+      afterPart: 4, palette: 'scene13',
+      title: '投资智慧知识地图', center: '聪明投资者<br>的核心',
+      branches: [
+        { title: '市场先生', leaves: ['价格≠价值', '利用他的愚蠢', '大部分时候忽略他'] },
+        { title: '安全边际', leaves: ['工程冗余思维', '为判断错误买保险', '价格与价值之间的差额'] },
+        { title: '投资者气质', leaves: ['纪律 > 智商', '逆向思考的勇气', '容忍"看起来愚蠢"'] },
+        { title: '分散化', leaves: ['安全边际 + 分散 = 体系', '至少10-30只股票', '个别失败不毁全局'] },
+        { title: '自我管理', leaves: ['最大的敌人是自己', '在恐慌时保持理性', '在狂热时保持清醒'] }
+      ]
+    }
+  ],
+
+  mindMaps: [
+    {
+      afterPart: 4, palette: 'scene13',
+      title: '《聪明的投资者》全书论证结构',
+      subtitle: 'THE INTELLIGENT INVESTOR · COMPLETE ARGUMENT MAP',
+      root: '聪明的投资者 = 控制自己，而非击败市场',
+      branches: [
+        {
+          text: '第一部分 · 投资的基本原则',
+          children: [
+            { text: '投资 vs 投机的三重标准', children: ['深入分析（不是看推文）', '本金安全（不是"涨了就跑"）', '满意回报（不是最大化回报）'] },
+            { text: '通胀：隐形的财富杀手', children: ['不投资 ≠ 零风险', '购买力被缓慢侵蚀', '股票是对冲通胀的必要工具'] },
+            { text: '75/25资产配置纪律', children: ['永不全仓股票或债券', '机械化再平衡对抗情绪', '最优人类策略 > 最优数学策略'] },
+            { text: '防御型 vs 进取型投资者', children: ['区别在时间投入，非风险偏好', '七条量化铁律（防御型）', '三大猎场（进取型）'] }
+          ]
+        },
+        {
+          text: '第二部分 · 股票与债券的选择',
+          children: [
+            { text: '防御型选股：排除而非选择', children: ['好公司 ≠ 好股票', 'P/E × P/B < 22.5', '指数基金是七条标准的现代实现'] },
+            { text: '成长股的数学陷阱', children: ['P/E 80x 买入 → 10年负回报', '增长率均值回归是铁律', '漂亮五十覆灭（宝丽来 -90%）'] },
+            { text: '复杂性 = 华尔街的利润工具', children: ['可转债的隐性成本结构', '产品越复杂→投资者越亏', '5分钟解释不清就不要买'] }
+          ]
+        },
+        {
+          text: '第三部分 · 市场先生与投资者心理',
+          children: [
+            { text: '市场先生寓言', children: ['他是你的仆人，不是导师', '股价波动 ≠ 企业价值变化', '恐慌时买入 / 狂热时卖出'] },
+            { text: '波动不是风险', children: ['真正的风险 = 本金永久性损失', '高波动低估值 > 低波动高估值', '被迫卖出才是最大风险'] },
+            { text: '美元成本平均法', children: ['心理纪律工具，非数学套利', '消除择时焦虑', '必须配合分散化组合'] },
+            { text: '投资者气质 > 智商', children: ['损失厌恶：痛苦 = 2.5倍快乐', '从众效应：逆向操作反人性', '过度自信：交易越多回报越差'] }
+          ]
+        },
+        {
+          text: '第四部分 · 安全边际与终极智慧',
+          children: [
+            { text: '安全边际 = 工程冗余思维', children: ['买入价 vs 内在价值的差额', '多种估值方法交叉验证', '只在差距"明显"时行动'] },
+            { text: '安全边际 + 分散化 = 完整体系', children: ['单只股票的安全边际可能失效', '20-30只组合吸收个别失败', '概率偏向你这一边'] },
+            { text: '巴菲特的继承与超越', children: ['格雷厄姆：安全边际来自价格折扣', '巴菲特：安全边际也来自企业品质', '能力圈 = 安全边际的延伸'] },
+            { text: '格雷厄姆框架的永恒与局限', children: ['永恒：安全边际/情绪纪律/独立思考', '需更新：P/E<15在低利率时代过严', '晚年结论：普通人应买指数基金'] }
+          ]
+        }
+      ]
+    }
+  ],
+
+  aiReflection: {
+    palette: 'scene13',
+    label: '写在最后',
+    title: '格雷厄姆的终极遗产',
+    subtitle: 'GRAHAM\'S ULTIMATE LEGACY',
+    paragraphs: [
+      '格雷厄姆在1976年去世前不久接受了一次采访。记者问他：经过五十多年的投资生涯，你认为普通投资者最应该做什么？他的回答出人意料地简单：<b>"买入指数基金，然后什么都不做。"</b>',
+      '这个回答让很多人困惑——一生致力于证券分析的人，最终建议是放弃分析？但这恰恰体现了格雷厄姆最深刻的自我认知：他发现，随着市场变得更有效率，通过个股选择获取超额回报的难度在持续上升。对于大多数人来说，试图超越市场的努力不仅是徒劳的，而且是有害的——因为它让人暴露在自身心理弱点的攻击之下。',
+      '但这并不意味着《聪明的投资者》过时了。恰恰相反——<b>这本书的核心价值不在于它的选股方法（这些可能需要随时代调整），而在于它对投资者心理的深刻洞察（这些永远不会过时）。</b>安全边际是对人类过度自信的解药；市场先生是对从众心理的解毒剂；75/25规则是对极端情绪的约束器。',
+      '格雷厄姆留给我们的最终智慧，也许可以浓缩为一句话：<b>投资中最聪明的事情，往往是最简单的事情——而最困难的，恰恰是做到简单。</b>'
+    ]
+  },
+
+  footer: {
+    title: '全书 · 终',
+    text: '投资的核心不在于击败市场，<br>而在于控制自己。<br><br>安全边际不仅是一个投资概念——<br>它是一种面对不确定世界的生存哲学：<br><b>永远为自己的无知留足缓冲。</b>',
+    note: '本杰明·格雷厄姆《聪明的投资者》· 沉浸式深度导读 · 全四部分'
+  }
+};
+</script>
+<script>
+// No custom components
+</script>
+<script>
+BookEngine.init();
+</script>
+</body>
+</html>

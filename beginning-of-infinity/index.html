@@ -1,0 +1,3044 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>无穷的开始 · 沉浸式深度导读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   IMMERSIVE BOOK ENGINE — Shared Stylesheet
+   Layered architecture for multi-book rendering engine.
+   Each book injects its own styles into @layer book-custom.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base, layout, components, interactive, animation, book-custom, utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE LAYER
+   Root variables, reset, body defaults, texture overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+
+  /* ── Root CSS Variables (unified superset) ── */
+  :root {
+    /* Palette */
+    --bg: #F5F0E8;
+    --bg-secondary: #EDE7DA;
+    --fg: #1A1A1A;
+    --fg-secondary: #5C5546;
+    --accent: #B8860B;
+    --accent-dim: rgba(184, 134, 11, 0.12);
+    --accent-mid: rgba(184, 134, 11, 0.35);
+    --accent-glow: rgba(184, 134, 11, 0.06);
+    --border: rgba(0,0,0,0.06);
+    --glass-bg: rgba(245, 240, 232, 0.72);
+    --glass-border: rgba(255,255,255,0.3);
+    --card-bg: rgba(255,255,255,0.7);
+    --muted-fg: #7A7062;
+
+    /* Typography */
+    --serif: 'Noto Serif SC', 'Songti SC', Georgia, serif;
+    --sans: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Easing */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background-color: var(--bg);
+    color: var(--fg);
+    overflow-x: hidden;
+    line-height: 1.9;
+    transition: background-color 1.4s var(--ease-smooth),
+                color 1.4s var(--ease-smooth);
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Noise/Grain Texture Overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT LAYER
+   Progress bar, scene navigation, hero, scenes, footer
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer layout {
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 9999;
+    width: 0%;
+    transition: width 0.15s linear;
+  }
+  /* Enhanced: gradient shimmer */
+  .progress-bar {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent)) !important;
+    background-size: 200% 100%;
+    animation: progressShimmer 3s ease infinite;
+    height: 3px !important;
+  }
+
+  /* ── Scene Nav (right-side dots) ── */
+  .scene-nav {
+    position: fixed;
+    right: 2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.8s var(--ease-smooth);
+  }
+  .scene-nav.visible { opacity: 1; }
+  .scene-nav a {
+    display: block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--fg);
+    opacity: 0.15;
+    transition: all 0.5s var(--ease-out);
+    position: relative;
+    text-decoration: none;
+  }
+  .scene-nav a.active {
+    background: var(--accent);
+    opacity: 1;
+    transform: scale(1.6);
+    box-shadow: 0 0 12px var(--accent-mid);
+  }
+  .scene-nav a::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%) translateX(4px);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: all 0.3s var(--ease-out);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+  }
+  .scene-nav a:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+  /* Enhanced: glass tooltip */
+  .scene-nav a::after {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  /* ── Hero Section ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+  }
+  .hero-overline {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 3rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 0.3s forwards;
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(3.5rem, 12vw, 8rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(40px);
+    animation: fadeUp 1.4s var(--ease-out) 0.6s forwards;
+    will-change: transform;
+  }
+  .hero-subtitle {
+    font-family: var(--serif);
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 300;
+    color: var(--fg-secondary);
+    max-width: 500px;
+    letter-spacing: 0.1em;
+    margin-bottom: 4rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 1.2s var(--ease-out) 1s forwards;
+  }
+  .hero-part {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    border: 1px solid var(--accent-mid);
+    padding: 0.6rem 2rem;
+    border-radius: 100px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 1.3s forwards;
+  }
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    animation: fadeUp 1s var(--ease-out) 2s forwards;
+  }
+  .hero-scroll-hint span {
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: var(--fg-secondary);
+    text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px;
+    height: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .scroll-line::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--accent));
+    animation: scrollDrop 2s ease-in-out infinite;
+  }
+  .hero-scroll-hint .scroll-arrow {
+    font-size: 1.2rem;
+    color: var(--accent);
+    animation: bounceArrow 2s var(--ease-out) infinite;
+    opacity: 0.6;
+  }
+
+  /* ── Scene Sections ── */
+  .scene {
+    min-height: 100vh;
+    padding: 12rem 2rem 8rem;
+    position: relative;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 100vh;
+  }
+  .scene-inner {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .scene-number {
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+  }
+  .scene-title {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .scene-subtitle {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    margin-bottom: 6rem;
+    text-transform: uppercase;
+  }
+
+  /* ── Gradient Mesh Backgrounds for Scenes ── */
+  .scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background:
+      radial-gradient(ellipse at 20% 20%, var(--accent-glow) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, var(--accent-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 100%);
+    z-index: -1;
+  }
+
+  /* ── Hero Quote (cinematic, massive) ── */
+  .hero-quote-wrap {
+    margin: 2rem 0 6rem;
+    padding: 4rem 0;
+    position: relative;
+  }
+  .hero-quote-wrap::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote-wrap::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2.6rem);
+    line-height: 1.7;
+    font-weight: 300;
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--accent);
+    z-index: 1;
+  }
+  /* Enhanced: quote decoration marks */
+  .hero-quote-wrap .quote-deco {
+    position: absolute;
+    font-family: var(--serif);
+    font-size: clamp(6rem, 15vw, 12rem);
+    font-weight: 900;
+    color: var(--accent);
+    opacity: 0.06;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-quote-wrap .quote-deco-open {
+    top: -0.5em;
+    left: -0.3em;
+  }
+  .hero-quote-wrap .quote-deco-close {
+    bottom: -0.8em;
+    right: -0.1em;
+  }
+  /* Animated underline highlight on hero quote */
+  .hero-quote-highlight {
+    background: linear-gradient(120deg, var(--accent-dim) 0%, var(--accent-mid) 100%);
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+    background-position: 0 100%;
+    transition: background-size 1.8s var(--ease-out);
+    padding: 0.1em 0;
+  }
+  .reveal-wipe.revealed .hero-quote-highlight {
+    background-size: 100% 100%;
+  }
+
+  /* ── Narrative Paragraphs ── */
+  .narrative { margin-bottom: 2rem; }
+  .narrative p {
+    font-size: 1.05rem;
+    line-height: 2.1;
+    margin-bottom: 2.5rem;
+    color: var(--fg);
+    opacity: 0.82;
+  }
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  /* Enhanced: bold marker highlight */
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+    background: linear-gradient(120deg, var(--accent-dim) 0%, transparent 100%);
+    padding: 0.05em 0.2em;
+    border-radius: 3px;
+  }
+  /* Enhanced: drop cap */
+  .narrative p.drop-cap-p::first-letter {
+    font-family: var(--serif);
+    font-size: 3.5em;
+    font-weight: 900;
+    float: left;
+    line-height: 0.8;
+    margin-right: 0.08em;
+    margin-top: 0.1em;
+    color: var(--accent);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 10rem 2rem 6rem;
+  }
+  .footer-title {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+  }
+  .footer-text {
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    max-width: 460px;
+    margin: 0 auto;
+    line-height: 2;
+    opacity: 0.7;
+  }
+  .footer-next {
+    margin-top: 3rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .footer-bookshelf {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+    padding: 0.75rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--fg-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: all 0.4s var(--ease-out);
+    background: var(--accent-glow);
+  }
+  .footer-bookshelf:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .footer-bookshelf .arrow {
+    transition: transform 0.3s var(--ease-out);
+  }
+  .footer-bookshelf:hover .arrow {
+    transform: translateX(-4px);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENTS LAYER
+   Data viz, big numbers, deep-dive triggers, modals, comparisons,
+   knowledge maps, stat pills, keyboard hint
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Data Viz Container ── */
+  .data-viz {
+    margin: 4rem 0;
+    padding: 3rem 0;
+    position: relative;
+  }
+  .data-viz-title {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .svg-container {
+    width: 100%;
+    overflow: visible;
+  }
+  .svg-container svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  /* SVG path draw animation */
+  .draw-path {
+    stroke-dasharray: var(--path-length, 1000);
+    stroke-dashoffset: var(--path-length, 1000);
+    transition: stroke-dashoffset 2.5s var(--ease-out);
+  }
+  .draw-path.drawn {
+    stroke-dashoffset: 0;
+  }
+  /* Enhanced: corner accents */
+  .data-viz::before,
+  .data-viz::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: var(--accent-mid);
+    border-style: solid;
+  }
+  .data-viz::before {
+    top: 0;
+    left: 0;
+    border-width: 2px 0 0 2px;
+  }
+  .data-viz::after {
+    bottom: 0;
+    right: 0;
+    border-width: 0 2px 2px 0;
+  }
+
+  /* ── Comparison Table ── */
+  .comparison-table-viz .viz-title {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .comparison-table-viz .viz-desc {
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .comparison-table-viz .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+  .comp-table th {
+    text-align: left;
+    padding: 0.65rem 0.8rem;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent-mid);
+    white-space: nowrap;
+  }
+  .comp-table td {
+    padding: 0.6rem 0.8rem;
+    color: var(--fg);
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-table tbody tr:hover {
+    background: var(--accent-dim);
+  }
+  .comparison-table-viz .viz-note {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--fg-secondary);
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid var(--accent-mid);
+    background: var(--accent-glow);
+    line-height: 1.6;
+  }
+
+  /* ── Big Number Counter ── */
+  .big-number {
+    font-family: var(--serif);
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-shadow: 0 0 40px var(--accent-dim), 0 0 80px var(--accent-glow);
+  }
+  .big-number-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--fg-secondary);
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+  .number-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin: 3rem 0;
+    text-align: center;
+  }
+
+  /* ── Deep Dive Triggers ── */
+  .dd-trigger-section {
+    margin-top: 5rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+  }
+  .dd-trigger-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+  .dd-trigger-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .dd-trigger-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .dd-trigger {
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    /* Enhanced: 3D tilt */
+    perspective: 800px;
+    transform-style: preserve-3d;
+    transition: all 0.4s var(--ease-out), transform 0.3s var(--ease-out);
+  }
+  .dd-trigger::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-dim), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .dd-trigger:hover {
+    border-color: var(--accent-mid);
+    transform: translateY(-4px) rotateX(2deg) rotateY(-2deg);
+    box-shadow: 0 12px 40px var(--accent-dim), 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .dd-trigger:hover::before { opacity: 1; }
+  .dd-trigger-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-content {
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-title {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+  }
+  .dd-trigger-hint {
+    font-size: 0.6rem;
+    color: var(--fg-secondary);
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+  }
+  .dd-trigger-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--accent);
+    transition: transform 0.3s var(--ease-out);
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger:hover .dd-trigger-arrow {
+    transform: translateX(4px);
+  }
+  /* Breathing pulse before first click */
+  .dd-trigger:not(.clicked) {
+    animation: ddPulse 3s ease-in-out infinite;
+  }
+  .dd-trigger.clicked {
+    animation: none;
+  }
+
+  /* ── Modal Overlay ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-smooth);
+  }
+  .modal-overlay.open {
+    pointer-events: all;
+    opacity: 1;
+  }
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  }
+  .modal-drawer {
+    position: relative;
+    width: min(580px, 92vw);
+    height: 100vh;
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border-left: 1px solid var(--glass-border);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.6s var(--ease-out);
+    box-shadow: -20px 0 80px rgba(0,0,0,0.1);
+  }
+  .modal-overlay.open .modal-drawer {
+    transform: translateX(0);
+  }
+  .modal-close {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    padding: 1.5rem 2rem 0;
+  }
+  .modal-close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--fg-secondary);
+    transition: all 0.3s;
+  }
+  .modal-close-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .modal-body {
+    padding: 2rem 2.5rem 4rem;
+  }
+  @media (max-width: 640px) {
+    .modal-body { padding: 1.5rem 1.5rem 3rem; }
+  }
+  .modal-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .modal-title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Logic Chain in Modal ── */
+  .logic-chain-modal {
+    position: relative;
+  }
+  .chain-step-modal {
+    position: relative;
+    padding-left: 2rem;
+    padding-bottom: 2.5rem;
+    border-left: 1.5px solid var(--accent-mid);
+  }
+  .chain-step-modal:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+  }
+  .chain-step-modal::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 0.2rem;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--glass-bg), 0 0 0 5px var(--accent-mid);
+  }
+  .chain-label-modal {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    display: inline-block;
+    padding: 0.2rem 0.75rem;
+    background: var(--accent-dim);
+    border-radius: 3px;
+  }
+  .chain-text-modal {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--fg);
+    opacity: 0.88;
+  }
+
+  /* ── Modal Stagger Animation ── */
+  .modal-stagger {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+  }
+  .modal-overlay.open .modal-stagger {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .modal-stagger-1 { transition-delay: 0.15s; }
+  .modal-stagger-2 { transition-delay: 0.35s; }
+  .modal-stagger-3 { transition-delay: 0.55s; }
+  .modal-stagger-4 { transition-delay: 0.75s; }
+  .modal-stagger-5 { transition-delay: 0.95s; }
+  .modal-stagger-6 { transition-delay: 1.15s; }
+
+  /* ── Active Recall Mask (triggerQuestion) ── */
+  .trigger-question {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-dim);
+    border-radius: 12px;
+  }
+  .trigger-question-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .trigger-question-text {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--fg);
+    margin-bottom: 1.2rem;
+  }
+  .recall-reveal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.8rem;
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+  }
+  .recall-reveal-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .logic-chain-modal {
+    transition: filter 0.6s var(--ease-out);
+  }
+  .logic-chain-modal.chain-masked {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ── Extended Reading (Collapsible Panel) ── */
+  .extended-reading {
+    margin: 1.5rem 0 3rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .extended-reading-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.3s;
+  }
+  .extended-reading-toggle::-webkit-details-marker { display: none; }
+  .extended-reading-toggle::after {
+    content: '›';
+    margin-left: auto;
+    font-size: 1.1rem;
+    transition: transform 0.3s var(--ease-out);
+  }
+  .extended-reading[open] .extended-reading-toggle::after {
+    transform: rotate(90deg);
+  }
+  .extended-reading-toggle:hover {
+    background: var(--accent-dim);
+  }
+  .extended-reading-content {
+    padding: 0 1.5rem 1.5rem;
+  }
+  .extended-reading-content p {
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--muted-fg);
+    margin-bottom: 1.2rem;
+    opacity: 0.85;
+  }
+  .extended-reading-content p:last-child { margin-bottom: 0; }
+
+  /* ── Key Term Inline Highlight ── */
+  .key-term {
+    color: var(--accent);
+    border-bottom: 1px dashed var(--accent-mid);
+    cursor: help;
+    transition: border-color 0.3s;
+  }
+  .key-term:hover {
+    border-bottom-style: solid;
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Glossary Floating Button ── */
+  .glossary-fab {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 450;
+    padding: 0.65rem 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .glossary-fab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-dim);
+  }
+
+  /* ── Glossary Drawer Content ── */
+  .glossary-header { margin-bottom: 2rem; }
+  .glossary-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .glossary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .glossary-item {
+    padding: 1.2rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.3s;
+  }
+  .glossary-item:hover { border-color: var(--accent-mid); }
+  .glossary-term {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .glossary-definition {
+    font-size: 0.88rem;
+    line-height: 1.9;
+    color: var(--fg-secondary);
+  }
+
+  /* ── Comparison Module ── */
+  .comparison-section {
+    margin: 5rem 0;
+    padding: 3rem 0;
+  }
+  .comparison-toggle {
+    display: inline-flex;
+    gap: 0;
+    margin-bottom: 3rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .toggle-btn {
+    padding: 0.65rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border: none;
+    background: transparent;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    min-height: 44px;
+    white-space: nowrap;
+  }
+  .toggle-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 100px;
+    box-shadow: 0 4px 15px var(--accent-mid);
+  }
+  .comparison-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .comp-row-label {
+    font-family: var(--serif);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+  .comp-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+  .comp-bar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .comp-bar-tag {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    width: 2.5rem;
+    text-align: right;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .comp-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .comp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.2s var(--ease-out);
+    width: 0%;
+  }
+  /* Enhanced: animated gradient fills */
+  .comp-bar-fill.amber {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+  }
+  .comp-bar-fill.grey {
+    background: linear-gradient(90deg, var(--fg-secondary), rgba(128,128,128,0.4), var(--fg-secondary));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+    opacity: 0.5;
+  }
+  .comp-bar-value {
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 2rem;
+    color: var(--fg-secondary);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .comp-text {
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--fg-secondary);
+    margin-top: 0.4rem;
+    opacity: 0.7;
+  }
+
+  /* ── Knowledge Map ── */
+  .knowledge-map {
+    margin: 4rem 0;
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+  .km-title {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--accent);
+  }
+  .km-center {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .km-connector {
+    width: 2px;
+    height: 2rem;
+    background: linear-gradient(to bottom, var(--accent-mid), transparent);
+    margin: 0 auto;
+  }
+  .km-branches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .km-branch {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: left;
+  }
+  .km-branch-title {
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .km-branch-title::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .km-leaves {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .km-leaf {
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: var(--fg-secondary);
+    padding-left: 1rem;
+    position: relative;
+  }
+  .km-leaf::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 6px;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+
+  /* ── Mind Map (Multi-level Tree) ── */
+  .mind-map {
+    margin: 4rem 0;
+    padding: 3rem 1.5rem;
+  }
+  .mm-title {
+    text-align: center;
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+  .mm-subtitle {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--fg-secondary);
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .mm-root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto 0.5rem;
+    padding: 0.7rem 1.8rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .mm-trunk {
+    width: 2px;
+    height: 1.5rem;
+    background: var(--accent-mid);
+    margin: 0 auto;
+  }
+  .mm-level1-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .mm-l1 {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    position: relative;
+  }
+  .mm-l1-title {
+    font-family: var(--serif);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.7rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .mm-l2 {
+    margin-left: 0.6rem;
+    padding-left: 0.9rem;
+    border-left: 1px solid var(--accent-mid);
+    margin-bottom: 0.5rem;
+  }
+  .mm-l2:last-child { margin-bottom: 0; }
+  .mm-l2-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.25rem;
+    position: relative;
+    padding-left: 0.7rem;
+  }
+  .mm-l2-title::before {
+    content: '';
+    position: absolute;
+    left: -0.95rem;
+    top: 0.5em;
+    width: 0.6rem;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+  .mm-l3-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-left: 0.7rem;
+    padding-left: 0.7rem;
+    border-left: 1px dashed var(--border);
+  }
+  .mm-l3 {
+    font-size: 0.7rem;
+    line-height: 1.55;
+    color: var(--fg-secondary);
+    position: relative;
+    padding-left: 0.6rem;
+  }
+  .mm-l3::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 0.55em;
+    width: 0.5rem;
+    height: 1px;
+    background: var(--border);
+  }
+  @media (max-width: 600px) {
+    .mm-level1-wrap { grid-template-columns: 1fr; }
+    .mm-root { font-size: 0.9rem; padding: 0.6rem 1.4rem; }
+  }
+
+  /* ── Stat Pill Badges ── */
+  .stat-pill {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85em;
+    padding: 0.1em 0.5em;
+    border-radius: 100px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Keyboard Nav Hint ── */
+  .kb-hint {
+    position: fixed;
+    bottom: 2rem;
+    right: 2.5rem;
+    z-index: 400;
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: var(--fg-secondary);
+    opacity: 0.4;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: opacity 0.8s var(--ease-smooth);
+    pointer-events: none;
+  }
+  .kb-hint.hidden { opacity: 0; }
+  .kb-hint kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--accent-glow);
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    line-height: 1;
+  }
+
+  /* ── Dark Scene Accents ── */
+  .scene.dark-scene .scene-title {
+    text-shadow: 0 0 60px var(--accent-dim);
+  }
+  .scene.dark-scene .big-number {
+    text-shadow: 0 0 40px var(--accent-mid), 0 0 80px var(--accent-dim);
+  }
+
+  /* ── Dark Particles (shared floating particle system) ── */
+  .dark-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .dark-particles .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    animation: particleFloat 12s ease-in-out infinite;
+    animation-play-state: paused;
+    will-change: transform, opacity;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTIVE LAYER
+   Empty placeholder — book-specific interactive styles injected at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer interactive {
+  /* Book-specific interactive widgets go here via custom.css */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATION LAYER
+   Reveal system, keyframes, reduced-motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer animation {
+
+  /* ── Reveal System ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.15s; }
+  .reveal-delay-2 { transition-delay: 0.3s; }
+  .reveal-delay-3 { transition-delay: 0.45s; }
+  .reveal-delay-4 { transition-delay: 0.6s; }
+
+  .reveal-wipe {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.6s var(--ease-out);
+  }
+  .reveal-wipe.revealed {
+    clip-path: inset(0 0% 0 0);
+  }
+
+  /* ── Keyframes ── */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollDrop {
+    0% { top: -100%; }
+    100% { top: 100%; }
+  }
+  @keyframes progressShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes bounceArrow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+  @keyframes ddPulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+  @keyframes barGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes particleFloat {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    50% { transform: translateY(-80px) translateX(30px); opacity: 0.2; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(-160px) translateX(-20px); opacity: 0; }
+  }
+
+  /* ── Reduced Motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal { opacity: 1; transform: none; }
+    .draw-path { stroke-dashoffset: 0 !important; }
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOOK-CUSTOM LAYER
+   Empty — each book injects its own styles at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer book-custom {
+  /* Populated by book-specific custom.css / custom.js */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITIES LAYER
+   Empty placeholder for utility classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Utility classes can be added here */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS (shared only — no book-specific selectors)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .scene { padding: 7rem 1.5rem 5rem; }
+  .scene-nav { display: none; }
+  .hero-quote { font-size: 1.2rem; }
+  .number-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .glossary-fab {
+    bottom: 1rem;
+    left: 1rem;
+    font-size: 0.6rem;
+    padding: 0.5rem 1rem;
+  }
+  .trigger-question { padding: 1rem; }
+  .trigger-question-text { font-size: 0.95rem; }
+  .extended-reading-toggle { padding: 0.8rem 1.2rem; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="scene-nav" id="sceneNav"></nav>
+<div id="app"></div>
+
+<div class="kb-hint" id="kbHint">
+  <kbd>Space</kbd> / <kbd>↓</kbd> 下一场景 &nbsp; <kbd>↑</kbd> 上一场景
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-drawer" id="modalDrawer">
+    <div class="modal-close">
+      <button class="modal-close-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// BookEngine — Component Registry, Plugin System & Shared Components
+// ═══════════════════════════════════════════════════════════════
+
+window.BookEngine = (function() {
+  // ── Registry ──
+  const vizRegistry = {};
+  const initQueue = [];
+  const plugins = [];
+  const hooks = {};
+
+  // ── Public API ──
+  const engine = {
+    // Register a visualization/component renderer
+    // Usage: BookEngine.registerViz('dunbar', { render: fn, init: fn })
+    registerViz(type, handler) {
+      vizRegistry[type] = handler;
+    },
+
+    // Register an init function to run after DOM render
+    registerInit(fn) {
+      initQueue.push(fn);
+    },
+
+    // Register a plugin with lifecycle hooks
+    // Plugin: { name, onInit, onRender, onScroll, onModalOpen, onModalClose, onDestroy }
+    registerPlugin(plugin) {
+      plugins.push(plugin);
+      // Register individual hooks
+      ['onInit','onRender','onScroll','onModalOpen','onModalClose','onDestroy'].forEach(hook => {
+        if (plugin[hook]) {
+          engine.registerHook(hook, plugin[hook]);
+        }
+      });
+    },
+
+    // Register a lifecycle hook
+    registerHook(hookName, fn) {
+      if (!hooks[hookName]) hooks[hookName] = [];
+      hooks[hookName].push(fn);
+    },
+
+    // Trigger all handlers for a hook
+    triggerHook(hookName, ...args) {
+      if (hooks[hookName]) {
+        hooks[hookName].forEach(fn => {
+          try { fn(...args); } catch(e) { console.warn(`[BookEngine] Hook ${hookName} error:`, e); }
+        });
+      }
+    },
+
+    // Render a visualization by type
+    renderViz(type, scene, config) {
+      const handler = vizRegistry[type];
+      if (!handler) {
+        console.warn(`[BookEngine] Unknown viz type: ${type}`);
+        return '';
+      }
+      return typeof handler.render === 'function' ? handler.render(scene, config) : '';
+    },
+
+    // Initialize a visualization by type (called after DOM render)
+    initViz(type) {
+      const handler = vizRegistry[type];
+      if (handler && typeof handler.init === 'function') {
+        handler.init();
+      }
+    },
+
+    // Run all init functions and plugin onInit hooks
+    runInits() {
+      initQueue.forEach(fn => {
+        try { fn(); } catch(e) { console.warn('[BookEngine] Init error:', e); }
+      });
+      engine.triggerHook('onInit');
+    },
+
+    // Inject custom CSS into the document (for book-specific styles)
+    injectCSS(cssString) {
+      if (!cssString) return;
+      const style = document.createElement('style');
+      style.textContent = cssString;
+      document.head.appendChild(style);
+    },
+
+    // ── Shared Component Renderers ──
+
+    // Render comparison toggle module
+    renderComparison(comp) {
+      // Accept both comp.rows and comp.dimensions
+      const rows = comp.rows || comp.dimensions;
+      if (!comp || !rows) return '';
+      const labels = comp.labels || ['采集', '农耕'];
+      const modes = comp.modes || ['foraging', 'farming'];
+      const triggerLabel = comp.triggerLabel || '生活质量对比 · Quality of Life';
+      // Support 2 or 3 buttons (original sapiens has 3: foraging, farming, compare)
+      const showCompare = comp.showCompare !== false;
+      let html = `
+        <div class="comparison-section reveal">
+          <div class="dd-trigger-label">${triggerLabel}</div>
+          <div class="comparison-toggle">
+            <button class="toggle-btn active" data-mode="${modes[0]}">${comp.btnLabels?.[0] || labels[0] + '生活'}</button>
+            <button class="toggle-btn" data-mode="${modes[1]}">${comp.btnLabels?.[1] || labels[1] + '生活'}</button>
+            ${showCompare ? `<button class="toggle-btn" data-mode="compare">对比</button>` : ''}
+          </div>
+          <div class="comparison-rows">`;
+      rows.forEach((row, i) => {
+        html += `
+            <div class="comp-row reveal reveal-delay-${Math.min(i+1,4)}" data-comp-row>
+              <div class="comp-row-label">${row.label}</div>
+              <div class="comp-bars">
+                <div class="comp-bar-wrapper" data-bar="${modes[0]}">
+                  <span class="comp-bar-tag">${labels[0]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill amber" data-score="${row[modes[0]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[0]].score}/10</span>
+                </div>
+                <div class="comp-bar-wrapper" data-bar="${modes[1]}" style="display:none;">
+                  <span class="comp-bar-tag">${labels[1]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill grey" data-score="${row[modes[1]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[1]].score}/10</span>
+                </div>
+              </div>
+              <div class="comp-text" data-text-${modes[0]}>${row[modes[0]].text}</div>
+              <div class="comp-text" data-text-${modes[1]} style="display:none;">${row[modes[1]].text}</div>
+            </div>`;
+      });
+      html += `</div></div>`;
+      return html;
+    },
+
+    // Render knowledge map
+    renderKnowledgeMap(map) {
+      if (!map) return '';
+      const centerText = map.center || map.centerNode || '';
+      const centerStyle = map.centerStyle ? ` style="${map.centerStyle}"` : '';
+      const branchesStyle = map.branchesStyle ? ` style="${map.branchesStyle}"` : '';
+      let html = `
+        <section class="knowledge-map" data-palette="${map.palette || 'hero'}">
+          <div class="km-title reveal">${map.title}</div>
+          <div class="km-center reveal reveal-delay-1"${centerStyle}>${centerText}</div>
+          <div class="km-connector reveal reveal-delay-1"></div>
+          <div class="km-branches"${branchesStyle}>`;
+      map.branches.forEach((branch, i) => {
+        const delay = i < 2 ? 2 : 3;
+        const items = branch.leaves || branch.items || [];
+        html += `
+            <div class="km-branch reveal reveal-delay-${delay}">
+              <div class="km-branch-title">${branch.title}</div>
+              <div class="km-leaves">
+                ${items.map(item => `<div class="km-leaf">${item}</div>`).join('')}
+              </div>
+            </div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // Render mind map (multi-level tree)
+    renderMindMap(map) {
+      if (!map || !map.branches) return '';
+      const renderL3 = (items) => {
+        if (!items || items.length === 0) return '';
+        return `<div class="mm-l3-list">${items.map(t => `<div class="mm-l3">${t}</div>`).join('')}</div>`;
+      };
+      const renderL2 = (children) => {
+        if (!children || children.length === 0) return '';
+        return children.map(c => {
+          if (typeof c === 'string') {
+            return `<div class="mm-l2"><div class="mm-l2-title">${c}</div></div>`;
+          }
+          return `<div class="mm-l2"><div class="mm-l2-title">${c.text}</div>${renderL3(c.children)}</div>`;
+        }).join('');
+      };
+      let html = `<section class="mind-map" data-palette="${map.palette || 'hero'}">`;
+      html += `<div class="mm-title reveal">${map.title}</div>`;
+      if (map.subtitle) html += `<div class="mm-subtitle reveal">${map.subtitle}</div>`;
+      html += `<div class="mm-root reveal reveal-delay-1">${map.root}</div>`;
+      html += `<div class="mm-trunk reveal reveal-delay-1"></div>`;
+      html += `<div class="mm-level1-wrap">`;
+      map.branches.forEach((b, i) => {
+        const delay = i < 2 ? 2 : 3;
+        html += `<div class="mm-l1 reveal reveal-delay-${delay}">`;
+        html += `<div class="mm-l1-title">${b.text}</div>`;
+        html += renderL2(b.children);
+        html += `</div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // ── Shared Initializers ──
+
+    // Initialize comparison toggle behavior
+    initComparison() {
+      document.querySelectorAll('.comparison-toggle').forEach(toggle => {
+        toggle.addEventListener('click', e => {
+          const btn = e.target.closest('.toggle-btn');
+          if (!btn) return;
+          toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const section = toggle.closest('.comparison-section');
+          engine.updateCompBars(btn.dataset.mode, section);
+        });
+      });
+    },
+
+    updateCompBars(mode, section) {
+      const modes = [];
+      section.querySelectorAll('.toggle-btn').forEach(b => {
+        if (b.dataset.mode !== 'compare') modes.push(b.dataset.mode);
+      });
+      const isCompare = mode === 'compare';
+      section.querySelectorAll('[data-comp-row]').forEach(row => {
+        modes.forEach(m => {
+          const bar = row.querySelector(`[data-bar="${m}"]`);
+          const text = row.querySelector(`[data-text-${m}]`);
+          if (bar) bar.style.display = (isCompare || m === mode) ? 'flex' : 'none';
+          if (text) text.style.display = (isCompare || m === mode) ? 'block' : 'none';
+        });
+      });
+      engine.animateCompBars(section);
+    },
+
+    animateCompBars(section) {
+      (section || document).querySelectorAll('.comp-bar-fill').forEach(bar => {
+        if (bar.closest('.comp-bar-wrapper').style.display === 'none') return;
+        bar.style.width = '0%';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.style.width = (parseInt(bar.dataset.score) / 10 * 100) + '%';
+        }));
+      });
+    },
+
+    // Animate counter (shared utility)
+    animateCounter(el, from, to, duration, suffix) {
+      const start = performance.now();
+      function formatVal(val) {
+        if (suffix === '万' || suffix === '%') return val;
+        if (val >= 1000000) return (val / 1000000).toFixed(0) + 'M';
+        if (val >= 10000 && !suffix) return Math.round(val / 1000) + 'K';
+        return val;
+      }
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = Math.round(from + (to - from) * eased);
+        el.textContent = formatVal(val) + (p >= 1 && suffix ? suffix : (p < 1 && suffix === '+' ? '' : ''));
+        if (p >= 1) el.textContent = formatVal(to) + (suffix || '');
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    },
+
+    // Animate SVG data viz bars
+    animateDataViz(container) {
+      const bars = container.querySelectorAll('.draw-bar');
+      bars.forEach((bar, i) => {
+        const targetW = parseFloat(bar.dataset.targetW);
+        setTimeout(() => {
+          bar.style.transition = 'width 1.5s var(--ease-out)';
+          bar.style.width = targetW + 'px';
+        }, i * 300);
+      });
+      const labels = container.querySelectorAll('.bar-label');
+      labels.forEach((lbl, i) => {
+        setTimeout(() => {
+          lbl.style.transition = 'opacity 0.6s';
+          lbl.style.opacity = '1';
+        }, 800 + i * 300);
+      });
+    },
+
+    // Get registered viz types
+    getVizTypes() { return Object.keys(vizRegistry); },
+
+    // Get plugins
+    getPlugins() { return plugins.map(p => p.name); }
+  };
+
+  // ── Built-in Viz: comparison-table ──
+  engine.registerViz('comparison-table', {
+    render(scene, config) {
+      const d = config.data;
+      if (!d || !d.columns || !d.rows) return '';
+      let html = `<div class="data-viz comparison-table-viz reveal" data-viz="comparison-table">`;
+      if (config.title) html += `<h4 class="viz-title">${config.title}</h4>`;
+      if (config.description) html += `<p class="viz-desc">${config.description}</p>`;
+      html += `<div class="table-scroll"><table class="comp-table">`;
+      html += `<thead><tr>${d.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
+      html += `<tbody>`;
+      d.rows.forEach(row => {
+        html += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+      });
+      html += `</tbody></table></div>`;
+      if (d.note) html += `<p class="viz-note">${d.note}</p>`;
+      html += `</div>`;
+      return html;
+    }
+  });
+
+  return engine;
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// Immersive Book Engine — Core Rendering & Interaction System
+// ═══════════════════════════════════════════════════════════════
+
+(function() {
+  'use strict';
+
+  // ── DOM References ──
+  const app = document.getElementById('app');
+  const sceneNav = document.getElementById('sceneNav');
+
+  // ── Palette System ──
+  // Unified superset: 13 color variables
+  const PALETTE_KEYS = [
+    ['bg',          '--bg'],
+    ['bgSecondary', '--bg-secondary'],
+    ['fg',          '--fg'],
+    ['fgSecondary', '--fg-secondary'],
+    ['accent',      '--accent'],
+    ['accentDim',   '--accent-dim'],
+    ['accentMid',   '--accent-mid'],
+    ['accentGlow',  '--accent-glow'],
+    ['border',      '--border'],
+    ['glassBg',     '--glass-bg'],
+    ['glassBorder', '--glass-border'],
+    ['cardBg',      '--card-bg'],
+    ['mutedFg',     '--muted-fg']
+  ];
+
+  function applyPalette(name) {
+    const p = PALETTES[name];
+    if (!p) return;
+    const s = document.documentElement.style;
+    PALETTE_KEYS.forEach(([key, prop]) => {
+      // Fallback: cardBg → glassBg, mutedFg → fgSecondary, etc.
+      const val = p[key]
+        || (key === 'cardBg' ? p.glassBg : null)
+        || (key === 'mutedFg' ? p.fgSecondary : null)
+        || (key === 'bgSecondary' ? p.bg : null)
+        || (key === 'glassBorder' ? p.border : null);
+      if (val) s.setProperty(prop, val);
+    });
+    document.body.style.backgroundColor = p.bg;
+    document.body.style.color = p.fg;
+  }
+
+  // ── Render Engine ──
+  function renderApp() {
+    const { meta, scenes } = CONTENT_DATA;
+    const parts = meta.parts || [];
+    const knowledgeMaps = CONTENT_DATA.knowledgeMaps || [];
+    const mindMaps = CONTENT_DATA.mindMaps || [];
+    const aiReflection = CONTENT_DATA.aiReflection || null;
+    let html = '';
+
+    // Hero
+    html += `
+      <section class="hero" id="hero">
+        <div class="hero-overline">${meta.author || meta.authorEn || ''} · ${meta.titleEn || meta.bookSub || ''}</div>
+        <h1 class="hero-title" id="heroTitle">${meta.title || meta.book || ''}</h1>
+        <p class="hero-subtitle">${meta.subtitle || meta.partTitle || ''}</p>
+        <div class="hero-part">${meta.badge || (meta.part ? meta.part + (meta.partSub ? ' · ' + meta.partSub : '') : '')}</div>
+        <div class="hero-scroll-hint">
+          <span>向下滚动</span>
+          <div class="scroll-arrow">↓</div>
+          <div class="scroll-line"></div>
+        </div>
+      </section>`;
+
+    // Hero extra content (e.g., timeline explorer for sapiens)
+    if (typeof CONTENT_DATA.renderHeroExtra === 'function') {
+      html += CONTENT_DATA.renderHeroExtra();
+    }
+
+    // Determine dark scenes from data or palette analysis
+    const darkScenes = CONTENT_DATA.darkScenes || [];
+
+    // Render scenes
+    scenes.forEach((scene, idx) => {
+      const isDark = darkScenes.includes(scene.palette);
+
+      // Part divider BEFORE scene (declarative)
+      const partBefore = parts.find(p => p.beforeScene === scene.id);
+      if (partBefore && partBefore.number > 1) {
+        // Knowledge map for the previous part
+        const kmBefore = knowledgeMaps.find(km => km.afterPart === partBefore.number - 1);
+        if (kmBefore) {
+          html += BookEngine.renderKnowledgeMap(kmBefore);
+        }
+        // Mind map for the previous part
+        const mmBefore = mindMaps.find(mm => mm.afterPart === partBefore.number - 1);
+        if (mmBefore) {
+          html += BookEngine.renderMindMap(mmBefore);
+        }
+        // Part intro
+        const prevScene = idx > 0 ? scenes[idx - 1] : null;
+        const introPalette = scene.palette;
+        html += `
+          <section class="hero" id="part${partBefore.number}-intro" data-palette="${introPalette}" style="min-height:80vh;">
+            <div class="hero-overline reveal" style="animation:none;">第${numberToChinese(partBefore.number)}部分</div>
+            <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">${partBefore.title}</h1>
+            <p class="hero-subtitle reveal reveal-delay-2" style="animation:none;">${partBefore.titleEn || ''}</p>
+          </section>`;
+      }
+
+      // Scene section
+      html += `<section class="scene${isDark ? ' dark-scene' : ''}" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner" style="position:relative;z-index:1;">`;
+
+      // Dark mode particles
+      if (isDark && !scene.starField) {
+        html += `<div class="dark-particles">${Array.from({length:20}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, d = 8+Math.random()*16, delay = Math.random()*10;
+          return `<div class="particle" style="left:${x}%;top:${y}%;animation-duration:${d}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+      // Star field
+      if (scene.starField) {
+        html += `<div class="star-field">${Array.from({length:50}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, size = 1+Math.random()*2, delay = Math.random()*6, dur = 3+Math.random()*4;
+          return `<div class="star" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+
+      // Scene header
+      html += `
+        <div class="reveal scene-number">${scene.number || ('场景 ' + String(idx+1).padStart(2,'0'))}</div>
+        <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
+        <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle || ''}</div>`;
+
+      // Hero Quote
+      if (scene.heroQuote) {
+        html += `
+        <div class="hero-quote-wrap reveal-wipe">
+          <span class="quote-deco quote-deco-open">「</span>
+          <span class="quote-deco quote-deco-close">」</span>
+          <blockquote class="hero-quote"><span class="hero-quote-highlight">${scene.heroQuote}</span></blockquote>
+        </div>`;
+      }
+
+      // Narrative (with keyTerm highlighting)
+      if (scene.narrative?.length) {
+        const kt = CONTENT_DATA.meta.keyTerms || [];
+        html += `<div class="narrative">`;
+        scene.narrative.forEach((p, pi) => {
+          let text = p;
+          if (kt.length) {
+            kt.forEach(k => {
+              const escaped = k.term.replace(/[.*+?^${}()|[\]\\]/g, '\\<!-- ENGINE_JS -->');
+              text = text.replace(new RegExp(`(?:<[^>]*>.*?<\\/[^>]*>)|(?:${escaped})`, 'g'), match => {
+                if (match.startsWith('<')) return match; // inside HTML tag, skip
+                return `<span class="key-term" title="${k.definition}">${match}</span>`;
+              });
+            });
+          }
+          const cls = pi === 0 ? ' drop-cap-p' : '';
+          html += `<p class="reveal${cls}">${text}</p>`;
+        });
+        html += `</div>`;
+      }
+
+      // Extended Reading (collapsible background panel)
+      if (scene.extendedReading?.length) {
+        html += `
+          <details class="extended-reading reveal">
+            <summary class="extended-reading-toggle">📖 展开深度背景</summary>
+            <div class="extended-reading-content">
+              ${scene.extendedReading.map(p => `<p>${p}</p>`).join('')}
+            </div>
+          </details>`;
+      }
+
+      // Data Viz — dispatch to registry
+      if (scene.dataViz) {
+        const vizType = typeof scene.dataViz === 'string' ? scene.dataViz : scene.dataViz.type;
+        const vizConfig = typeof scene.dataViz === 'string' ? { type: vizType } : scene.dataViz;
+        html += BookEngine.renderViz(vizType, scene, vizConfig);
+      }
+
+      // Extra renderers for this scene (book-specific injections)
+      if (scene.extraRender) {
+        scene.extraRender.forEach(fn => {
+          if (typeof fn === 'function') html += fn(scene);
+          else if (typeof fn === 'string') html += fn;
+        });
+      }
+
+      // Comparison
+      if (scene.comparison) {
+        html += BookEngine.renderComparison(scene.comparison);
+      }
+
+      // Interactive module — dispatch to registry
+      if (scene.interactive) {
+        const intType = scene.interactive.type;
+        html += BookEngine.renderViz(intType, scene, scene.interactive);
+      }
+
+      // Deep Dives
+      if (scene.deepDives?.length) {
+        html += `<div class="dd-trigger-section reveal"><div class="dd-trigger-label">深度解析 · Deep Dive</div><div class="dd-trigger-grid">`;
+        scene.deepDives.forEach((dd, i) => {
+          html += `
+            <div class="dd-trigger reveal reveal-delay-${Math.min(i+1, 4)}" data-dd-idx="${idx}-${i}">
+              <span class="dd-trigger-icon">${dd.icon}</span>
+              <div class="dd-trigger-content">
+                <div class="dd-trigger-title">${dd.title}</div>
+                <div class="dd-trigger-hint">点击展开完整论证链</div>
+              </div>
+              <span class="dd-trigger-arrow">→</span>
+            </div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // Key Takeaway
+      if (scene.keyTakeaway) {
+        html += `<div class="reveal" style="margin-top:3rem;padding:1.5rem;background:var(--accent-glow);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:0.85rem;line-height:1.8;color:var(--fg-secondary);">
+          <strong style="color:var(--accent);font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;">核心收获</strong><br>${scene.keyTakeaway}</div>`;
+      }
+
+      html += `</div></section>`; // end scene-inner + scene
+    });
+
+    // Final knowledge map (after last part)
+    const lastPart = parts.length > 0 ? Math.max(...parts.map(p => p.number)) : 0;
+    knowledgeMaps.filter(km => km.afterPart >= lastPart || km.afterPart === 'final').forEach(km => {
+      html += BookEngine.renderKnowledgeMap(km);
+    });
+
+    // Final mind maps (after last part)
+    mindMaps.filter(mm => mm.afterPart >= lastPart || mm.afterPart === 'final').forEach(mm => {
+      html += BookEngine.renderMindMap(mm);
+    });
+
+    // AI Reflection / Epilogue
+    if (aiReflection) {
+      const epiloguePalette = aiReflection.palette || (scenes.length > 0 ? scenes[scenes.length - 1].palette : 'hero');
+      html += `
+        <section class="scene epilogue-section" id="epilogue" data-palette="${epiloguePalette}" style="min-height:auto; padding: clamp(4rem,10vw,8rem) 0;">
+          <div class="scene-inner">
+            <div class="reveal scene-number" style="opacity:0.4;">${aiReflection.label || '写在最后'}</div>
+            <h2 class="reveal scene-title reveal-delay-1" style="font-size:clamp(1.8rem,5vw,3rem);">${aiReflection.title}</h2>
+            <div class="reveal scene-subtitle reveal-delay-2">${aiReflection.subtitle || ''}</div>
+            ${aiReflection.heroQuote ? `
+            <div class="hero-quote-wrap reveal-wipe">
+              <blockquote class="hero-quote" style="font-size:clamp(1rem,2.5vw,1.4rem);">${aiReflection.heroQuote}</blockquote>
+            </div>` : ''}
+            <div class="narrative">
+              ${(aiReflection.paragraphs || []).map(p => `<p class="reveal">${p}</p>`).join('')}
+            </div>
+          </div>
+        </section>`;
+    }
+
+    // Glossary floating button (only if keyTerms exist)
+    if (CONTENT_DATA.meta.keyTerms?.length) {
+      html += `<button class="glossary-fab" id="glossaryFab" title="术语表">📖 术语表</button>`;
+    }
+
+    // Footer
+    html += `
+      <footer class="footer" data-palette="hero">
+        <div class="reveal footer-title">${CONTENT_DATA.footer?.title || '全书 · 终'}</div>
+        <p class="reveal footer-text reveal-delay-1">${CONTENT_DATA.footer?.text || ''}</p>
+        ${CONTENT_DATA.footer?.note ? `<div class="reveal footer-next reveal-delay-2" style="opacity:0.4;margin-top:3rem;font-size:0.7rem;">${CONTENT_DATA.footer.note}</div>` : ''}
+        <a href="../index.html" class="footer-bookshelf reveal reveal-delay-3"><span class="arrow">←</span> 返回书架</a>
+      </footer>`;
+
+    app.innerHTML = html;
+
+    // Build nav dots
+    let navHtml = '';
+    scenes.forEach(s => {
+      navHtml += `<a href="#${s.id}" data-scene="${s.id}" data-label="${s.title}"></a>`;
+    });
+    sceneNav.innerHTML = navHtml;
+
+    // Trigger hook
+    BookEngine.triggerHook('onRender');
+
+    // Init systems
+    initScrollSystem();
+    initDeepDiveModal();
+    BookEngine.initComparison();
+    BookEngine.runInits();
+  }
+
+  // ── Scroll System ──
+  function initScrollSystem() {
+    const scenes = document.querySelectorAll('.scene');
+    const navLinks = document.querySelectorAll('.scene-nav a');
+    const progressBar = document.getElementById('progressBar');
+    const nav = document.getElementById('sceneNav');
+
+    // Reveal observer
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => revealObs.observe(el));
+
+    // Data viz observer
+    const vizObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateDataViz(e.target);
+          vizObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('[data-viz]').forEach(el => vizObs.observe(el));
+
+    // Big number counter observer
+    const countObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const target = parseInt(e.target.dataset.countTo);
+          const suffix = e.target.dataset.suffix || '';
+          BookEngine.animateCounter(e.target, 0, target, 2000, suffix);
+          countObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count-to]').forEach(el => countObs.observe(el));
+
+    // Comparison observer
+    const compObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateCompBars();
+          compObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.comparison-section').forEach(el => compObs.observe(el));
+
+    // Custom observers (registered by books)
+    if (BookEngine._customObservers) {
+      BookEngine._customObservers.forEach(obs => obs());
+    }
+
+    // Scroll handler — palette + progress + nav
+    let currentPalette = 'hero';
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+        nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
+
+        // Hero parallax
+        const heroTitle = document.getElementById('heroTitle');
+        if (heroTitle && scrollTop < window.innerHeight) {
+          heroTitle.style.transform = `translateY(${scrollTop * 0.15}px)`;
+        }
+
+        // Determine active palette
+        const viewMid = scrollTop + window.innerHeight * 0.45;
+        let newPalette = 'hero';
+        document.querySelectorAll('[data-palette]').forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            newPalette = s.dataset.palette;
+          }
+        });
+        // Nav active dot
+        scenes.forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            navLinks.forEach(l => l.classList.toggle('active', l.dataset.scene === s.id));
+          }
+        });
+        // Footer reset
+        const footer = document.querySelector('.footer');
+        if (footer && viewMid >= footer.offsetTop) newPalette = 'hero';
+
+        if (newPalette !== currentPalette) {
+          currentPalette = newPalette;
+          applyPalette(newPalette);
+        }
+
+        // Plugin scroll hook
+        BookEngine.triggerHook('onScroll', { scrollTop, viewMid, currentPalette });
+
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // ── Deep Dive Modal ──
+  function initDeepDiveModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const backdrop = document.getElementById('modalBackdrop');
+    const closeBtn = document.getElementById('modalClose');
+    const body = document.getElementById('modalBody');
+
+    function openModal(sceneIdx, ddIdx) {
+      const dd = CONTENT_DATA.scenes[sceneIdx].deepDives[ddIdx];
+      if (!dd) return;
+
+      const hasQ = !!dd.triggerQuestion;
+      const s = (n) => `modal-stagger modal-stagger-${n}`;
+      const chainOffset = hasQ ? 1 : 0;
+
+      body.innerHTML = `
+        <div class="modal-icon ${s(1)}">${dd.icon}</div>
+        <h3 class="modal-title ${s(2)}">${dd.title}</h3>
+        ${hasQ ? `
+        <div class="trigger-question ${s(3)}">
+          <div class="trigger-question-label">主动回忆 · Active Recall</div>
+          <p class="trigger-question-text">${dd.triggerQuestion}</p>
+          <button class="recall-reveal-btn" id="recallReveal">💡 揭晓作者逻辑</button>
+        </div>` : ''}
+        <div class="logic-chain-modal${hasQ ? ' chain-masked' : ''}">
+          <div class="chain-step-modal ${s(3 + chainOffset)}">
+            <div class="chain-label-modal">前 提</div>
+            <div class="chain-text-modal">${dd.chain.premise}</div>
+          </div>
+          <div class="chain-step-modal ${s(4 + chainOffset)}">
+            <div class="chain-label-modal">证 据</div>
+            <div class="chain-text-modal">${dd.chain.evidence}</div>
+          </div>
+          <div class="chain-step-modal ${s(5 + chainOffset)}">
+            <div class="chain-label-modal">结 论</div>
+            <div class="chain-text-modal">${dd.chain.conclusion}</div>
+          </div>
+        </div>`;
+      body.offsetHeight; // force reflow
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      if (hasQ) {
+        const revealBtn = document.getElementById('recallReveal');
+        if (revealBtn) {
+          revealBtn.addEventListener('click', () => {
+            body.querySelector('.logic-chain-modal').classList.remove('chain-masked');
+            revealBtn.style.display = 'none';
+          });
+        }
+      }
+      BookEngine.triggerHook('onModalOpen', { sceneIdx, ddIdx, dd });
+    }
+
+    function openGlossary() {
+      const keyTerms = CONTENT_DATA.meta.keyTerms;
+      if (!keyTerms?.length) return;
+      body.innerHTML = `
+        <div class="glossary-header modal-stagger modal-stagger-1">
+          <div class="glossary-label">术语表 · Glossary</div>
+          <h3 class="modal-title">${CONTENT_DATA.meta.title} · 关键术语</h3>
+          <p style="font-size:0.8rem;color:var(--fg-secondary);margin-top:0.5rem;line-height:1.6;">以下术语按作者在书中的<strong>特定定义</strong>整理，可能与日常含义不同。</p>
+        </div>
+        <div class="glossary-list">
+          ${keyTerms.map((kt, i) => `
+            <div class="glossary-item modal-stagger modal-stagger-${Math.min(i + 2, 5)}">
+              <div class="glossary-term">${kt.term}</div>
+              <div class="glossary-definition">${kt.definition}</div>
+            </div>
+          `).join('')}
+        </div>`;
+      body.offsetHeight;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      BookEngine.triggerHook('onModalClose');
+    }
+
+    document.addEventListener('click', e => {
+      const trigger = e.target.closest('[data-dd-idx]');
+      if (trigger) {
+        const [sIdx, dIdx] = trigger.dataset.ddIdx.split('-').map(Number);
+        openModal(sIdx, dIdx);
+        trigger.classList.add('clicked');
+      }
+      if (e.target.closest('#glossaryFab')) {
+        openGlossary();
+      }
+    });
+    backdrop.addEventListener('click', closeModal);
+    closeBtn.addEventListener('click', closeModal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  }
+
+  // ── Keyboard Navigation ──
+  function initKeyboardNav() {
+    const kbHint = document.getElementById('kbHint');
+    let hintDismissed = false;
+
+    function dismissHint() {
+      if (!hintDismissed) {
+        hintDismissed = true;
+        kbHint.classList.add('hidden');
+        window.removeEventListener('wheel', dismissHint);
+        window.removeEventListener('touchstart', dismissHint);
+      }
+    }
+    window.addEventListener('wheel', dismissHint, { passive: true, once: true });
+    window.addEventListener('touchstart', dismissHint, { passive: true, once: true });
+
+    function getAnchors() {
+      const anchors = [document.getElementById('hero')];
+      CONTENT_DATA.scenes.forEach(s => {
+        const el = document.getElementById(s.id);
+        if (el) anchors.push(el);
+      });
+      return anchors;
+    }
+
+    function currentIdx(anchors) {
+      const scrollMid = window.scrollY + window.innerHeight * 0.4;
+      let idx = 0;
+      for (let i = anchors.length - 1; i >= 0; i--) {
+        if (scrollMid >= anchors[i].offsetTop) { idx = i; break; }
+      }
+      return idx;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('modalOverlay').classList.contains('open')) return;
+      const anchors = getAnchors();
+      const cur = currentIdx(anchors);
+
+      if (e.key === 'ArrowDown' || (e.key === ' ' && !e.shiftKey)) {
+        e.preventDefault();
+        const next = Math.min(cur + 1, anchors.length - 1);
+        anchors[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      } else if (e.key === 'ArrowUp' || (e.key === ' ' && e.shiftKey)) {
+        e.preventDefault();
+        const prev = Math.max(cur - 1, 0);
+        anchors[prev].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      }
+    });
+  }
+
+  // ── Utility: Number to Chinese ──
+  function numberToChinese(n) {
+    const map = ['零','一','二','三','四','五','六','七','八','九','十'];
+    return n <= 10 ? map[n] : String(n);
+  }
+
+  // ── Register observer for book-specific elements ──
+  BookEngine._customObservers = [];
+  BookEngine.registerObserver = function(setupFn) {
+    BookEngine._customObservers.push(setupFn);
+  };
+
+  // ── Main init (called by template after all scripts load) ──
+  BookEngine.init = function() {
+    // Inject custom CSS if defined
+    if (typeof CUSTOM_CSS !== 'undefined') {
+      BookEngine.injectCSS(CUSTOM_CSS);
+    }
+
+    // Register custom components if defined
+    if (typeof CUSTOM_COMPONENTS !== 'undefined') {
+      Object.entries(CUSTOM_COMPONENTS).forEach(([type, handler]) => {
+        BookEngine.registerViz(type, handler);
+      });
+    }
+
+    // Render
+    renderApp();
+    initKeyboardNav();
+  };
+
+  // Expose applyPalette for external use
+  BookEngine.applyPalette = applyPalette;
+
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// THE BEGINNING OF INFINITY · DATA
+// 无穷的开始 · Immersive Book Engine Data
+// ═══════════════════════════════════════════════════════════════
+
+const PALETTES = {
+  hero: {
+    bg: '#0A0A1A', bgSecondary: '#0E0E24', fg: '#E0E4F0', fgSecondary: '#8890B0',
+    accent: '#4A90D9', accentDim: 'rgba(74,144,217,0.12)', accentMid: 'rgba(74,144,217,0.35)',
+    accentGlow: 'rgba(74,144,217,0.06)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(10,10,26,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Part I: The Nature of Explanation
+  scene1: {
+    bg: '#0C0C20', bgSecondary: '#12122A', fg: '#D8DCF0', fgSecondary: '#7A82A8',
+    accent: '#5A9EE0', accentDim: 'rgba(90,158,224,0.1)', accentMid: 'rgba(90,158,224,0.3)',
+    accentGlow: 'rgba(90,158,224,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(12,12,32,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene2: {
+    bg: '#F0F2F8', bgSecondary: '#E4E8F2', fg: '#141828', fgSecondary: '#4A5070',
+    accent: '#3A6EA5', accentDim: 'rgba(58,110,165,0.1)', accentMid: 'rgba(58,110,165,0.3)',
+    accentGlow: 'rgba(58,110,165,0.05)', border: 'rgba(20,24,40,0.06)',
+    glassBg: 'rgba(240,242,248,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene3: {
+    bg: '#F2F0F6', bgSecondary: '#E6E2F0', fg: '#1A1628', fgSecondary: '#5A5078',
+    accent: '#6A5AAE', accentDim: 'rgba(106,90,174,0.1)', accentMid: 'rgba(106,90,174,0.3)',
+    accentGlow: 'rgba(106,90,174,0.05)', border: 'rgba(26,22,40,0.06)',
+    glassBg: 'rgba(242,240,246,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // Part II: Universality and Infinity
+  scene4: {
+    bg: '#F0F4F2', bgSecondary: '#E0EAE4', fg: '#0E1C14', fgSecondary: '#3A6050',
+    accent: '#2E8A6A', accentDim: 'rgba(46,138,106,0.1)', accentMid: 'rgba(46,138,106,0.3)',
+    accentGlow: 'rgba(46,138,106,0.05)', border: 'rgba(14,28,20,0.06)',
+    glassBg: 'rgba(240,244,242,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene5: {
+    bg: '#0A0A18', bgSecondary: '#101028', fg: '#D4D8F0', fgSecondary: '#7078A8',
+    accent: '#7A6AD0', accentDim: 'rgba(122,106,208,0.1)', accentMid: 'rgba(122,106,208,0.3)',
+    accentGlow: 'rgba(122,106,208,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(10,10,24,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene6: {
+    bg: '#F5F2E8', bgSecondary: '#EBE6D8', fg: '#1C1A10', fgSecondary: '#6A6448',
+    accent: '#C4962A', accentDim: 'rgba(196,150,42,0.1)', accentMid: 'rgba(196,150,42,0.35)',
+    accentGlow: 'rgba(196,150,42,0.05)', border: 'rgba(28,26,16,0.06)',
+    glassBg: 'rgba(245,242,232,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // Part III: Physics and Philosophy
+  scene7: {
+    bg: '#08081A', bgSecondary: '#0E0E28', fg: '#D0D8F4', fgSecondary: '#6A78B0',
+    accent: '#4A7AE0', accentDim: 'rgba(74,122,224,0.1)', accentMid: 'rgba(74,122,224,0.3)',
+    accentGlow: 'rgba(74,122,224,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(8,8,26,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene8: {
+    bg: '#F4F0F0', bgSecondary: '#EAE4E6', fg: '#1C1418', fgSecondary: '#6A5060',
+    accent: '#A05A70', accentDim: 'rgba(160,90,112,0.1)', accentMid: 'rgba(160,90,112,0.3)',
+    accentGlow: 'rgba(160,90,112,0.05)', border: 'rgba(28,20,24,0.06)',
+    glassBg: 'rgba(244,240,240,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // Part IV: The Future of Civilization
+  scene9: {
+    bg: '#F0EEF4', bgSecondary: '#E2DEF0', fg: '#161428', fgSecondary: '#504A72',
+    accent: '#7A5AB0', accentDim: 'rgba(122,90,176,0.1)', accentMid: 'rgba(122,90,176,0.3)',
+    accentGlow: 'rgba(122,90,176,0.05)', border: 'rgba(22,20,40,0.06)',
+    glassBg: 'rgba(240,238,244,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene10: {
+    bg: '#060614', bgSecondary: '#0C0C22', fg: '#D8E0F8', fgSecondary: '#6878B8',
+    accent: '#5AA0E8', accentDim: 'rgba(90,160,232,0.1)', accentMid: 'rgba(90,160,232,0.3)',
+    accentGlow: 'rgba(90,160,232,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(6,6,20,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// CONTENT DATA
+// ═══════════════════════════════════════════════════════════════
+
+const CONTENT_DATA = {
+  meta: {
+    title: '无穷的开始',
+    titleEn: 'THE BEGINNING OF INFINITY',
+    subtitle: '关于解释的力量与无穷进步的可能',
+    badge: '沉浸式深度导读 · EXPLANATIONS THAT TRANSFORM THE WORLD · COMPLETE',
+    author: '大卫·德意志',
+    authorEn: 'David Deutsch',
+    type: 'philosophy',
+    shelf: {
+      emoji: '\u267E\uFE0F',
+      gradient: 'linear-gradient(135deg, #0A0A20 0%, #1A3A5C 50%, #4A90D9 100%)',
+      description: '一切进步的源头是什么？德意志用10个场景论证：好的解释是宇宙中最强大的力量——从量子多重宇宙到人类文明的无穷未来。',
+      stats: ['10 场景', '4 部分', '12 深度解析']
+    },
+    parts: [
+      { number: 1, title: '解释的本质', titleEn: 'THE NATURE OF EXPLANATION', beforeScene: 'scene-1' },
+      { number: 2, title: '通用性与无穷', titleEn: 'UNIVERSALITY AND INFINITY', beforeScene: 'scene-4' },
+      { number: 3, title: '物理与哲学', titleEn: 'PHYSICS AND PHILOSOPHY', beforeScene: 'scene-7' },
+      { number: 4, title: '文明的未来', titleEn: 'THE FUTURE OF CIVILIZATION', beforeScene: 'scene-9' }
+    ],
+    coreThesis: '一切进步的来源都是寻求好的解释。好的解释是难以改变的——你不能在不破坏其解释力的情况下修改它的任何细节。人类是宇宙中的"通用解释者"，这赋予了我们无穷的进步潜力。',
+    authorProblem: '知识的本质到底是什么？它从何而来，如何增长，有没有尽头？德意志试图统一科学哲学、量子物理、计算理论和政治哲学，论证"好的解释"是一切进步的唯一源泉——同时反驳经验主义、工具主义和悲观主义对人类前景的限制。',
+    bookStructure: '全书围绕一个核心概念（好的解释）层层展开：第一部分建立认识论基础（什么是好解释、人类为何独特、抽象为何真实）；第二部分探索通用性与无穷的数学/物理结构；第三部分将理论应用于量子物理和美学等争议领域；第四部分汇聚为对人类文明未来的乐观论证。每章既独立又互相支撑，形成一个从微观（解释的标准）到宏观（文明的命运）的论证弧。',
+    readerQuestions: [
+      '德意志的"好解释"标准与波普尔的"可证伪性"有什么本质区别？在实际科学实践中，哪个更有操作性？',
+      '如果人类是通用解释者，为什么我们在几万年里几乎没有进步？"静态社会"假说是否充分解释了这个谜题？',
+      '多世界解释是否真的是量子力学"唯一的好解释"？还是德意志低估了退相干历史等替代方案？',
+      '乐观主义原则——"所有恶都来自知识匮乏"——是一个可检验的命题，还是一种不可证伪的信仰？',
+      '"可持续性是错误目标"这一论断在气候变化的紧迫现实面前是否站得住脚？创造新知识的速度能赶上生态破坏的速度吗？'
+    ],
+    critique: '德意志的论证在最强处令人信服——"好解释"理论确实比传统经验主义更深刻，对工具主义的批判也击中要害。但全书存在几个张力：(1) 对多世界解释的辩护带有明显的门派色彩，对退相干历史、QBism等替代方案的讨论不够公平；(2) 乐观主义原则虽然逻辑自洽，但在时间尺度上含糊——"问题总是可解的"对面临灭绝风险的文明来说是冷安慰；(3) 对"静态社会"的描述过于二元化，忽视了许多传统社会中的渐进创新；(4) 美学客观主义的论证最为薄弱——从"花对人和昆虫都美"跳到"美的标准是客观的"存在明显的逻辑跳跃。总体而言，这是一部极具野心的综合性著作，其认识论核心远强于其在具体领域的应用。',
+    keyTerms: [
+      { term: '好的解释', definition: '难以改变的解释——不能在不破坏其解释力的情况下随意修改细节。与"容易变化的"解释相对，后者可以被改编来"解释"任何事情，因此实际上什么都没有解释。' },
+      { term: '通用解释者', definition: '人类的独特属性。指能够创造任何类型知识的实体。人类是已知唯一的通用解释者，这意味着我们原则上可以理解宇宙中的任何事物。' },
+      { term: '可谬主义', definition: '承认所有知识都可能包含错误的立场。这不是悲观主义，而是进步的前提——因为只有承认可能犯错，才会去寻求更好的解释。' },
+      { term: '乐观主义原则', definition: '所有的恶都来自知识的匮乏。任何不被物理定律禁止的事情，在拥有正确知识的情况下都是可以实现的。' },
+      { term: '多重宇宙', definition: '量子力学的多世界解释。每次量子事件发生时，宇宙分裂为多个分支，每个分支中不同的可能性都实际发生了。德意志认为这是目前唯一的好解释。' },
+      { term: '通向普遍性的飞跃', definition: '某些系统从有限功能突然跃迁到通用能力的现象。如字母表从有限符号跃迁到能表达任何语言，图灵机从简单规则跃迁到通用计算。' },
+      { term: '静态社会 vs 动态社会', definition: '静态社会压制变化和创新，用传统和权威控制知识创造。动态社会鼓励批评和改进，这是启蒙运动的核心遗产。' },
+      { term: '可持续性谬误', definition: '"可持续发展"是一个错误目标，因为它假设我们可以预知未来需要什么资源。真正需要的不是维持现状，而是持续创造解决问题的新知识。' }
+    ]
+  },
+
+  darkScenes: ['scene5', 'scene7', 'scene10'],
+
+  scenes: [
+
+    // ═════════════════════════════════════════════════════════════
+    // PART I · 解释的本质 · THE NATURE OF EXPLANATION
+    // ═════════════════════════════════════════════════════════════
+
+    {
+      id: 'scene-1', number: '第一部分 · 场景 01', palette: 'scene1',
+      title: '好解释的力量',
+      subtitle: 'THE REACH OF EXPLANATIONS',
+      heroQuote: '经验主义是错的，因为它说知识来自感官经验。理性主义也是错的，因为它说知识来自纯粹的理性思辨。知识来自猜想与批评——来自对好解释的不懈追求。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '好解释 vs 坏解释：德意志的核心判据',
+        description: '德意志认为，区分科学与伪科学、进步与停滞的根本标准不是"可证伪性"，而是解释的"难以改变性"。',
+        data: {
+          columns: ['维度', '好的解释（难以改变的）', '坏的解释（容易变化的）'],
+          rows: [
+            ['核心特征', '每个细节都不可或缺，改动任何部分都会破坏解释力', '可以随意修改来适应任何观测，因此实际上什么都没解释'],
+            ['对新证据的反应', '可能被证伪——这恰恰是其力量所在', '永远不会被"驳倒"——总有办法自圆其说'],
+            ['典型案例', '地轴倾斜23.4°→季节变化（改变角度预测就崩溃）', '冥后回冥界→冬天（三个季节？她回去两次就行）'],
+            ['预测能力', '延伸到设计者未预见的领域（牛顿力学→潮汐）', '只能"事后解释"，无法预测新现象'],
+            ['与可证伪性的关系', '可证伪性是好解释的自然推论，不是定义', '不可证伪恰恰因为它对现实没有做出具体承诺'],
+            ['知识进步的作用', '被更好的解释替代时，推动真正的进步', '阻碍进步——让人满足于虚假的"理解"']
+          ],
+          note: '德意志超越波普尔之处：可证伪性只是好解释的一个症状，"难以改变性"才是根本判据。阴谋论之所以危险，正因为它们被设计成"容易变化的"——任何反面证据都变成"阴谋的一部分"。'
+        }
+      },
+      narrative: [
+        '想象你站在一颗距地球一百亿光年的恒星旁边，测量它的光谱。你会发现：<b>那里的氢原子发出的光，与你在地球实验室里观察到的氢原子光谱完全一致。</b>同样的物理定律，同样的数学结构，横跨整个可观测宇宙。这不是一个平凡的事实——它是一个需要解释的惊人谜团。',
+        '德意志认为，科学的核心不是实验，不是观察，不是数据收集——<b>科学的核心是解释。</b>一个好的科学理论不仅仅能"预测"实验结果，它还必须解释为什么这些结果会出现。预言家可以做出准确的预测（"明天会下雨"），但如果他无法解释为什么会下雨，他的"知识"就是空洞的——它不能被推广、不能被改进、不能帮助我们理解任何新的事物。',
+        '什么才算"好的"解释？德意志提出了一个极具洞察力的判据：<b>好的解释是"难以改变的"。</b>你不能在不破坏其解释力的情况下随意修改它的任何细节。以牛顿引力理论为例：如果你改变引力的平方反比律中的任何一个参数，整个太阳系的轨道预测都会崩溃。相比之下，古代的"神创论"是一个"容易变化的"解释——如果观察到新的现象，你总可以说"神选择了这样做"。',
+        '德意志由此得出了一个关于科学进步的根本性洞见：<b>人类知识的增长不是通过积累更多数据，而是通过提出更好的解释——更难以改变的、更精确的、适用范围更广的解释。</b>经验主义者认为知识"来自"感官经验，但感官经验本身没有意义，除非你有一个解释框架来赋予它意义。同一片星空，古代人看到的是众神的居所，哥白尼看到的是行星的轨道——差别不在于他们的眼睛，而在于他们的解释。'
+      ],
+      deepDives: [
+        {
+          title: '好解释 vs 坏解释：进步的判据', icon: '\uD83D\uDD2D',
+          triggerQuestion: '如果一个理论可以"解释"任何可能的观测结果，那它到底解释了什么？如果一个全能的神可以让世界以任何方式运行，那么"神创造了世界"这句话传达了多少信息？',
+          chain: {
+            premise: '科学进步的关键不在于积累更多数据，而在于区分好的解释和坏的解释。好的解释是难以改变的——它的每个细节都在发挥作用，删除任何一个都会破坏整体。坏的解释是容易变化的——可以被随意修改来适应任何观测。',
+            evidence: '考虑两种对季节变化的解释。希腊神话说冬天是因为冥后珀耳塞福涅回到冥界，她的母亲德墨忒尔悲伤不已，大地因此凋零。这个解释可以轻易修改——如果季节不存在，你可以说珀耳塞福涅从未离开；如果有三个季节，你可以说她一年回去两次。相反，地球轴倾斜23.4度的解释是难以改变的：改变角度就会改变季节的强度，去掉轴倾斜就完全消除了季节，把地球换成不倾斜的行星就预测出无季节变化——而这正是我们在赤道附近观测到的。每个细节都承载着不可替代的解释功能。',
+            conclusion: '这个判据的力量在于它超越了波普尔的"可证伪性"。可证伪性只是好解释的一个推论，而非核心。核心是"难以改变性"——一个好解释之所以可以被证伪，正是因为它对现实做出了具体的、不可修改的承诺。这也解释了为什么阴谋论如此难以驳倒：它们被设计成"容易变化的"，任何反面证据都可以被解释为"阴谋的一部分"。'
+          }
+        },
+        {
+          title: '科学的真正起源：从经验到解释', icon: '\uD83C\uDF0C',
+          chain: {
+            premise: '传统的科学哲学认为科学始于观察和归纳。德意志认为这完全是倒过来的——科学始于猜想。观察只是用来检验猜想的工具，而非猜想的来源。',
+            evidence: '以发现DNA双螺旋结构为例。沃森和克里克并没有通过"仔细观察"DNA来发现它的结构。他们从已有的化学知识出发，提出了一个大胆的猜想——DNA可能是双螺旋形状。然后他们用这个模型去解释罗莎琳德·富兰克林的X射线衍射数据。数据没有"告诉"他们答案；他们的猜想赋予了数据意义。同样，爱因斯坦的广义相对论不是从"观察"中"归纳"出来的，而是一个大胆的理论猜想，后来被日食观测所证实。',
+            conclusion: '科学不是一台把观测数据输入后自动输出理论的机器。科学是一个持续的猜想与批评过程：提出大胆的解释，然后用一切可能的手段去批评和检验它们。幸存下来的解释就是我们目前最好的知识——但它们永远不是最终的真理，因为更好的解释永远可能出现。这就是为什么可谬主义不是悲观——它是无穷进步的保证。'
+          }
+        }
+      ],
+      extendedReading: [
+        '德意志对经验主义的批评可以追溯到卡尔·波普尔，他的哲学导师。波普尔在20世纪提出"科学理论不能被证实，只能被证伪"，彻底颠覆了逻辑实证主义。但德意志走得更远——他认为波普尔的"可证伪性"标准虽然比归纳主义好，但仍然不够。真正的判据是"好的解释"，可证伪性只是好解释的一个自然推论。',
+        '这一章的另一个深刻洞见是关于"解释的触及范围"。一个好的物理理论不仅解释了它被设计来解释的现象，还能延伸到完全出乎意料的领域。牛顿的引力理论解释了苹果为什么落地，也解释了潮汐为什么涨落、行星为什么以椭圆轨道运行。这种"触及范围"不是理论的附加优势，而是好解释的核心特征。',
+        '值得注意的是，德意志并不认为科学是唯一的知识领域。他在后续章节中会论证，哲学、艺术甚至道德判断也可以包含真正的知识——前提是它们也遵循"寻求好解释"的方法论。这使得本书的论域远超一般的科学哲学著作。'
+      ]
+    },
+
+    {
+      id: 'scene-2', number: '第一部分 · 场景 02', palette: 'scene2',
+      title: '人类的独特火花',
+      subtitle: 'THE SPARK',
+      heroQuote: '人类不仅仅是会使用工具的灵长类动物。我们是通用解释者——这意味着原则上不存在我们无法理解的事物。这不是傲慢，这是一个关于物理现实结构的深刻事实。',
+      narrative: [
+        '在整个已知宇宙中，只有一颗行星上出现了一种能够理解宇宙本身的实体。<b>人类的独特之处不在于我们更聪明、更强壮或更擅长合作——而在于我们是"通用解释者"。</b>',
+        '什么是通用解释者？德意志给出了一个惊人的定义：<b>一个能够创造任何类型知识的实体。</b>这不是一个程度上的差异，而是一个类型上的跃迁。黑猩猩可以学会用树枝钓白蚁，但它永远不可能理解白蚁的社会结构为什么是这样、进化是如何塑造它们的。人类可以理解量子力学、创作交响乐、辩论道德哲学——这些能力之间没有共同的"领域"，它们的共同点是都需要创造性的解释。',
+        '德意志进一步论证：<b>生物进化创造知识的方式与人类创造知识的方式有着根本区别。</b>进化通过随机变异和自然选择来"发现"适应环境的方案，但这个过程是盲目的——它不理解自己在做什么。一只羚羊的腿部肌肉"知道"如何逃避猎豹，但羚羊并不理解力学原理。人类则不同：我们通过猜想和批评来创造解释性知识，这种知识可以被有意地改进、推广和应用到全新的领域。',
+        '这个论点的哲学含义是深远的：<b>如果人类是通用解释者，那么不存在原则上超越人类理解能力的事物。</b>当然，可能存在我们当前无法理解的事物，但这是知识不足的问题，而非能力的根本限制。宇宙不包含任何对通用解释者原则上不可理解的秘密——只要物理定律不禁止，人类就可以通过创造正确的知识来理解它、做到它。'
+      ],
+      deepDives: [
+        {
+          title: '通用性的奥秘：为什么只有人类跨越了门槛', icon: '\u2728',
+          triggerQuestion: '鹦鹉能说话，黑猩猩能使用工具，蜜蜂能建造精密的蜂巢。但没有一种动物能理解自己在做什么。是什么让人类跨越了从"专用"到"通用"的门槛？这个跃迁是渐进的还是突发的？',
+          chain: {
+            premise: '在自然界中，所有非人类的知识创造者都是"专用"的——蜘蛛织网的"知识"只适用于织网，鸟类筑巢的"知识"只适用于筑巢。人类是唯一跨越到"通用"能力的物种。这个跃迁需要解释。',
+            evidence: '德意志援引图灵的计算理论来类比。在图灵之前，人们设计的计算机器都是专用的——一台机器只能做一类计算。图灵证明了存在一种"通用计算机"，原则上可以模拟任何其他计算机器。关键在于：通用性不是通过增加更多专用功能来实现的，而是一种质的飞跃。类似地，人类的大脑不是一个"更强大的黑猩猩大脑"——它具有了一种全新的能力：创造解释性知识。这种能力可能与语言的出现、模因的传播以及文化积累密切相关，但其核心是一种能够进行开放式猜想的认知架构。',
+            conclusion: '通用解释者的出现是宇宙史上最重要的事件之一。在此之前，知识只能通过基因突变和自然选择缓慢积累，需要数百万年才能产生微小的改进。在此之后，知识可以通过猜想和批评快速增长，一代人就能实现从马车到登月的飞跃。人类不仅仅是进化的产物——我们是进化创造出的一种全新的知识创造机制。'
+          }
+        },
+        {
+          title: '生物知识 vs 人类知识：两种创造引擎', icon: '\uD83E\uDDEC',
+          chain: {
+            premise: '生物进化和人类创造力都在产生"知识"——适应环境的信息。但两者的运作机制根本不同，这种差异解释了为什么人类文明可以指数增长而生物进化只能线性爬行。',
+            evidence: '生物进化是一个盲目的搜索过程：随机产生变异，环境筛选出有利的变异，知识缓慢积累在基因中。这个过程没有方向、没有理解、没有预见。一种细菌对抗生素产生了抗药性，但它不"知道"自己为什么有抗药性。人类知识创造则完全不同：我们提出猜想（这可能是这样的），然后批评它们（但如果是那样，就会导致矛盾），保留经受住批评的解释。这个过程有方向（朝向更好的解释），有理解（我们知道理论为什么有效），有预见（我们可以预测尚未观测到的现象）。',
+            conclusion: '这种区分的一个深刻含义是：人工智能如果要达到人类水平的创造力，就不能只是一个更快的搜索算法。它必须能够进行真正的解释——提出猜想、理解为什么某些解释比其他解释更好、创造全新的概念。德意志认为这在原则上是可能的（因为通用计算可以模拟通用解释），但我们目前还不理解创造力的工作机制，因此无法编程实现它。'
+          }
+        }
+      ]
+    },
+
+    {
+      id: 'scene-3', number: '第一部分 · 场景 03', palette: 'scene3',
+      title: '抽象的实在性',
+      subtitle: 'THE REALITY OF ABSTRACTIONS',
+      heroQuote: '如果你认为只有基本粒子才是"真实的"，那么请解释为什么一个铜原子可以成为导线的一部分，也可以成为雕塑的一部分——而"导线"和"雕塑"这两个概念做出了完全不同的预测。还原论者解释不了这一点。',
+      narrative: [
+        '一个铜原子在一根导线中。同一个铜原子也可以在一座铜像中。在物理的最底层——量子力学层面——这两个铜原子之间没有任何区别。但是，<b>"这是一根导线"和"这是一座铜像"这两个高层次描述却对现实做出了完全不同的预测：</b>导线可以通电，铜像不能（至少不以有用的方式）。',
+        '德意志用这个简单的例子来论证一个惊人的哲学命题：<b>抽象概念是真实的。</b>它们不是人类强加给世界的"便利标签"，它们是对实在的真实结构的描述。"导线""生命""计算""进化"——这些高层次概念捕捉了底层粒子无法表达的因果关系。',
+        '这直接挑战了还原论——那种认为一切现象最终都可以用基本粒子的行为来解释的观点。德意志承认，一切现象都与基本物理兼容，但他否认一切现象都能用基本物理来"解释"。<b>你不能通过追踪一根导线中每一个铜原子的量子态来解释"为什么这根导线能导电"。</b>要解释导电，你需要用到"电子在金属晶格中的自由移动"——这是一个只在更高层次才存在的概念。',
+        '这个论点的核心是关于"涌现"的。涌现不是神秘主义——它是说某些因果关系只在特定的描述层次上才可见。一台计算机在物理层面只是电子的流动，但"这台计算机正在运行一个程序来计算质数"这个描述捕捉了一种真实的因果结构，而这种结构在电子层面是不可见的。<b>否认涌现的实在性，就是否认大部分科学知识的有效性。</b>'
+      ],
+      deepDives: [
+        {
+          title: '涌现层次与还原论的溃败：为什么"万有理论"解释不了任何事', icon: '🔭',
+          triggerQuestion: '物理学家追求"万有理论"——一个用单一方程描述宇宙一切的终极理论。德意志却说即使找到了这个理论，它也"解释不了"大部分现象。这不是自相矛盾吗？',
+          chain: {
+            premise: '德意志的论点乍看自相矛盾，其实触及了科学哲学中最深刻的断层线。关键区别在于<b>"兼容"（compatible with）和"解释"（explained by）是完全不同的关系。</b>一切现象都与基本物理兼容（否则物理学就错了），但"兼容"不等于"被解释"。解释需要的是因果叙事——为什么这件事发生而不是那件事。',
+            evidence: '考虑一个具体案例：<b>为什么Stradivarius小提琴的音色比现代小提琴更好？</b>在原子层面，Stradivarius琴就是木头纤维+清漆——碳、氢、氧原子按一定排列堆叠。理论上，如果你知道每个原子的精确位置和量子态，你"拥有了"关于这把琴的全部物理信息。但你能从这些原子数据中推导出"音色更好"这个事实吗？不能。因为"音色"是一个声学概念（涉及泛音频谱分布），"更好"是一个审美概念（涉及人类听觉系统的偏好结构）——这两个概念都不存在于原子物理学的词汇中。你需要至少三个涌现层次的知识：材料科学（木头的微观结构如何影响振动传播）、声学（振动模式如何转化为泛音频谱）、心理声学（人耳为什么偏好某些频谱分布）。这三个层次中的每一个都包含了不可从下层推导出的新因果关系。德意志用更极端的例子来强化这个论点：<b>设想一台计算机正在证明费马大定理。</b>在电子层面，只有电流的开关——你可以完美描述每个晶体管的状态变化，但你永远无法从中"看出"这台机器正在做数学证明。"证明"这个概念根本不存在于电子物理学中——它是一个只在数学和逻辑层次上才有意义的概念。一个全知的粒子物理学家在观察这台计算机的原子状态时，会看到电子的流动完全符合麦克斯韦方程——但他永远不会因此"发现"费马大定理是真的。',
+            conclusion: '德意志的论点摧毁的不是物理学的权威，而是<b>一种特定的对科学的误解——认为"更基础"就等于"更真实"或"更有解释力"。</b>事实恰恰相反：对于大部分我们关心的现象——生命、意识、经济、历史——高层次的解释比低层次的解释更有力，因为它们在正确的因果层面上运作。一个生物学家用自然选择来解释眼睛的进化，比一个粒子物理学家用夸克来"解释"眼睛的原子组成，说出了更多关于眼睛为什么存在的真相。这就是为什么德意志说：<b>真正的解释永远是关于涌现层次的——而涌现层次的数量和种类是无穷的。</b>这也是为什么"无穷的开始"——永远有新的解释层次等待被发现。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART II · 通用性与无穷 · UNIVERSALITY AND INFINITY
+    // ═════════════════════════════════════════════════════════════
+
+    {
+      id: 'scene-4', number: '第二部分 · 场景 04', palette: 'scene4',
+      title: '通向普遍性的飞跃',
+      subtitle: 'THE JUMP TO UNIVERSALITY',
+      heroQuote: '最伟大的发明不是某个特定问题的解决方案，而是从特定到通用的飞跃——字母表不是为了书写某种特定的语言，而是为了书写一切可能的语言。',
+      narrative: [
+        '人类历史上最重要的发明不是轮子、蒸汽机或互联网——<b>而是那些实现了"通向普遍性的飞跃"的系统。</b>德意志认为，这种飞跃是文明进步中最深刻的模式。',
+        '考虑书写系统的历史。最早的书写是象形文字——每个符号代表一个特定的物体或概念。这是一个"专用"系统：要表达新事物，就必须发明新符号。但在某个时刻，人类发明了<b>字母表</b>——一套有限数量的符号，通过组合可以表达任何语言中的任何词汇。这不是量变而是质变：<b>从"有限种可能"到"无限种可能"。</b>',
+        '同样的模式反复出现。<b>印度-阿拉伯数字系统</b>是对数字的类似飞跃：用10个符号加上位值原则，你可以表示任何大小的数。<b>图灵机</b>是对计算的飞跃：一台简单到只需要几条规则的机器，原则上可以执行任何计算。<b>基因密码</b>是自然界的飞跃：四种碱基的组合可以编码任何蛋白质。',
+        '德意志指出，这些飞跃有一个令人惊奇的共同特征：<b>它们从来不是被设计出来的。</b>字母表的发明者并不知道他们在创造一个通用系统。位值记数法的发明者也不是为了"通用性"才设计它的。通用性是作为一个副作用出现的——当一个系统碰巧跨越了从"专用"到"通用"的门槛时，它的能力就从有限突变为无限。这个模式暗示：<b>通用性不是一种奢侈品，而是现实结构中某种深层规律的反映。</b>'
+      ],
+      deepDives: [
+        {
+          title: '从有限到无限：飞跃的结构', icon: '\uD83D\uDE80',
+          triggerQuestion: '罗马数字可以表示任何数，只是越来越笨拙。印度-阿拉伯数字用10个符号就能表示一切。两者之间的差距仅仅是"效率"吗？还是存在一个从有限到无限的质变门槛——一旦跨过，系统的能力就从有界变为无界？',
+          chain: {
+            premise: '通向普遍性的飞跃在数学、语言、计算和生物学中都独立出现。如果这不是巧合，那么一定存在某种深层的结构性原因。理解这个原因可能是理解进步本质的关键。',
+            evidence: '德意志分析了数字系统的历史来说明飞跃的结构。罗马数字系统是"近乎通用"的——它能表示很大的数字，但随着数字增大，表示变得越来越笨拙。关键的飞跃发生在印度数学家引入零和位值原则的那一刻：突然之间，你可以用完全相同的规则表示1和1万亿——系统的复杂度不随问题规模增长。图灵机也是如此：一台通用图灵机可以模拟任何其他图灵机，其自身的复杂度不需要随被模拟机器的复杂度而增长。这就是通用性的数学签名：系统的能力无界增长，而系统本身的复杂度保持有界。',
+            conclusion: '这个洞见对理解人工智能的前景至关重要。当前的AI系统——无论多么强大——都是"专用"的：每个任务需要特定的训练数据和架构。如果AI要实现类似人类的通用智能，它需要经历一次从专用到通用的飞跃。这次飞跃可能不是通过"增加更多数据"或"扩大模型规模"来实现的，而是需要一种全新的架构——就像字母表不是"更多的象形文字"，而是一个完全不同的设计原则。'
+          }
+        },
+        {
+          title: '人工创造力：图灵与意识之谜', icon: '\uD83E\uDD16',
+          chain: {
+            premise: '如果人类大脑是一种通用解释者，而图灵证明了通用计算机在原则上可以模拟任何计算过程，那么原则上应该可以创造出具有人类级别创造力的人工智能。但问题是：我们不知道创造力到底是什么。',
+            evidence: '德意志区分了两种常被混淆的能力：模拟和理解。当前的AI可以完美模拟某些人类行为——下棋、翻译、作画——但德意志认为这与"理解"完全不同。一台国际象棋程序不"理解"象棋的美感，一个翻译模型不"理解"语言的含义。理解需要创造解释——一种我们目前不知道如何形式化的能力。图灵本人在提出图灵测试时也注意到了这个问题：一台能通过对话欺骗人类的机器，究竟是真的在"思考"还是仅仅在"模拟思考"？德意志的立场是：真正的人工智能必须能够创造新的解释，而不仅仅是处理已有的模式。',
+            conclusion: '德意志对AI的态度既乐观又谨慎。乐观的是：物理定律不禁止人工通用智能的存在，因此它原则上是可实现的。谨慎的是：我们距离理解创造力的本质还很远，而没有这种理解，我们就无法"设计"创造力——只能期望它偶然涌现。这也意味着当前关于AI"超级智能"的恐惧和希望可能都为时过早，因为它们假设我们已经走在通向通用AI的正确道路上。'
+          }
+        }
+      ]
+    },
+
+    {
+      id: 'scene-5', number: '第二部分 · 场景 05', palette: 'scene5',
+      title: '无穷之窗',
+      subtitle: 'A WINDOW ON INFINITY',
+      heroQuote: '无穷不是一个遥远的抽象概念——它就在这里，在每一次真正的解释中。因为每一个好的解释都暗含着无穷多尚未被发现的推论。',
+      narrative: [
+        '数学家格奥尔格·康托尔在19世纪末做了一件看似不可能的事情：<b>他证明了无穷有不同的大小。</b>自然数（1, 2, 3, ...）是无穷的，但实数的无穷"更大"——你无法将实数与自然数建立一一对应。这个发现不仅震惊了数学界，也为我们理解实在的结构打开了一扇窗。',
+        '德意志认为，无穷不是数学的专利——<b>它深嵌在物理实在的结构之中。</b>量子力学中的多重宇宙是一种无穷：每次量子事件发生时，宇宙分裂为多个分支，每个可能的结果都在某个分支中实际发生。知识增长的潜力也是一种无穷：因为好的解释总是暗含新的问题，而新的问题引出新的解释，这个过程没有终点。',
+        '但无穷也带来了深刻的哲学困惑。<b>希尔伯特旅馆悖论</b>展示了无穷的反直觉性质：一家拥有无穷多房间的旅馆已经客满，但仍然可以容纳新客人——只需让每位客人搬到下一间房，第一间就空出来了。甚至可以容纳无穷多新客人——让每位原来住在n号房的客人搬到2n号房，所有奇数号房间就空出来了。',
+        '德意志用无穷来论证他的核心乐观主义：<b>如果知识创造的潜力是无穷的，那么就不存在人类进步的"天花板"。</b>每一个被解决的问题都会暴露出新的问题，每一个好的解释都会打开通向更深理解的大门。文明的历史不是一个有限的资源被逐渐耗尽的故事，而是一个无穷的知识空间被逐步探索的冒险。悲观主义者总是认为我们即将触及极限——而历史反复证明他们错了。'
+      ],
+      deepDives: [
+        {
+          title: '希尔伯特旅馆与多重宇宙：无穷如何从数学走进物理', icon: '🏨',
+          triggerQuestion: '德意志是量子计算的先驱。他坚持认为"无穷"不是数学家的抽象玩具，而是物理实在的核心特征——这个立场的证据是什么？',
+          chain: {
+            premise: '大多数物理学家把无穷当作数学工具——方程中出现的∞是一个需要被"重整化"消除的麻烦，而不是实在的特征。但德意志的立场截然不同：<b>他认为无穷不仅是实在的特征，而且是物理学中最深刻的解释力的来源。</b>这个立场直接来自他对量子力学的诠释——休·埃弗雷特的多世界诠释。',
+            evidence: '德意志的论证从量子计算开始。1985年，他提出了通用量子计算机的概念——而这个概念的核心洞察是：<b>一台量子计算机在计算过程中，实际上是在利用多重宇宙中其他"副本"的计算资源。</b>考虑Shor算法——Peter Shor在1994年证明量子计算机可以在多项式时间内分解大数质因子，而经典计算机需要指数时间。一个500位数字的质因子分解，经典计算机需要的时间超过宇宙的年龄，但量子计算机理论上可以在几小时内完成。德意志问了一个尖锐的问题：<b>这些计算发生在哪里？</b>我们可观测宇宙中的原子数大约是10^80。但Shor算法在运行过程中进行的并行计算路径数远超10^500——比宇宙中所有原子的数量还要多得不可想象。如果你拒绝多世界诠释，你必须解释这些计算资源是从哪里来的。哥本哈根诠释说"不要问这个问题"——但这等于放弃了解释的责任。德意志认为，唯一融贯的解释是：<b>这些计算确实在物理上发生了——在多重宇宙的其他分支中。</b>量子计算机之所以强大，恰恰是因为它在同时利用极大量（可能是无穷多）平行宇宙中的计算资源。这个论证的深度在于它把一个形而上学问题变成了一个实验物理学问题。如果2025年谷歌或IBM的量子计算机成功地分解了一个经典计算机无法分解的大数——这些额外的计算发生在"哪里"？你必须给出一个物理解释，而不仅仅是说"量子力学就是这样运作的"。',
+            conclusion: '德意志把无穷从数学拉入物理的意义超越了量子力学本身。<b>如果物理实在是无穷的（无穷多平行宇宙），那么知识空间也是无穷的——因为每个宇宙中都有不同的物理过程在产生不同的信息。</b>这为他的核心哲学论点——"无穷的开始"——提供了物理学基础：我们不是在一个有限的宇宙中挤占有限的资源，而是身处一个无穷丰饶的多重实在之中，其中知识创造的可能性字面意义上是无穷的。当然，这个论证依赖于你接受多世界诠释——这仍然是物理学中最具争议的话题之一。但德意志会说：批评我的论证很好，提出更好的解释——这就是无穷的开始运作的方式。'
+          }
+        }
+      ]
+    },
+
+    {
+      id: 'scene-6', number: '第二部分 · 场景 06', palette: 'scene6',
+      title: '乐观主义原则',
+      subtitle: 'THE PRINCIPLE OF OPTIMISM',
+      heroQuote: '所有的恶——所有的痛苦、所有的不公、所有的灾难——都来自知识的匮乏。这不是一个安慰性的口号，而是一个可以被检验的物理学命题。',
+      narrative: [
+        '德意志提出了一个极其大胆的命题，他称之为<b>"乐观主义原则"</b>：所有的恶都来自知识的匮乏。任何不被物理定律禁止的事情，在拥有正确知识的情况下都是可以实现的。这不是天真的乐观——它是一个关于实在结构的深刻论断。',
+        '考虑疾病。在19世纪之前，传染病是人类最大的杀手。当时的"常识"认为瘟疫是不可避免的自然灾害。<b>但细菌理论的发现——一个好的解释——彻底改变了这一切。</b>疾病不是神的惩罚，不是"瘴气"的作用，而是微生物的感染。一旦有了这个解释，抗生素、疫苗、公共卫生措施就成为可能。曾经"不可避免"的恶，变成了"等待知识来解决"的问题。',
+        '德意志进一步论证：这个模式是普遍的。贫困、战争、环境退化——<b>所有这些"恶"都不是因为宇宙本身是恶意的，而是因为我们还没有创造出解决它们的知识。</b>物理定律不禁止消除贫困，不禁止和平共处，不禁止可持续地利用资源。它们只是还没有被我们目前的知识水平所实现。',
+        '在"苏格拉底之梦"这个思想实验中，德意志想象了一场苏格拉底与雅典民主之间的对话。苏格拉底质疑的核心问题是：<b>多数人的意见是否等于真理？</b>德意志认为答案是否定的——民主的价值不在于"多数人更可能是对的"，而在于民主允许错误的政策被和平替换。民主是一种纠错机制，而纠错能力正是进步的根本前提。'
+      ],
+      deepDives: [
+        {
+          title: '恶的知识论：为什么问题总是可解的', icon: '\u2600\uFE0F',
+          triggerQuestion: '如果你能证明某个具体的问题永远无法被解决，你实际上需要什么？你需要证明不存在任何物理过程可以产生解决这个问题的知识。但你怎么能证明一个不存在性命题——关于一种你可能尚未理解的知识创造过程？',
+          chain: {
+            premise: '乐观主义原则的逻辑结构是：如果某件事不被物理定律禁止，那么唯一阻止它实现的就是缺乏相关知识。因此，寻求知识——寻求好的解释——是解决一切问题的通用策略。',
+            evidence: '德意志用历史案例来支持这个论点。18世纪的化学家认为"燃素"（一种假想的物质）解释了燃烧。这个错误理论阻碍了化学进步几十年。直到拉瓦锡提出了氧化理论——一个好的解释——化学才开始指数式发展。类似地，19世纪的物理学家认为经典力学已经解释了一切，只剩下"两朵小乌云"。这两朵乌云变成了量子力学和相对论，开启了整个现代物理学。每一次看似"不可逾越"的障碍，最终都被一个好的解释所打破。反对者的唯一论据是"这次不同"——但历史上每个反对者都这么说过。',
+            conclusion: '乐观主义原则不是说"一切都会好起来"。它是说"一切都有可能好起来——只要我们持续寻求好的解释"。这个区别至关重要。乐观主义不承诺自动的进步——它承诺进步的可能性。如果我们停止寻求好的解释（比如在静态社会中），进步就会停止，恶就会持续。因此，乐观主义原则同时也是一个行动号召：进步不是注定的，它需要努力。'
+          }
+        },
+        {
+          title: '苏格拉底之梦：民主作为纠错机制', icon: '\uD83C\uDFDB\uFE0F',
+          chain: {
+            premise: '大多数关于民主的辩护都建立在"多数人更可能做出正确决定"的假设上。德意志认为这个辩护是错误的——民主的真正价值不在于"选出正确的领导人"，而在于"不流血地替换错误的领导人"。',
+            evidence: '德意志用一个思想实验来说明这一点。在苏格拉底与一个雅典公民的对话中，雅典人为民主辩护说"大多数人比少数人更有智慧"。苏格拉底回应：如果多数人在某个问题上碰巧是错的呢？多数票并不能使错误变成正确。但如果你问一个不同的问题——"哪种制度更容易纠正自己的错误？"——民主的优越性就清晰了。独裁政权犯了错误后，纠正错误需要革命或政变。民主制度犯了错误后，只需要一次选举。波普尔将此总结为：民主的核心问题不是"谁应该统治？"而是"如何在不发生暴力的情况下摆脱坏政府？"',
+            conclusion: '这个框架将民主从一种"选择最佳领导人的方法"重新定义为一种"纠错制度"。这与德意志整本书的核心主题一致：进步的关键不在于一开始就找到正确答案，而在于拥有持续纠正错误的机制。科学通过实验和反驳来纠错，民主通过选举和权力交替来纠错。两者的共同点是：它们都允许错误被发现和替换，而不需要暴力或灾难。'
+          }
+        }
+      ],
+      extendedReading: [
+        '德意志的乐观主义原则与斯蒂芬·平克在《人性中的善良天使》和《当下的启蒙》中的乐观主义有相似之处，但根基不同。平克的论据主要是统计性的——暴力在下降，健康在改善，贫困在减少。德意志的论据是物理学性的——物理定律的结构保证了知识增长的无限可能性。平克的乐观可以被反例削弱（如果暴力突然上升怎么办？），但德意志的乐观基于更深层的论证。',
+        '"苏格拉底之梦"这一章是全书最具文学性的部分。德意志用柏拉图式对话的形式，让苏格拉底与一个雅典公民辩论民主的本质。这不仅是一个哲学论证，也是德意志对波普尔政治哲学的致敬——波普尔在《开放社会及其敌人》中同样以批判柏拉图为起点来为民主辩护。',
+        '乐观主义原则的一个反直觉推论是：如果文明毁灭了（比如通过核战争），这不是因为"人类注定要失败"，而是因为我们犯了一个可以避免的错误。这个推论拒绝了一切形式的宿命论——无论是末日论的还是乌托邦的。未来既不是注定的灾难，也不是注定的天堂——它取决于我们是否继续创造好的解释。'
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART III · 物理与哲学 · PHYSICS AND PHILOSOPHY
+    // ═════════════════════════════════════════════════════════════
+
+    {
+      id: 'scene-7', number: '第三部分 · 场景 07', palette: 'scene7',
+      title: '多重宇宙',
+      subtitle: 'THE MULTIVERSE',
+      heroQuote: '否认多重宇宙的存在不是谨慎——而是放弃解释。当你说"不要问波函数坍缩是怎么发生的"时，你就已经退出了科学。',
+      narrative: [
+        '在量子力学中有一个令人困惑的实验：<b>双缝实验。</b>向一面有两条狭缝的屏障发射单个光子——一次一个。如果你不观测光子通过哪条缝，屏幕上会出现干涉图案，仿佛光子同时通过了两条缝。如果你观测它通过了哪条缝，干涉图案消失，光子表现得像一个普通粒子。',
+        '标准量子力学教科书说：不要问光子"真正"做了什么。只关注预测实验结果就好。<b>德意志认为这种态度——被称为"工具主义"——是科学的背叛。</b>科学的目的不是做出预测，而是理解实在。如果一个理论做出了正确的预测但拒绝提供解释，它就不是好的科学。',
+        '德意志给出的解释是<b>埃弗雷特的多世界解释</b>：当一个光子"同时通过两条缝"时，它真的同时通过了两条缝——只不过是在不同的宇宙分支中。干涉图案是不同宇宙分支中的光子互相干涉的结果。当你观测光子通过哪条缝时，你的观测行为使你所在的宇宙分支与其他分支"去相干"——干涉消失了。',
+        '德意志进一步批评了量子力学哲学中的"坏哲学"。<b>哥本哈根解释</b>说"波函数坍缩"在观测时发生，但拒绝解释坍缩的物理机制。这是一个"容易变化的"解释——如果你问"坍缩是怎么发生的？"，回答是"不要问"。<b>工具主义</b>说理论只是预测工具，不描述实在。德意志认为这些立场不仅是错误的哲学，还积极阻碍了物理学的进步——它们使物理学家停止了对量子力学基础的思考，浪费了几十年。'
+      ],
+      deepDives: [
+        {
+          title: '为什么多重宇宙是唯一的好解释', icon: '\uD83C\uDF0A',
+          triggerQuestion: '在双缝实验中，一个光子在没有被观测时表现得像同时通过了两条缝。如果你否认另一个"版本"的光子存在，你怎么解释干涉图案？如果你说"不需要解释"，你还在做科学吗？',
+          chain: {
+            premise: '一个好的解释必须是"难以改变的"——它的每个细节都必须有不可替代的作用。在量子力学的多世界解释中，多重宇宙的存在正是这样一个不可省略的要素。',
+            evidence: '考虑一个量子计算的具体例子：肖尔算法可以高效地分解大质数，这在经典计算中需要天文数字般的时间。量子计算机在运行时，其量子比特处于多个状态的叠加中——从多世界的视角看，计算是在多个宇宙分支中同时进行的，最终结果通过量子干涉汇聚到我们的分支中。德意志反问：如果你否认其他宇宙分支的存在，那么肖尔算法的计算在哪里完成的？经典计算机无法在可行的时间内完成同样的计算，所以计算资源一定来自我们看不见的某个地方。多世界解释给出了一个清晰的答案：计算在平行宇宙中同时进行。其他解释要么拒绝回答这个问题，要么给出"容易变化的"答案。',
+            conclusion: '德意志承认，多世界解释在直觉上令人不安——整个宇宙在每次量子事件时"分裂"？但他指出，科学理论的判据从来不是"直觉上舒适"，而是"好的解释"。日心说在当时也违反直觉——我们明明感觉不到地球在动。但日心说是一个好的解释：它用更简单的方式解释了更多的现象，它的每个细节都不可或缺。多世界解释也是如此。'
+          }
+        },
+        {
+          title: '坏哲学如何阻碍好物理学', icon: '\u26A0\uFE0F',
+          chain: {
+            premise: '如果哲学对科学没有影响，那么"坏哲学"最多只是无害的胡说。但德意志认为，坏哲学——特别是工具主义和实证主义——已经造成了可测量的科学损失。',
+            evidence: '德意志列举了多个案例。20世纪初，行为主义心理学——受逻辑实证主义影响——拒绝研究意识和心理状态，因为它们"不可观测"。这使心理学倒退了几十年。同样，哥本哈根解释的"不要问"态度使几代物理学家放弃了对量子力学基础的研究。贝尔不等式的实验验证本可以在1930年代就完成——但因为当时的主流哲学认为这类问题"没有意义"，它直到1960年代才被提出，1980年代才被实验验证。最令人痛心的例子也许是量子计算：如果物理学家在1950年代就认真对待多重宇宙的物理实在性，量子计算的概念可能提前30年被发明出来。',
+            conclusion: '德意志的结论是：哲学不是科学的附属品——它是科学的基础设施。好的哲学（可谬主义、实在论）为科学提供正确的方向；坏的哲学（工具主义、实证主义）则堵住了通向好解释的道路。科学家可以声称自己"不关心哲学"，但他们仍然在使用某种哲学——只是他们使用的可能是未经检验的、有害的哲学。'
+          }
+        }
+      ]
+    },
+
+    {
+      id: 'scene-8', number: '第三部分 · 场景 08', palette: 'scene8',
+      title: '花为什么美丽',
+      subtitle: 'WHY ARE FLOWERS BEAUTIFUL?',
+      heroQuote: '花的美丽不是主观的——花之所以美丽，是因为美的标准是客观的，而进化碰巧发现了与人类审美重叠的那些标准。这是关于实在结构的一个深刻事实。',
+      narrative: [
+        '这也许是全书最出人意料的一章。德意志问了一个看似简单的问题：<b>花为什么是美丽的？</b>按照标准的进化生物学解释，花的颜色和形状是为了吸引传粉昆虫。但这只回答了"花为什么是那个样子的"，没有回答"花为什么是美丽的"——为什么人类（不是传粉昆虫）会觉得花很美？',
+        '常见的回答是"美在观者的眼中"——美是主观的，是人类的文化建构。<b>德意志断然否认了这个回答。</b>他论证说，如果美完全是主观的和文化建构的，那么进化出来吸引昆虫的花就不应该恰好被人类觉得美丽。我们与昆虫的共同祖先生活在数亿年前。如果美是纯粹的"文化产物"，人类和昆虫对花的"偏好"之间的巧合就是无法解释的。',
+        '德意志提出了一个大胆的替代方案：<b>美的标准至少部分是客观的。</b>某些形式和比例关系在客观上比其他的更"好"——更对称、更有节奏感、更有层次。进化和人类审美都受到这些客观标准的约束，这就是为什么两者会收敛到相似的结果。',
+        '这个论证延伸到了艺术和创造力的本质。德意志认为，<b>艺术创作不仅仅是"自我表达"——它是一种对客观美学真理的探索。</b>就像科学家探索物理实在的结构一样，艺术家探索审美空间的结构。最伟大的艺术作品之所以经久不衰，不是因为文化惯性，而是因为它们触及了某些客观的审美真理——某些跨越文化和时代的形式的"好"。'
+      ],
+      deepDives: [
+        {
+          title: '美的客观性论证：从花到巴赫，德意志如何挑战审美相对主义', icon: '🌸',
+          triggerQuestion: '"美是客观的"这个说法不是已经被后现代主义彻底否定了吗？德意志凭什么声称一朵花的美不是我们投射给它的？',
+          chain: {
+            premise: '后现代主义的核心信条之一是：美是社会建构的，不存在客观的审美标准。不同文化认为不同的东西是美的，因此美只是文化偏好的投射。德意志承认不同文化确实有不同的审美偏好——<b>但他论证说，这个事实恰恰无法解释花和人类审美之间的巧合。</b>',
+            evidence: '论证的核心是一个排除法。花是被自然选择塑造来吸引传粉昆虫的——它们的颜色、对称性和形状对昆虫有吸引力。人类与昆虫的共同祖先大约在6亿年前分化。如果美完全是文化建构，那么人类对花的审美偏好应该与昆虫对花的"偏好"完全无关——因为两者之间没有任何文化传承路径。但事实是：<b>人类普遍觉得花是美的。</b>不是某些文化觉得花美——几乎所有人类文化都把花用于装饰、仪式和馈赠。这个跨文化的一致性需要解释。德意志排除了几个候选解释。（1）"花美是因为我们进化出了对植物的偏好"——但我们同样进化出了对能吃的果实的偏好，而许多果实并不被认为特别"美丽"。（2）"花美是因为颜色鲜艳"——但并非所有鲜艳的东西都美丽（想想热带毒蛇）。德意志的解释是：<b>花和人类审美偏好之间存在趋同，是因为两者都受到同一组客观的"优美标准"的约束。</b>这些标准包括对称性（花几乎都是径向对称的）、比例的和谐性（花瓣的大小和排列遵循数学规律，如斐波那契数列）、色彩对比的层次感。这些特征之所以"美"，不是因为人类或昆虫碰巧喜欢它们——而是因为它们反映了某些信息处理上的"最优性"。对称性表明发育的稳定性（基因质量的信号），比例和谐性降低认知处理的成本（大脑更容易编码有规律的模式），色彩层次提供了最大的信息密度。进化发现了这些标准（因为符合这些标准的花更有效地吸引传粉者），人类审美也独立发现了同样的标准——这不是巧合，而是两个独立的搜索过程都收敛到了同一片客观的"优美空间"。',
+            conclusion: '德意志的美的客观性论证不是要求所有人喜欢同样的东西——他完全承认口味差异的存在。<b>他的论点更精确：存在某些形式上的客观标准（如对称性、比例、层次），好的艺术和好的自然设计都趋向于这些标准。</b>就像不同的数学家可能偏好不同的证明风格，但他们都能区分正确证明和错误证明一样——不同的人可能偏好不同的美学风格，但存在某些超越个人偏好的"美的事实"。巴赫的赋格之所以在300年后仍被广泛认为美丽，不是因为文化惯性——而是因为它触及了关于音乐形式的某些客观真理，正如花的对称性触及了关于视觉形式的某些客观真理。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART IV · 文明的未来 · THE FUTURE OF CIVILIZATION
+    // ═════════════════════════════════════════════════════════════
+
+    {
+      id: 'scene-9', number: '第四部分 · 场景 09', palette: 'scene9',
+      title: '文化的演化',
+      subtitle: 'THE EVOLUTION OF CULTURE',
+      heroQuote: '在整个人类历史的大部分时间里，社会的首要目标不是进步，而是防止变化。这些社会成功地做到了——它们维持了几千年不变。这就是为什么它们如此悲惨。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '静态社会 vs 动态社会：文明的两种操作系统',
+        description: '德意志认为，人类文明的核心分界不是东方/西方、农业/工业，而是社会对待变化和批评的态度。',
+        data: {
+          columns: ['维度', '静态社会', '动态社会'],
+          rows: [
+            ['对变化的态度', '变化是威胁，必须被压制', '变化是常态，必须被引导'],
+            ['知识的来源', '权威和传统——祖先/神/经典', '猜想和批评——任何人都可以提出更好的解释'],
+            ['对创新者的待遇', '异端、叛逆者、需要被惩罚', '企业家、科学家、值得被奖励'],
+            ['纠错机制', '几乎不存在——错误通过灾难（饥荒、瘟疫、战争）暴露', '制度化——科学实验、民主选举、市场竞争'],
+            ['模因传播方式', '高保真复制：传统被精确传递，变异被惩罚', '鼓励变异和竞争：新思想挑战旧思想'],
+            ['持续时间', '可以维持数千年不变（如古埃及、斯巴达）', '持续变革，几代人内面目全非'],
+            ['人均生活水平', '长期停滞在接近生存线的水平', '指数增长——启蒙运动后200年的进步超过之前的20万年'],
+            ['失败模式', '外部冲击（被动态社会征服）或内部崩溃', '可能退回静态（法西斯主义、极权主义）']
+          ],
+          note: '启蒙运动的核心遗产不是某些特定思想，而是"批评可以被公开表达"这一制度。德意志认为这是人类文明史上最重要的发明——它使知识增长从偶然变为系统性。'
+        }
+      },
+      narrative: [
+        '为什么人类拥有通用解释的能力已经几万年了，但科学和工业革命只在几百年前才发生？<b>德意志认为，答案在于文化的类型。</b>在人类历史的绝大部分时间里，占主导地位的是"静态社会"——那些积极压制变化和创新的社会。',
+        '<b>静态社会</b>不是因为没有聪明人而停滞。它们是因为制度设计——传统、禁忌、权威——系统性地阻止了新知识的创造和传播。在这些社会中，创新者不是英雄而是威胁。一个提出新农耕方法的农民可能被视为亵渎祖先。一个质疑宗教教义的哲学家可能被处死。<b>这些社会的"成功"恰恰在于它们有效地压制了人类天生的创造力。</b>',
+        '德意志用模因（meme）的概念来分析文化传播。模因是文化信息的基本单位——思想、习惯、技术、歌曲。在静态社会中，模因的复制高度保真——传统被精确地从一代传给下一代，任何变异都被压制。在动态社会中，模因被鼓励变异和竞争——新思想可以挑战旧思想，更好的解释可以替代较差的解释。',
+        '<b>启蒙运动的真正遗产不是某些特定的思想内容，而是一种制度性的态度：对批评的容忍。</b>当一个社会开始允许人们公开质疑权威、检验传统、提出替代方案时，知识增长就从线性变成了指数级。德意志认为这是人类文明史上最重要的转折点——不是某个发明，不是某场战争，而是"批评可以被公开表达"这一制度的建立。'
+      ],
+      deepDives: [
+        {
+          title: '模因的两种复制策略：为什么有些思想"不允许被质疑"', icon: '🧬',
+          triggerQuestion: '德意志说静态社会通过"高保真复制"模因来维持稳定。这在当代有什么对应物？你每天接触的哪些思想具有"不允许被质疑"的自我保护机制？',
+          chain: {
+            premise: '德意志对模因的分析远比道金斯（模因概念的发明者）的分析更深入。他区分了两种根本不同的模因复制策略：<b>理性模因</b>通过让持有者觉得它是真的来传播（你相信E=mc²是因为有证据）；<b>反理性模因</b>通过禁用持有者的批判能力来传播（你相信某个教条是因为质疑它会让你感到恐惧或内疚）。</b>',
+            evidence: '反理性模因的自我保护机制极为精巧。德意志列举了几种经典模式。<b>（1）"质疑即背叛"模式：</b>某些政治意识形态和宗教教义的核心防御机制是将批评等同于道德缺陷——质疑教义不是"你可能有更好的解释"，而是"你信仰不够虔诚"或"你是叛徒"。这种机制将认识论问题转化为道德问题，从而绕过了理性讨论。<b>（2）"不可证伪"模式：</b>阴谋论的标准防御是将一切反证都解释为阴谋的一部分——"没有证据证明阴谋存在"本身就被解读为"阴谋隐藏得很好的证据"。波普尔指出，不可证伪的理论不是更强，而是更弱——它们放弃了与现实对话的能力。<b>（3）"传统即智慧"模式：</b>保守主义思想中有一种论证认为，长期存在的传统必然包含我们无法明确表述的隐性智慧。德意志承认这种论证有一定的合理性（长期存在的实践确实可能包含试错积累的知识），但他指出它的致命缺陷：<b>它无法区分"长期存在是因为有用"和"长期存在是因为压制了所有替代方案"。</b>奴隶制存在了几千年，但这不意味着它包含什么隐性智慧——它只是表明压制批评的制度可以长期自我维持。',
+            conclusion: '德意志的模因分析提供了一个实用的思维工具：<b>当你遇到一个声称"不应该被质疑"的思想时，这恰恰是它最应该被质疑的信号。</b>理性模因欢迎批评（因为批评要么被回应从而加强理论，要么暴露错误从而促进改进）；反理性模因恐惧批评（因为批评威胁到它的传播机制）。一个社会中反理性模因的流行程度，是衡量它距离"静态社会"有多近的精确指标。'
+          }
+        }
+      ]
+    },
+
+    {
+      id: 'scene-10', number: '第四部分 · 场景 10', palette: 'scene10',
+      title: '无穷的开始',
+      subtitle: 'THE BEGINNING',
+      heroQuote: '我们正处在无穷的开始。不是终点的开始，而是无穷进步的开始——前提是我们不停止寻求好的解释。这是最深刻意义上的乐观主义：不是相信一切都会好起来，而是知道一切都有可能好起来。',
+      narrative: [
+        '在全书的最后，德意志直面了当代最流行的一种思维方式：<b>"可持续性"。</b>他认为，"可持续发展"作为一个目标是根本错误的。',
+        '为什么？因为"可持续性"隐含着一个致命的假设：<b>我们可以预知未来需要什么资源。</b>但我们不能。一百年前，没有人能预见到硅——这种沙子里最普通的元素——会成为信息时代最重要的资源。同样，我们无法预见一百年后什么资源是关键的、什么技术是可能的。试图为一个不可预见的未来"维持"现有的资源配置，不仅是不可能的，而且是有害的——它把注意力从真正重要的事情（创造新知识）转移到了一个虚假的目标（维持现状）上。',
+        '德意志提出了一个替代框架：<b>不要追求可持续性，要追求知识创造的可持续性。</b>真正重要的不是保留特定的资源或技术，而是保持创造新知识来解决未来问题的能力。这意味着保护的不是森林或石油（虽然它们当前可能有价值），而是科学研究、批判性思维、开放社会——这些是持续解决问题的基础设施。',
+        '这就是"无穷的开始"的含义。人类文明不是一条走向终点的道路，而是<b>一个无穷探索的起点。</b>我们面前没有"终极状态"需要到达，没有"完美社会"需要建立——只有无穷多的问题等待被更好地解释，无穷多的可能性等待被实现。每一个被解决的问题都会暴露出新的问题——但这不是西西弗斯的诅咒，而是无穷进步的保证。',
+        '<b>如果我们犯了灾难性的错误——比如发动核战争或建立了全球性的静态社会——文明可能终结。但如果我们保持开放、保持批判、保持对好解释的追求，那么摆在我们面前的就是一个字面意义上的无穷未来。</b>不是因为进步是自动的——它不是。而是因为不存在任何物理定律规定的进步上限。德意志的最终信息是：我们正处在无穷的开始——这是人类状况中最重要的事实。'
+      ],
+      deepDives: [
+        {
+          title: '静态社会的陷阱：当代文明面临的三种退行风险', icon: '⚠️',
+          triggerQuestion: '德意志说文明可能"退回静态"——这在当代现实中意味着什么？今天是否存在把动态社会拉回静态的力量？',
+          chain: {
+            premise: '德意志最令人不安的洞察之一是：<b>动态社会不是人类的"默认状态"——静态社会才是。</b>在智人存在的约30万年中，动态社会（允许系统性知识创造和批评的社会）只存在了约400年——始于17世纪的科学革命和启蒙运动。这意味着从静态到动态的转换极为罕见，而从动态退回静态的风险始终存在。',
+            evidence: '<b>退行风险一：认识论上的相对主义。</b>如果"所有观点同样有效""没有客观真理""科学只是一种叙事"，那么批判性讨论的基础就瓦解了。德意志明确说：如果你不承认有些解释比其他解释更好，你就无法进行真正的知识创造——因为你不再有"改进"的标准。后现代主义对科学权威的解构在学术界产生了深远影响。在极端形态下，它导致了一种立场：疫苗的科学证据和反疫苗的阴谋论"各有道理"——这正是静态社会的认识论在动态社会中的复活。<b>退行风险二：技术平台对纠错机制的破坏。</b>德意志强调民主的价值不在于"多数人更可能正确"，而在于它允许错误的政策被和平更换。但当信息平台的算法创造了封闭的回音室——在其中每个人只接触确认自己已有观点的信息——纠错机制就失效了。一个人如果从未接触到对自己观点的严肃批评，他在认识论上就生活在一个"静态社会"中——一个变异被系统性压制的环境。<b>退行风险三：对"预防原则"的滥用。</b>预防原则说：如果一项新技术有未知风险，就不应该使用它。德意志认为这个原则在逻辑上是自相矛盾的——<b>不采用新技术也有风险</b>（你失去了这项技术本来能解决的问题的解决方案），而预防原则只看到了行动的风险，忽略了不行动的风险。极端的预防原则会导致技术停滞——而技术停滞在一个充满问题的世界中等于缓慢的退行。',
+            conclusion: '德意志的框架提供了一个清醒的检测标准来判断一个社会是否正在退行：<b>批评是否变得更难以公开表达？</b>如果媒体的自我审查增加、学术界的观点多样性降低、政治讨论从"我们哪里做错了"变成"谁该为此负责"——这些都是动态社会向静态滑动的早期信号。德意志会说：这些退行趋势不是不可逆的——但它们只能通过创造更好的解释来对抗，而不是通过恐惧、权威或传统。每一代人都必须重新赢得启蒙运动的遗产——它不是一个可以被"保存"的成就，而是一个需要被持续实践的过程。'
+          }
+        },
+        {
+          title: '可持续性谬误：为什么维持现状是错误目标', icon: '\u267B\uFE0F',
+          triggerQuestion: '19世纪伦敦最紧迫的环境危机是马粪堆积。如果当时的人制定了一个"可持续马粪管理计划"，他们会错过什么？当我们今天制定"可持续发展"战略时，我们是否在犯同样的错误——试图维持一个即将被新知识彻底改变的现状？',
+          chain: {
+            premise: '如果"可持续发展"要求我们维持当前的资源使用模式，那么它隐含地假设我们知道未来需要什么。但所有的知识都是可谬的，关于未来的知识尤其如此。',
+            evidence: '德意志用一系列历史案例来论证这一点。19世纪的伦敦面临一场"马粪危机"——城市中的马匹产生了如此多的粪便，以至于有人预测伦敦将在几十年内被马粪掩埋。解决方案不是"可持续地管理马粪"，而是汽车的发明使马匹变得多余。同样，1970年代的"石油峰值"恐慌预测石油将在2000年前耗尽。但新的勘探技术发现了更多储量，而且更重要的是，替代能源技术使石油的不可替代性持续下降。每一次"资源危机"的解决都不是通过"消耗更少"，而是通过创造新知识。',
+            conclusion: '德意志的替代方案不是"不关心环境"——而是将关注点从"维持"转向"创造"。真正的环保主义应该追求更好的技术（更清洁的能源、更高效的生产），而非更少的消耗。限制消耗是一种悲观策略，它假设人类无法发明更好的解决方案。创造新知识是乐观策略，它基于乐观主义原则——问题是可以被解决的，只要我们拥有正确的知识。'
+          }
+        },
+        {
+          title: '无穷的开始：人类状况的终极真相', icon: '\uD83C\uDF1F',
+          chain: {
+            premise: '如果知识增长没有物理学上的上限，如果人类是通用解释者，如果所有的恶都来自知识的匮乏——那么人类文明的未来在原则上是无限的。这不是一种愿望，而是一个物理学结论。',
+            evidence: '德意志将他全书的论证汇聚于此。从好解释的理论（知识增长的方法）、通用解释者（知识增长的主体）、通向普遍性的飞跃（知识增长的模式）、乐观主义原则（知识增长的可能性）到对坏哲学的批判（知识增长的障碍），每一条线索都指向同一个结论：人类的未来不受任何已知的物理限制。宇宙不会"用完"供我们理解的事物，数学不会"用完"供我们证明的定理，文明不会"用完"供我们解决的问题。恒星最终会熄灭，但知识可以找到比恒星更持久的存在方式——只要我们不停止寻找。',
+            conclusion: '这就是"无穷的开始"——不是一个乌托邦的承诺，而是一种关于实在结构的陈述。进步不是自动的，文明可以因为错误而毁灭。但如果我们保持对好解释的追求——保持科学的精神、保持开放社会的制度、保持可谬主义的态度——那么摆在我们面前的就是一个真正无穷的未来。在宇宙138亿年的历史中，人类文明只有几千年。从无穷的视角来看，我们才刚刚开始。'
+          }
+        }
+      ]
+    }
+  ],
+
+  knowledgeMaps: [
+    {
+      afterPart: 2, palette: 'scene4',
+      title: '知识创造的结构', center: '好解释<br>的力量',
+      branches: [
+        { title: '好解释vs坏解释', leaves: ['好解释难以变动(hard to vary)', '坏解释可随意调整', '可证伪性是副产品而非本质'] },
+        { title: '人类的独特性', leaves: ['通用解释者：能理解一切可理解之物', '创造力不可还原为算法', '人是宇宙中意义的来源'] },
+        { title: '抽象的实在性', leaves: ['抽象实体(数学/道德)客观存在', '涌现层级不可还原', '解释比预测更根本'] },
+        { title: '通用性飞跃', leaves: ['从专用到通用的质变', '字母表/数字/计算的通用化', '一旦通用化便无法逆转'] },
+        { title: '无穷的数学', leaves: ['无穷不是大数而是质的飞跃', '希尔伯特旅馆悖论', '数学知识也需要解释'] }
+      ]
+    },
+    {
+      afterPart: 4, palette: 'scene10',
+      title: '文明进步的逻辑', center: '无穷的<br>开始',
+      branches: [
+        { title: '乐观主义原则', leaves: ['一切恶皆源于知识不足', '问题可解只要不违反物理定律', '悲观主义低估人类创造力'] },
+        { title: '多重宇宙', leaves: ['量子力学要求多宇宙诠释', '真实存在而非隐喻', '可替代性与决策伦理'] },
+        { title: '客观美的标准', leaves: ['美不只是主观偏好', '花的美与人类审美共演化', '艺术进步与科学进步同构'] },
+        { title: '动态vs静态社会', leaves: ['静态社会压制创新求稳定', '动态社会通过纠错进步', '启蒙运动是关键转折点'] },
+        { title: '可持续性批判', leaves: ['可持续=停止进步的伪概念', '预言资源枯竭忽视知识创造', '只有持续创新才是真正安全'] }
+      ]
+    }
+  ],
+
+  mindMaps: [
+    {
+      afterPart: 4, palette: 'scene10',
+      title: '无穷的开始全书思维导图',
+      subtitle: 'ALL PROGRESS COMES FROM GOOD EXPLANATIONS',
+      root: '一切进步源于好解释——知识创造没有终点',
+      branches: [
+        {
+          text: '解释的本质',
+          children: [
+            { text: '好解释vs坏解释', children: ['好解释难以变动(hard to vary)', '坏解释可随意调整以适应任何事实', '可证伪性是副产品而非本质'] },
+            { text: '经验主义的谬误', children: ['知识不是从观察中"导出"的', '理论先于观察：猜想与反驳', '归纳法从未被成功辩护'] },
+            { text: '抽象的实在性', children: ['数学和道德客观存在', '涌现层级不可还原为低层', '解释比预测更根本'] }
+          ]
+        },
+        {
+          text: '通用性与无穷',
+          children: [
+            { text: '通用性飞跃', children: ['从专用到通用的质变时刻', '字母表数字计算的通用化', '一旦通用化便不可逆转'] },
+            { text: '人类作为通用解释者', children: ['能理解一切可理解之物', '创造力不可还原为算法', '人是宇宙中意义的唯一来源'] },
+            { text: '无穷的数学与哲学', children: ['无穷不是大数而是质的飞跃', '希尔伯特旅馆悖论', '数学知识也需要解释而非仅证明'] },
+            { text: '计算的通用性', children: ['图灵通用计算的发现', '一切可计算之物皆可模拟', '但创造力超越计算'] }
+          ]
+        },
+        {
+          text: '物理与哲学',
+          children: [
+            { text: '量子力学与多重宇宙', children: ['多宇宙诠释是唯一好解释', '真实存在而非数学隐喻', '可替代性与决策伦理'] },
+            { text: '客观美的标准', children: ['美不只是主观偏好', '花的美与人类审美共演化', '艺术进步与科学进步同构'] },
+            { text: '乐观主义原则', children: ['一切恶皆源于知识不足', '问题可解只要不违反物理定律', '悲观主义系统性低估人类创造力'] }
+          ]
+        },
+        {
+          text: '文明的未来',
+          children: [
+            { text: '动态社会vs静态社会', children: ['静态社会压制创新求虚假稳定', '动态社会通过纠错机制进步', '启蒙运动是关键转折点'] },
+            { text: '可持续性批判', children: ['可持续=停止进步的伪概念', '预言资源枯竭忽视知识创造', '只有持续创新才是真正的安全'] },
+            { text: '知识创造的无穷前景', children: ['不存在不可解决的问题', '只存在尚未被创造的知识', '我们正处在无穷的开始而非终结'] }
+          ]
+        }
+      ]
+    }
+  ],
+
+  aiReflection: null,
+
+  footer: {
+    title: '全书 \u00B7 终',
+    text: '一切进步的来源是什么？<br>是好的解释——难以改变的、精确的、对实在做出承诺的解释。<br><br>人类不是宇宙中微不足道的尘埃。<br>我们是通用解释者——原则上能够理解一切、改变一切。<br><br><b>我们正处在无穷的开始。<br>不存在不可解决的问题，只存在尚未被创造的知识。</b>',
+    note: '大卫\u00B7德意志《无穷的开始》\u00B7 沉浸式深度导读 \u00B7 全四部分'
+  }
+};
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// The Beginning of Infinity — Custom Components & Styles
+// Book-specific visualizations, animations, and interactive modules
+// ═══════════════════════════════════════════════════════════════
+
+</script>
+<script>
+BookEngine.init();
+</script>
+</body>
+</html>

@@ -1,0 +1,4127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何阅读一本书 · 沉浸式深度导读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   IMMERSIVE BOOK ENGINE — Shared Stylesheet
+   Layered architecture for multi-book rendering engine.
+   Each book injects its own styles into @layer book-custom.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base, layout, components, interactive, animation, book-custom, utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE LAYER
+   Root variables, reset, body defaults, texture overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+
+  /* ── Root CSS Variables (unified superset) ── */
+  :root {
+    /* Palette */
+    --bg: #F5F0E8;
+    --bg-secondary: #EDE7DA;
+    --fg: #1A1A1A;
+    --fg-secondary: #5C5546;
+    --accent: #B8860B;
+    --accent-dim: rgba(184, 134, 11, 0.12);
+    --accent-mid: rgba(184, 134, 11, 0.35);
+    --accent-glow: rgba(184, 134, 11, 0.06);
+    --border: rgba(0,0,0,0.06);
+    --glass-bg: rgba(245, 240, 232, 0.72);
+    --glass-border: rgba(255,255,255,0.3);
+    --card-bg: rgba(255,255,255,0.7);
+    --muted-fg: #7A7062;
+
+    /* Typography */
+    --serif: 'Noto Serif SC', 'Songti SC', Georgia, serif;
+    --sans: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Easing */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background-color: var(--bg);
+    color: var(--fg);
+    overflow-x: hidden;
+    line-height: 1.9;
+    transition: background-color 1.4s var(--ease-smooth),
+                color 1.4s var(--ease-smooth);
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Noise/Grain Texture Overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT LAYER
+   Progress bar, scene navigation, hero, scenes, footer
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer layout {
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 9999;
+    width: 0%;
+    transition: width 0.15s linear;
+  }
+  /* Enhanced: gradient shimmer */
+  .progress-bar {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent)) !important;
+    background-size: 200% 100%;
+    animation: progressShimmer 3s ease infinite;
+    height: 3px !important;
+  }
+
+  /* ── Scene Nav (right-side dots) ── */
+  .scene-nav {
+    position: fixed;
+    right: 2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.8s var(--ease-smooth);
+  }
+  .scene-nav.visible { opacity: 1; }
+  .scene-nav a {
+    display: block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--fg);
+    opacity: 0.15;
+    transition: all 0.5s var(--ease-out);
+    position: relative;
+    text-decoration: none;
+  }
+  .scene-nav a.active {
+    background: var(--accent);
+    opacity: 1;
+    transform: scale(1.6);
+    box-shadow: 0 0 12px var(--accent-mid);
+  }
+  .scene-nav a::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%) translateX(4px);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: all 0.3s var(--ease-out);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+  }
+  .scene-nav a:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+  /* Enhanced: glass tooltip */
+  .scene-nav a::after {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  /* ── Hero Section ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+  }
+  .hero-overline {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 3rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 0.3s forwards;
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(3.5rem, 12vw, 8rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(40px);
+    animation: fadeUp 1.4s var(--ease-out) 0.6s forwards;
+    will-change: transform;
+  }
+  .hero-subtitle {
+    font-family: var(--serif);
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 300;
+    color: var(--fg-secondary);
+    max-width: 500px;
+    letter-spacing: 0.1em;
+    margin-bottom: 4rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 1.2s var(--ease-out) 1s forwards;
+  }
+  .hero-part {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    border: 1px solid var(--accent-mid);
+    padding: 0.6rem 2rem;
+    border-radius: 100px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 1.3s forwards;
+  }
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    animation: fadeUp 1s var(--ease-out) 2s forwards;
+  }
+  .hero-scroll-hint span {
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: var(--fg-secondary);
+    text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px;
+    height: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .scroll-line::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--accent));
+    animation: scrollDrop 2s ease-in-out infinite;
+  }
+  .hero-scroll-hint .scroll-arrow {
+    font-size: 1.2rem;
+    color: var(--accent);
+    animation: bounceArrow 2s var(--ease-out) infinite;
+    opacity: 0.6;
+  }
+
+  /* ── Scene Sections ── */
+  .scene {
+    min-height: 100vh;
+    padding: 12rem 2rem 8rem;
+    position: relative;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 100vh;
+  }
+  .scene-inner {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .scene-number {
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+  }
+  .scene-title {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .scene-subtitle {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    margin-bottom: 6rem;
+    text-transform: uppercase;
+  }
+
+  /* ── Gradient Mesh Backgrounds for Scenes ── */
+  .scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background:
+      radial-gradient(ellipse at 20% 20%, var(--accent-glow) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, var(--accent-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 100%);
+    z-index: -1;
+  }
+
+  /* ── Hero Quote (cinematic, massive) ── */
+  .hero-quote-wrap {
+    margin: 2rem 0 6rem;
+    padding: 4rem 0;
+    position: relative;
+  }
+  .hero-quote-wrap::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote-wrap::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2.6rem);
+    line-height: 1.7;
+    font-weight: 300;
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--accent);
+    z-index: 1;
+  }
+  /* Enhanced: quote decoration marks */
+  .hero-quote-wrap .quote-deco {
+    position: absolute;
+    font-family: var(--serif);
+    font-size: clamp(6rem, 15vw, 12rem);
+    font-weight: 900;
+    color: var(--accent);
+    opacity: 0.06;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-quote-wrap .quote-deco-open {
+    top: -0.5em;
+    left: -0.3em;
+  }
+  .hero-quote-wrap .quote-deco-close {
+    bottom: -0.8em;
+    right: -0.1em;
+  }
+  /* Animated underline highlight on hero quote */
+  .hero-quote-highlight {
+    background: linear-gradient(120deg, var(--accent-dim) 0%, var(--accent-mid) 100%);
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+    background-position: 0 100%;
+    transition: background-size 1.8s var(--ease-out);
+    padding: 0.1em 0;
+  }
+  .reveal-wipe.revealed .hero-quote-highlight {
+    background-size: 100% 100%;
+  }
+
+  /* ── Narrative Paragraphs ── */
+  .narrative { margin-bottom: 2rem; }
+  .narrative p {
+    font-size: 1.05rem;
+    line-height: 2.1;
+    margin-bottom: 2.5rem;
+    color: var(--fg);
+    opacity: 0.82;
+  }
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  /* Enhanced: bold marker highlight */
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+    background: linear-gradient(120deg, var(--accent-dim) 0%, transparent 100%);
+    padding: 0.05em 0.2em;
+    border-radius: 3px;
+  }
+  /* Enhanced: drop cap */
+  .narrative p.drop-cap-p::first-letter {
+    font-family: var(--serif);
+    font-size: 3.5em;
+    font-weight: 900;
+    float: left;
+    line-height: 0.8;
+    margin-right: 0.08em;
+    margin-top: 0.1em;
+    color: var(--accent);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 10rem 2rem 6rem;
+  }
+  .footer-title {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+  }
+  .footer-text {
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    max-width: 460px;
+    margin: 0 auto;
+    line-height: 2;
+    opacity: 0.7;
+  }
+  .footer-next {
+    margin-top: 3rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .footer-bookshelf {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+    padding: 0.75rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--fg-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: all 0.4s var(--ease-out);
+    background: var(--accent-glow);
+  }
+  .footer-bookshelf:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .footer-bookshelf .arrow {
+    transition: transform 0.3s var(--ease-out);
+  }
+  .footer-bookshelf:hover .arrow {
+    transform: translateX(-4px);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENTS LAYER
+   Data viz, big numbers, deep-dive triggers, modals, comparisons,
+   knowledge maps, stat pills, keyboard hint
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Data Viz Container ── */
+  .data-viz {
+    margin: 4rem 0;
+    padding: 3rem 0;
+    position: relative;
+  }
+  .data-viz-title {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .svg-container {
+    width: 100%;
+    overflow: visible;
+  }
+  .svg-container svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  /* SVG path draw animation */
+  .draw-path {
+    stroke-dasharray: var(--path-length, 1000);
+    stroke-dashoffset: var(--path-length, 1000);
+    transition: stroke-dashoffset 2.5s var(--ease-out);
+  }
+  .draw-path.drawn {
+    stroke-dashoffset: 0;
+  }
+  /* Enhanced: corner accents */
+  .data-viz::before,
+  .data-viz::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: var(--accent-mid);
+    border-style: solid;
+  }
+  .data-viz::before {
+    top: 0;
+    left: 0;
+    border-width: 2px 0 0 2px;
+  }
+  .data-viz::after {
+    bottom: 0;
+    right: 0;
+    border-width: 0 2px 2px 0;
+  }
+
+  /* ── Comparison Table ── */
+  .comparison-table-viz .viz-title {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .comparison-table-viz .viz-desc {
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .comparison-table-viz .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+  .comp-table th {
+    text-align: left;
+    padding: 0.65rem 0.8rem;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent-mid);
+    white-space: nowrap;
+  }
+  .comp-table td {
+    padding: 0.6rem 0.8rem;
+    color: var(--fg);
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-table tbody tr:hover {
+    background: var(--accent-dim);
+  }
+  .comparison-table-viz .viz-note {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--fg-secondary);
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid var(--accent-mid);
+    background: var(--accent-glow);
+    line-height: 1.6;
+  }
+
+  /* ── Big Number Counter ── */
+  .big-number {
+    font-family: var(--serif);
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-shadow: 0 0 40px var(--accent-dim), 0 0 80px var(--accent-glow);
+  }
+  .big-number-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--fg-secondary);
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+  .number-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin: 3rem 0;
+    text-align: center;
+  }
+
+  /* ── Deep Dive Triggers ── */
+  .dd-trigger-section {
+    margin-top: 5rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+  }
+  .dd-trigger-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+  .dd-trigger-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .dd-trigger-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .dd-trigger {
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    /* Enhanced: 3D tilt */
+    perspective: 800px;
+    transform-style: preserve-3d;
+    transition: all 0.4s var(--ease-out), transform 0.3s var(--ease-out);
+  }
+  .dd-trigger::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-dim), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .dd-trigger:hover {
+    border-color: var(--accent-mid);
+    transform: translateY(-4px) rotateX(2deg) rotateY(-2deg);
+    box-shadow: 0 12px 40px var(--accent-dim), 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .dd-trigger:hover::before { opacity: 1; }
+  .dd-trigger-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-content {
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-title {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+  }
+  .dd-trigger-hint {
+    font-size: 0.6rem;
+    color: var(--fg-secondary);
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+  }
+  .dd-trigger-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--accent);
+    transition: transform 0.3s var(--ease-out);
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger:hover .dd-trigger-arrow {
+    transform: translateX(4px);
+  }
+  /* Breathing pulse before first click */
+  .dd-trigger:not(.clicked) {
+    animation: ddPulse 3s ease-in-out infinite;
+  }
+  .dd-trigger.clicked {
+    animation: none;
+  }
+
+  /* ── Modal Overlay ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-smooth);
+  }
+  .modal-overlay.open {
+    pointer-events: all;
+    opacity: 1;
+  }
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  }
+  .modal-drawer {
+    position: relative;
+    width: min(580px, 92vw);
+    height: 100vh;
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border-left: 1px solid var(--glass-border);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.6s var(--ease-out);
+    box-shadow: -20px 0 80px rgba(0,0,0,0.1);
+  }
+  .modal-overlay.open .modal-drawer {
+    transform: translateX(0);
+  }
+  .modal-close {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    padding: 1.5rem 2rem 0;
+  }
+  .modal-close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--fg-secondary);
+    transition: all 0.3s;
+  }
+  .modal-close-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .modal-body {
+    padding: 2rem 2.5rem 4rem;
+  }
+  @media (max-width: 640px) {
+    .modal-body { padding: 1.5rem 1.5rem 3rem; }
+  }
+  .modal-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .modal-title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Logic Chain in Modal ── */
+  .logic-chain-modal {
+    position: relative;
+  }
+  .chain-step-modal {
+    position: relative;
+    padding-left: 2rem;
+    padding-bottom: 2.5rem;
+    border-left: 1.5px solid var(--accent-mid);
+  }
+  .chain-step-modal:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+  }
+  .chain-step-modal::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 0.2rem;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--glass-bg), 0 0 0 5px var(--accent-mid);
+  }
+  .chain-label-modal {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    display: inline-block;
+    padding: 0.2rem 0.75rem;
+    background: var(--accent-dim);
+    border-radius: 3px;
+  }
+  .chain-text-modal {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--fg);
+    opacity: 0.88;
+  }
+
+  /* ── Modal Stagger Animation ── */
+  .modal-stagger {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+  }
+  .modal-overlay.open .modal-stagger {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .modal-stagger-1 { transition-delay: 0.15s; }
+  .modal-stagger-2 { transition-delay: 0.35s; }
+  .modal-stagger-3 { transition-delay: 0.55s; }
+  .modal-stagger-4 { transition-delay: 0.75s; }
+  .modal-stagger-5 { transition-delay: 0.95s; }
+  .modal-stagger-6 { transition-delay: 1.15s; }
+
+  /* ── Active Recall Mask (triggerQuestion) ── */
+  .trigger-question {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-dim);
+    border-radius: 12px;
+  }
+  .trigger-question-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .trigger-question-text {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--fg);
+    margin-bottom: 1.2rem;
+  }
+  .recall-reveal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.8rem;
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+  }
+  .recall-reveal-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .logic-chain-modal {
+    transition: filter 0.6s var(--ease-out);
+  }
+  .logic-chain-modal.chain-masked {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ── Extended Reading (Collapsible Panel) ── */
+  .extended-reading {
+    margin: 1.5rem 0 3rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .extended-reading-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.3s;
+  }
+  .extended-reading-toggle::-webkit-details-marker { display: none; }
+  .extended-reading-toggle::after {
+    content: '›';
+    margin-left: auto;
+    font-size: 1.1rem;
+    transition: transform 0.3s var(--ease-out);
+  }
+  .extended-reading[open] .extended-reading-toggle::after {
+    transform: rotate(90deg);
+  }
+  .extended-reading-toggle:hover {
+    background: var(--accent-dim);
+  }
+  .extended-reading-content {
+    padding: 0 1.5rem 1.5rem;
+  }
+  .extended-reading-content p {
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--muted-fg);
+    margin-bottom: 1.2rem;
+    opacity: 0.85;
+  }
+  .extended-reading-content p:last-child { margin-bottom: 0; }
+
+  /* ── Key Term Inline Highlight ── */
+  .key-term {
+    color: var(--accent);
+    border-bottom: 1px dashed var(--accent-mid);
+    cursor: help;
+    transition: border-color 0.3s;
+  }
+  .key-term:hover {
+    border-bottom-style: solid;
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Glossary Floating Button ── */
+  .glossary-fab {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 450;
+    padding: 0.65rem 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .glossary-fab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-dim);
+  }
+
+  /* ── Glossary Drawer Content ── */
+  .glossary-header { margin-bottom: 2rem; }
+  .glossary-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .glossary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .glossary-item {
+    padding: 1.2rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.3s;
+  }
+  .glossary-item:hover { border-color: var(--accent-mid); }
+  .glossary-term {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .glossary-definition {
+    font-size: 0.88rem;
+    line-height: 1.9;
+    color: var(--fg-secondary);
+  }
+
+  /* ── Comparison Module ── */
+  .comparison-section {
+    margin: 5rem 0;
+    padding: 3rem 0;
+  }
+  .comparison-toggle {
+    display: inline-flex;
+    gap: 0;
+    margin-bottom: 3rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .toggle-btn {
+    padding: 0.65rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border: none;
+    background: transparent;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    min-height: 44px;
+    white-space: nowrap;
+  }
+  .toggle-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 100px;
+    box-shadow: 0 4px 15px var(--accent-mid);
+  }
+  .comparison-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .comp-row-label {
+    font-family: var(--serif);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+  .comp-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+  .comp-bar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .comp-bar-tag {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    width: 2.5rem;
+    text-align: right;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .comp-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .comp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.2s var(--ease-out);
+    width: 0%;
+  }
+  /* Enhanced: animated gradient fills */
+  .comp-bar-fill.amber {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+  }
+  .comp-bar-fill.grey {
+    background: linear-gradient(90deg, var(--fg-secondary), rgba(128,128,128,0.4), var(--fg-secondary));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+    opacity: 0.5;
+  }
+  .comp-bar-value {
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 2rem;
+    color: var(--fg-secondary);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .comp-text {
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--fg-secondary);
+    margin-top: 0.4rem;
+    opacity: 0.7;
+  }
+
+  /* ── Knowledge Map ── */
+  .knowledge-map {
+    margin: 4rem 0;
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+  .km-title {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--accent);
+  }
+  .km-center {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .km-connector {
+    width: 2px;
+    height: 2rem;
+    background: linear-gradient(to bottom, var(--accent-mid), transparent);
+    margin: 0 auto;
+  }
+  .km-branches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .km-branch {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: left;
+  }
+  .km-branch-title {
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .km-branch-title::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .km-leaves {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .km-leaf {
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: var(--fg-secondary);
+    padding-left: 1rem;
+    position: relative;
+  }
+  .km-leaf::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 6px;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+
+  /* ── Mind Map (Multi-level Tree) ── */
+  .mind-map {
+    margin: 4rem 0;
+    padding: 3rem 1.5rem;
+  }
+  .mm-title {
+    text-align: center;
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+  .mm-subtitle {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--fg-secondary);
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .mm-root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto 0.5rem;
+    padding: 0.7rem 1.8rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .mm-trunk {
+    width: 2px;
+    height: 1.5rem;
+    background: var(--accent-mid);
+    margin: 0 auto;
+  }
+  .mm-level1-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .mm-l1 {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    position: relative;
+  }
+  .mm-l1-title {
+    font-family: var(--serif);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.7rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .mm-l2 {
+    margin-left: 0.6rem;
+    padding-left: 0.9rem;
+    border-left: 1px solid var(--accent-mid);
+    margin-bottom: 0.5rem;
+  }
+  .mm-l2:last-child { margin-bottom: 0; }
+  .mm-l2-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.25rem;
+    position: relative;
+    padding-left: 0.7rem;
+  }
+  .mm-l2-title::before {
+    content: '';
+    position: absolute;
+    left: -0.95rem;
+    top: 0.5em;
+    width: 0.6rem;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+  .mm-l3-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-left: 0.7rem;
+    padding-left: 0.7rem;
+    border-left: 1px dashed var(--border);
+  }
+  .mm-l3 {
+    font-size: 0.7rem;
+    line-height: 1.55;
+    color: var(--fg-secondary);
+    position: relative;
+    padding-left: 0.6rem;
+  }
+  .mm-l3::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 0.55em;
+    width: 0.5rem;
+    height: 1px;
+    background: var(--border);
+  }
+  @media (max-width: 600px) {
+    .mm-level1-wrap { grid-template-columns: 1fr; }
+    .mm-root { font-size: 0.9rem; padding: 0.6rem 1.4rem; }
+  }
+
+  /* ── Stat Pill Badges ── */
+  .stat-pill {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85em;
+    padding: 0.1em 0.5em;
+    border-radius: 100px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Keyboard Nav Hint ── */
+  .kb-hint {
+    position: fixed;
+    bottom: 2rem;
+    right: 2.5rem;
+    z-index: 400;
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: var(--fg-secondary);
+    opacity: 0.4;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: opacity 0.8s var(--ease-smooth);
+    pointer-events: none;
+  }
+  .kb-hint.hidden { opacity: 0; }
+  .kb-hint kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--accent-glow);
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    line-height: 1;
+  }
+
+  /* ── Dark Scene Accents ── */
+  .scene.dark-scene .scene-title {
+    text-shadow: 0 0 60px var(--accent-dim);
+  }
+  .scene.dark-scene .big-number {
+    text-shadow: 0 0 40px var(--accent-mid), 0 0 80px var(--accent-dim);
+  }
+
+  /* ── Dark Particles (shared floating particle system) ── */
+  .dark-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .dark-particles .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    animation: particleFloat 12s ease-in-out infinite;
+    animation-play-state: paused;
+    will-change: transform, opacity;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTIVE LAYER
+   Empty placeholder — book-specific interactive styles injected at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer interactive {
+  /* Book-specific interactive widgets go here via custom.css */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATION LAYER
+   Reveal system, keyframes, reduced-motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer animation {
+
+  /* ── Reveal System ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.15s; }
+  .reveal-delay-2 { transition-delay: 0.3s; }
+  .reveal-delay-3 { transition-delay: 0.45s; }
+  .reveal-delay-4 { transition-delay: 0.6s; }
+
+  .reveal-wipe {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.6s var(--ease-out);
+  }
+  .reveal-wipe.revealed {
+    clip-path: inset(0 0% 0 0);
+  }
+
+  /* ── Keyframes ── */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollDrop {
+    0% { top: -100%; }
+    100% { top: 100%; }
+  }
+  @keyframes progressShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes bounceArrow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+  @keyframes ddPulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+  @keyframes barGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes particleFloat {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    50% { transform: translateY(-80px) translateX(30px); opacity: 0.2; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(-160px) translateX(-20px); opacity: 0; }
+  }
+
+  /* ── Reduced Motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal { opacity: 1; transform: none; }
+    .draw-path { stroke-dashoffset: 0 !important; }
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOOK-CUSTOM LAYER
+   Empty — each book injects its own styles at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer book-custom {
+  /* Populated by book-specific custom.css / custom.js */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITIES LAYER
+   Empty placeholder for utility classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Utility classes can be added here */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS (shared only — no book-specific selectors)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .scene { padding: 7rem 1.5rem 5rem; }
+  .scene-nav { display: none; }
+  .hero-quote { font-size: 1.2rem; }
+  .number-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .glossary-fab {
+    bottom: 1rem;
+    left: 1rem;
+    font-size: 0.6rem;
+    padding: 0.5rem 1rem;
+  }
+  .trigger-question { padding: 1rem; }
+  .trigger-question-text { font-size: 0.95rem; }
+  .extended-reading-toggle { padding: 0.8rem 1.2rem; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="scene-nav" id="sceneNav"></nav>
+<div id="app"></div>
+
+<div class="kb-hint" id="kbHint">
+  <kbd>Space</kbd> / <kbd>↓</kbd> 下一场景 &nbsp; <kbd>↑</kbd> 上一场景
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-drawer" id="modalDrawer">
+    <div class="modal-close">
+      <button class="modal-close-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// BookEngine — Component Registry, Plugin System & Shared Components
+// ═══════════════════════════════════════════════════════════════
+
+window.BookEngine = (function() {
+  // ── Registry ──
+  const vizRegistry = {};
+  const initQueue = [];
+  const plugins = [];
+  const hooks = {};
+
+  // ── Public API ──
+  const engine = {
+    // Register a visualization/component renderer
+    // Usage: BookEngine.registerViz('dunbar', { render: fn, init: fn })
+    registerViz(type, handler) {
+      vizRegistry[type] = handler;
+    },
+
+    // Register an init function to run after DOM render
+    registerInit(fn) {
+      initQueue.push(fn);
+    },
+
+    // Register a plugin with lifecycle hooks
+    // Plugin: { name, onInit, onRender, onScroll, onModalOpen, onModalClose, onDestroy }
+    registerPlugin(plugin) {
+      plugins.push(plugin);
+      // Register individual hooks
+      ['onInit','onRender','onScroll','onModalOpen','onModalClose','onDestroy'].forEach(hook => {
+        if (plugin[hook]) {
+          engine.registerHook(hook, plugin[hook]);
+        }
+      });
+    },
+
+    // Register a lifecycle hook
+    registerHook(hookName, fn) {
+      if (!hooks[hookName]) hooks[hookName] = [];
+      hooks[hookName].push(fn);
+    },
+
+    // Trigger all handlers for a hook
+    triggerHook(hookName, ...args) {
+      if (hooks[hookName]) {
+        hooks[hookName].forEach(fn => {
+          try { fn(...args); } catch(e) { console.warn(`[BookEngine] Hook ${hookName} error:`, e); }
+        });
+      }
+    },
+
+    // Render a visualization by type
+    renderViz(type, scene, config) {
+      const handler = vizRegistry[type];
+      if (!handler) {
+        console.warn(`[BookEngine] Unknown viz type: ${type}`);
+        return '';
+      }
+      return typeof handler.render === 'function' ? handler.render(scene, config) : '';
+    },
+
+    // Initialize a visualization by type (called after DOM render)
+    initViz(type) {
+      const handler = vizRegistry[type];
+      if (handler && typeof handler.init === 'function') {
+        handler.init();
+      }
+    },
+
+    // Run all init functions and plugin onInit hooks
+    runInits() {
+      initQueue.forEach(fn => {
+        try { fn(); } catch(e) { console.warn('[BookEngine] Init error:', e); }
+      });
+      engine.triggerHook('onInit');
+    },
+
+    // Inject custom CSS into the document (for book-specific styles)
+    injectCSS(cssString) {
+      if (!cssString) return;
+      const style = document.createElement('style');
+      style.textContent = cssString;
+      document.head.appendChild(style);
+    },
+
+    // ── Shared Component Renderers ──
+
+    // Render comparison toggle module
+    renderComparison(comp) {
+      // Accept both comp.rows and comp.dimensions
+      const rows = comp.rows || comp.dimensions;
+      if (!comp || !rows) return '';
+      const labels = comp.labels || ['采集', '农耕'];
+      const modes = comp.modes || ['foraging', 'farming'];
+      const triggerLabel = comp.triggerLabel || '生活质量对比 · Quality of Life';
+      // Support 2 or 3 buttons (original sapiens has 3: foraging, farming, compare)
+      const showCompare = comp.showCompare !== false;
+      let html = `
+        <div class="comparison-section reveal">
+          <div class="dd-trigger-label">${triggerLabel}</div>
+          <div class="comparison-toggle">
+            <button class="toggle-btn active" data-mode="${modes[0]}">${comp.btnLabels?.[0] || labels[0] + '生活'}</button>
+            <button class="toggle-btn" data-mode="${modes[1]}">${comp.btnLabels?.[1] || labels[1] + '生活'}</button>
+            ${showCompare ? `<button class="toggle-btn" data-mode="compare">对比</button>` : ''}
+          </div>
+          <div class="comparison-rows">`;
+      rows.forEach((row, i) => {
+        html += `
+            <div class="comp-row reveal reveal-delay-${Math.min(i+1,4)}" data-comp-row>
+              <div class="comp-row-label">${row.label}</div>
+              <div class="comp-bars">
+                <div class="comp-bar-wrapper" data-bar="${modes[0]}">
+                  <span class="comp-bar-tag">${labels[0]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill amber" data-score="${row[modes[0]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[0]].score}/10</span>
+                </div>
+                <div class="comp-bar-wrapper" data-bar="${modes[1]}" style="display:none;">
+                  <span class="comp-bar-tag">${labels[1]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill grey" data-score="${row[modes[1]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[1]].score}/10</span>
+                </div>
+              </div>
+              <div class="comp-text" data-text-${modes[0]}>${row[modes[0]].text}</div>
+              <div class="comp-text" data-text-${modes[1]} style="display:none;">${row[modes[1]].text}</div>
+            </div>`;
+      });
+      html += `</div></div>`;
+      return html;
+    },
+
+    // Render knowledge map
+    renderKnowledgeMap(map) {
+      if (!map) return '';
+      const centerText = map.center || map.centerNode || '';
+      const centerStyle = map.centerStyle ? ` style="${map.centerStyle}"` : '';
+      const branchesStyle = map.branchesStyle ? ` style="${map.branchesStyle}"` : '';
+      let html = `
+        <section class="knowledge-map" data-palette="${map.palette || 'hero'}">
+          <div class="km-title reveal">${map.title}</div>
+          <div class="km-center reveal reveal-delay-1"${centerStyle}>${centerText}</div>
+          <div class="km-connector reveal reveal-delay-1"></div>
+          <div class="km-branches"${branchesStyle}>`;
+      map.branches.forEach((branch, i) => {
+        const delay = i < 2 ? 2 : 3;
+        const items = branch.leaves || branch.items || [];
+        html += `
+            <div class="km-branch reveal reveal-delay-${delay}">
+              <div class="km-branch-title">${branch.title}</div>
+              <div class="km-leaves">
+                ${items.map(item => `<div class="km-leaf">${item}</div>`).join('')}
+              </div>
+            </div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // Render mind map (multi-level tree)
+    renderMindMap(map) {
+      if (!map || !map.branches) return '';
+      const renderL3 = (items) => {
+        if (!items || items.length === 0) return '';
+        return `<div class="mm-l3-list">${items.map(t => `<div class="mm-l3">${t}</div>`).join('')}</div>`;
+      };
+      const renderL2 = (children) => {
+        if (!children || children.length === 0) return '';
+        return children.map(c => {
+          if (typeof c === 'string') {
+            return `<div class="mm-l2"><div class="mm-l2-title">${c}</div></div>`;
+          }
+          return `<div class="mm-l2"><div class="mm-l2-title">${c.text}</div>${renderL3(c.children)}</div>`;
+        }).join('');
+      };
+      let html = `<section class="mind-map" data-palette="${map.palette || 'hero'}">`;
+      html += `<div class="mm-title reveal">${map.title}</div>`;
+      if (map.subtitle) html += `<div class="mm-subtitle reveal">${map.subtitle}</div>`;
+      html += `<div class="mm-root reveal reveal-delay-1">${map.root}</div>`;
+      html += `<div class="mm-trunk reveal reveal-delay-1"></div>`;
+      html += `<div class="mm-level1-wrap">`;
+      map.branches.forEach((b, i) => {
+        const delay = i < 2 ? 2 : 3;
+        html += `<div class="mm-l1 reveal reveal-delay-${delay}">`;
+        html += `<div class="mm-l1-title">${b.text}</div>`;
+        html += renderL2(b.children);
+        html += `</div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // ── Shared Initializers ──
+
+    // Initialize comparison toggle behavior
+    initComparison() {
+      document.querySelectorAll('.comparison-toggle').forEach(toggle => {
+        toggle.addEventListener('click', e => {
+          const btn = e.target.closest('.toggle-btn');
+          if (!btn) return;
+          toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const section = toggle.closest('.comparison-section');
+          engine.updateCompBars(btn.dataset.mode, section);
+        });
+      });
+    },
+
+    updateCompBars(mode, section) {
+      const modes = [];
+      section.querySelectorAll('.toggle-btn').forEach(b => {
+        if (b.dataset.mode !== 'compare') modes.push(b.dataset.mode);
+      });
+      const isCompare = mode === 'compare';
+      section.querySelectorAll('[data-comp-row]').forEach(row => {
+        modes.forEach(m => {
+          const bar = row.querySelector(`[data-bar="${m}"]`);
+          const text = row.querySelector(`[data-text-${m}]`);
+          if (bar) bar.style.display = (isCompare || m === mode) ? 'flex' : 'none';
+          if (text) text.style.display = (isCompare || m === mode) ? 'block' : 'none';
+        });
+      });
+      engine.animateCompBars(section);
+    },
+
+    animateCompBars(section) {
+      (section || document).querySelectorAll('.comp-bar-fill').forEach(bar => {
+        if (bar.closest('.comp-bar-wrapper').style.display === 'none') return;
+        bar.style.width = '0%';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.style.width = (parseInt(bar.dataset.score) / 10 * 100) + '%';
+        }));
+      });
+    },
+
+    // Animate counter (shared utility)
+    animateCounter(el, from, to, duration, suffix) {
+      const start = performance.now();
+      function formatVal(val) {
+        if (suffix === '万' || suffix === '%') return val;
+        if (val >= 1000000) return (val / 1000000).toFixed(0) + 'M';
+        if (val >= 10000 && !suffix) return Math.round(val / 1000) + 'K';
+        return val;
+      }
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = Math.round(from + (to - from) * eased);
+        el.textContent = formatVal(val) + (p >= 1 && suffix ? suffix : (p < 1 && suffix === '+' ? '' : ''));
+        if (p >= 1) el.textContent = formatVal(to) + (suffix || '');
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    },
+
+    // Animate SVG data viz bars
+    animateDataViz(container) {
+      const bars = container.querySelectorAll('.draw-bar');
+      bars.forEach((bar, i) => {
+        const targetW = parseFloat(bar.dataset.targetW);
+        setTimeout(() => {
+          bar.style.transition = 'width 1.5s var(--ease-out)';
+          bar.style.width = targetW + 'px';
+        }, i * 300);
+      });
+      const labels = container.querySelectorAll('.bar-label');
+      labels.forEach((lbl, i) => {
+        setTimeout(() => {
+          lbl.style.transition = 'opacity 0.6s';
+          lbl.style.opacity = '1';
+        }, 800 + i * 300);
+      });
+    },
+
+    // Get registered viz types
+    getVizTypes() { return Object.keys(vizRegistry); },
+
+    // Get plugins
+    getPlugins() { return plugins.map(p => p.name); }
+  };
+
+  // ── Built-in Viz: comparison-table ──
+  engine.registerViz('comparison-table', {
+    render(scene, config) {
+      const d = config.data;
+      if (!d || !d.columns || !d.rows) return '';
+      let html = `<div class="data-viz comparison-table-viz reveal" data-viz="comparison-table">`;
+      if (config.title) html += `<h4 class="viz-title">${config.title}</h4>`;
+      if (config.description) html += `<p class="viz-desc">${config.description}</p>`;
+      html += `<div class="table-scroll"><table class="comp-table">`;
+      html += `<thead><tr>${d.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
+      html += `<tbody>`;
+      d.rows.forEach(row => {
+        html += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+      });
+      html += `</tbody></table></div>`;
+      if (d.note) html += `<p class="viz-note">${d.note}</p>`;
+      html += `</div>`;
+      return html;
+    }
+  });
+
+  return engine;
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// Immersive Book Engine — Core Rendering & Interaction System
+// ═══════════════════════════════════════════════════════════════
+
+(function() {
+  'use strict';
+
+  // ── DOM References ──
+  const app = document.getElementById('app');
+  const sceneNav = document.getElementById('sceneNav');
+
+  // ── Palette System ──
+  // Unified superset: 13 color variables
+  const PALETTE_KEYS = [
+    ['bg',          '--bg'],
+    ['bgSecondary', '--bg-secondary'],
+    ['fg',          '--fg'],
+    ['fgSecondary', '--fg-secondary'],
+    ['accent',      '--accent'],
+    ['accentDim',   '--accent-dim'],
+    ['accentMid',   '--accent-mid'],
+    ['accentGlow',  '--accent-glow'],
+    ['border',      '--border'],
+    ['glassBg',     '--glass-bg'],
+    ['glassBorder', '--glass-border'],
+    ['cardBg',      '--card-bg'],
+    ['mutedFg',     '--muted-fg']
+  ];
+
+  function applyPalette(name) {
+    const p = PALETTES[name];
+    if (!p) return;
+    const s = document.documentElement.style;
+    PALETTE_KEYS.forEach(([key, prop]) => {
+      // Fallback: cardBg → glassBg, mutedFg → fgSecondary, etc.
+      const val = p[key]
+        || (key === 'cardBg' ? p.glassBg : null)
+        || (key === 'mutedFg' ? p.fgSecondary : null)
+        || (key === 'bgSecondary' ? p.bg : null)
+        || (key === 'glassBorder' ? p.border : null);
+      if (val) s.setProperty(prop, val);
+    });
+    document.body.style.backgroundColor = p.bg;
+    document.body.style.color = p.fg;
+  }
+
+  // ── Render Engine ──
+  function renderApp() {
+    const { meta, scenes } = CONTENT_DATA;
+    const parts = meta.parts || [];
+    const knowledgeMaps = CONTENT_DATA.knowledgeMaps || [];
+    const mindMaps = CONTENT_DATA.mindMaps || [];
+    const aiReflection = CONTENT_DATA.aiReflection || null;
+    let html = '';
+
+    // Hero
+    html += `
+      <section class="hero" id="hero">
+        <div class="hero-overline">${meta.author || meta.authorEn || ''} · ${meta.titleEn || meta.bookSub || ''}</div>
+        <h1 class="hero-title" id="heroTitle">${meta.title || meta.book || ''}</h1>
+        <p class="hero-subtitle">${meta.subtitle || meta.partTitle || ''}</p>
+        <div class="hero-part">${meta.badge || (meta.part ? meta.part + (meta.partSub ? ' · ' + meta.partSub : '') : '')}</div>
+        <div class="hero-scroll-hint">
+          <span>向下滚动</span>
+          <div class="scroll-arrow">↓</div>
+          <div class="scroll-line"></div>
+        </div>
+      </section>`;
+
+    // Hero extra content (e.g., timeline explorer for sapiens)
+    if (typeof CONTENT_DATA.renderHeroExtra === 'function') {
+      html += CONTENT_DATA.renderHeroExtra();
+    }
+
+    // Determine dark scenes from data or palette analysis
+    const darkScenes = CONTENT_DATA.darkScenes || [];
+
+    // Render scenes
+    scenes.forEach((scene, idx) => {
+      const isDark = darkScenes.includes(scene.palette);
+
+      // Part divider BEFORE scene (declarative)
+      const partBefore = parts.find(p => p.beforeScene === scene.id);
+      if (partBefore && partBefore.number > 1) {
+        // Knowledge map for the previous part
+        const kmBefore = knowledgeMaps.find(km => km.afterPart === partBefore.number - 1);
+        if (kmBefore) {
+          html += BookEngine.renderKnowledgeMap(kmBefore);
+        }
+        // Mind map for the previous part
+        const mmBefore = mindMaps.find(mm => mm.afterPart === partBefore.number - 1);
+        if (mmBefore) {
+          html += BookEngine.renderMindMap(mmBefore);
+        }
+        // Part intro
+        const prevScene = idx > 0 ? scenes[idx - 1] : null;
+        const introPalette = scene.palette;
+        html += `
+          <section class="hero" id="part${partBefore.number}-intro" data-palette="${introPalette}" style="min-height:80vh;">
+            <div class="hero-overline reveal" style="animation:none;">第${numberToChinese(partBefore.number)}部分</div>
+            <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">${partBefore.title}</h1>
+            <p class="hero-subtitle reveal reveal-delay-2" style="animation:none;">${partBefore.titleEn || ''}</p>
+          </section>`;
+      }
+
+      // Scene section
+      html += `<section class="scene${isDark ? ' dark-scene' : ''}" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner" style="position:relative;z-index:1;">`;
+
+      // Dark mode particles
+      if (isDark && !scene.starField) {
+        html += `<div class="dark-particles">${Array.from({length:20}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, d = 8+Math.random()*16, delay = Math.random()*10;
+          return `<div class="particle" style="left:${x}%;top:${y}%;animation-duration:${d}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+      // Star field
+      if (scene.starField) {
+        html += `<div class="star-field">${Array.from({length:50}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, size = 1+Math.random()*2, delay = Math.random()*6, dur = 3+Math.random()*4;
+          return `<div class="star" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+
+      // Scene header
+      html += `
+        <div class="reveal scene-number">${scene.number || ('场景 ' + String(idx+1).padStart(2,'0'))}</div>
+        <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
+        <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle || ''}</div>`;
+
+      // Hero Quote
+      if (scene.heroQuote) {
+        html += `
+        <div class="hero-quote-wrap reveal-wipe">
+          <span class="quote-deco quote-deco-open">「</span>
+          <span class="quote-deco quote-deco-close">」</span>
+          <blockquote class="hero-quote"><span class="hero-quote-highlight">${scene.heroQuote}</span></blockquote>
+        </div>`;
+      }
+
+      // Narrative (with keyTerm highlighting)
+      if (scene.narrative?.length) {
+        const kt = CONTENT_DATA.meta.keyTerms || [];
+        html += `<div class="narrative">`;
+        scene.narrative.forEach((p, pi) => {
+          let text = p;
+          if (kt.length) {
+            kt.forEach(k => {
+              const escaped = k.term.replace(/[.*+?^${}()|[\]\\]/g, '\\<!-- ENGINE_JS -->');
+              text = text.replace(new RegExp(`(?:<[^>]*>.*?<\\/[^>]*>)|(?:${escaped})`, 'g'), match => {
+                if (match.startsWith('<')) return match; // inside HTML tag, skip
+                return `<span class="key-term" title="${k.definition}">${match}</span>`;
+              });
+            });
+          }
+          const cls = pi === 0 ? ' drop-cap-p' : '';
+          html += `<p class="reveal${cls}">${text}</p>`;
+        });
+        html += `</div>`;
+      }
+
+      // Extended Reading (collapsible background panel)
+      if (scene.extendedReading?.length) {
+        html += `
+          <details class="extended-reading reveal">
+            <summary class="extended-reading-toggle">📖 展开深度背景</summary>
+            <div class="extended-reading-content">
+              ${scene.extendedReading.map(p => `<p>${p}</p>`).join('')}
+            </div>
+          </details>`;
+      }
+
+      // Data Viz — dispatch to registry
+      if (scene.dataViz) {
+        const vizType = typeof scene.dataViz === 'string' ? scene.dataViz : scene.dataViz.type;
+        const vizConfig = typeof scene.dataViz === 'string' ? { type: vizType } : scene.dataViz;
+        html += BookEngine.renderViz(vizType, scene, vizConfig);
+      }
+
+      // Extra renderers for this scene (book-specific injections)
+      if (scene.extraRender) {
+        scene.extraRender.forEach(fn => {
+          if (typeof fn === 'function') html += fn(scene);
+          else if (typeof fn === 'string') html += fn;
+        });
+      }
+
+      // Comparison
+      if (scene.comparison) {
+        html += BookEngine.renderComparison(scene.comparison);
+      }
+
+      // Interactive module — dispatch to registry
+      if (scene.interactive) {
+        const intType = scene.interactive.type;
+        html += BookEngine.renderViz(intType, scene, scene.interactive);
+      }
+
+      // Deep Dives
+      if (scene.deepDives?.length) {
+        html += `<div class="dd-trigger-section reveal"><div class="dd-trigger-label">深度解析 · Deep Dive</div><div class="dd-trigger-grid">`;
+        scene.deepDives.forEach((dd, i) => {
+          html += `
+            <div class="dd-trigger reveal reveal-delay-${Math.min(i+1, 4)}" data-dd-idx="${idx}-${i}">
+              <span class="dd-trigger-icon">${dd.icon}</span>
+              <div class="dd-trigger-content">
+                <div class="dd-trigger-title">${dd.title}</div>
+                <div class="dd-trigger-hint">点击展开完整论证链</div>
+              </div>
+              <span class="dd-trigger-arrow">→</span>
+            </div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // Key Takeaway
+      if (scene.keyTakeaway) {
+        html += `<div class="reveal" style="margin-top:3rem;padding:1.5rem;background:var(--accent-glow);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:0.85rem;line-height:1.8;color:var(--fg-secondary);">
+          <strong style="color:var(--accent);font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;">核心收获</strong><br>${scene.keyTakeaway}</div>`;
+      }
+
+      html += `</div></section>`; // end scene-inner + scene
+    });
+
+    // Final knowledge map (after last part)
+    const lastPart = parts.length > 0 ? Math.max(...parts.map(p => p.number)) : 0;
+    knowledgeMaps.filter(km => km.afterPart >= lastPart || km.afterPart === 'final').forEach(km => {
+      html += BookEngine.renderKnowledgeMap(km);
+    });
+
+    // Final mind maps (after last part)
+    mindMaps.filter(mm => mm.afterPart >= lastPart || mm.afterPart === 'final').forEach(mm => {
+      html += BookEngine.renderMindMap(mm);
+    });
+
+    // AI Reflection / Epilogue
+    if (aiReflection) {
+      const epiloguePalette = aiReflection.palette || (scenes.length > 0 ? scenes[scenes.length - 1].palette : 'hero');
+      html += `
+        <section class="scene epilogue-section" id="epilogue" data-palette="${epiloguePalette}" style="min-height:auto; padding: clamp(4rem,10vw,8rem) 0;">
+          <div class="scene-inner">
+            <div class="reveal scene-number" style="opacity:0.4;">${aiReflection.label || '写在最后'}</div>
+            <h2 class="reveal scene-title reveal-delay-1" style="font-size:clamp(1.8rem,5vw,3rem);">${aiReflection.title}</h2>
+            <div class="reveal scene-subtitle reveal-delay-2">${aiReflection.subtitle || ''}</div>
+            ${aiReflection.heroQuote ? `
+            <div class="hero-quote-wrap reveal-wipe">
+              <blockquote class="hero-quote" style="font-size:clamp(1rem,2.5vw,1.4rem);">${aiReflection.heroQuote}</blockquote>
+            </div>` : ''}
+            <div class="narrative">
+              ${(aiReflection.paragraphs || []).map(p => `<p class="reveal">${p}</p>`).join('')}
+            </div>
+          </div>
+        </section>`;
+    }
+
+    // Glossary floating button (only if keyTerms exist)
+    if (CONTENT_DATA.meta.keyTerms?.length) {
+      html += `<button class="glossary-fab" id="glossaryFab" title="术语表">📖 术语表</button>`;
+    }
+
+    // Footer
+    html += `
+      <footer class="footer" data-palette="hero">
+        <div class="reveal footer-title">${CONTENT_DATA.footer?.title || '全书 · 终'}</div>
+        <p class="reveal footer-text reveal-delay-1">${CONTENT_DATA.footer?.text || ''}</p>
+        ${CONTENT_DATA.footer?.note ? `<div class="reveal footer-next reveal-delay-2" style="opacity:0.4;margin-top:3rem;font-size:0.7rem;">${CONTENT_DATA.footer.note}</div>` : ''}
+        <a href="../index.html" class="footer-bookshelf reveal reveal-delay-3"><span class="arrow">←</span> 返回书架</a>
+      </footer>`;
+
+    app.innerHTML = html;
+
+    // Build nav dots
+    let navHtml = '';
+    scenes.forEach(s => {
+      navHtml += `<a href="#${s.id}" data-scene="${s.id}" data-label="${s.title}"></a>`;
+    });
+    sceneNav.innerHTML = navHtml;
+
+    // Trigger hook
+    BookEngine.triggerHook('onRender');
+
+    // Init systems
+    initScrollSystem();
+    initDeepDiveModal();
+    BookEngine.initComparison();
+    BookEngine.runInits();
+  }
+
+  // ── Scroll System ──
+  function initScrollSystem() {
+    const scenes = document.querySelectorAll('.scene');
+    const navLinks = document.querySelectorAll('.scene-nav a');
+    const progressBar = document.getElementById('progressBar');
+    const nav = document.getElementById('sceneNav');
+
+    // Reveal observer
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => revealObs.observe(el));
+
+    // Data viz observer
+    const vizObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateDataViz(e.target);
+          vizObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('[data-viz]').forEach(el => vizObs.observe(el));
+
+    // Big number counter observer
+    const countObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const target = parseInt(e.target.dataset.countTo);
+          const suffix = e.target.dataset.suffix || '';
+          BookEngine.animateCounter(e.target, 0, target, 2000, suffix);
+          countObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count-to]').forEach(el => countObs.observe(el));
+
+    // Comparison observer
+    const compObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateCompBars();
+          compObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.comparison-section').forEach(el => compObs.observe(el));
+
+    // Custom observers (registered by books)
+    if (BookEngine._customObservers) {
+      BookEngine._customObservers.forEach(obs => obs());
+    }
+
+    // Scroll handler — palette + progress + nav
+    let currentPalette = 'hero';
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+        nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
+
+        // Hero parallax
+        const heroTitle = document.getElementById('heroTitle');
+        if (heroTitle && scrollTop < window.innerHeight) {
+          heroTitle.style.transform = `translateY(${scrollTop * 0.15}px)`;
+        }
+
+        // Determine active palette
+        const viewMid = scrollTop + window.innerHeight * 0.45;
+        let newPalette = 'hero';
+        document.querySelectorAll('[data-palette]').forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            newPalette = s.dataset.palette;
+          }
+        });
+        // Nav active dot
+        scenes.forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            navLinks.forEach(l => l.classList.toggle('active', l.dataset.scene === s.id));
+          }
+        });
+        // Footer reset
+        const footer = document.querySelector('.footer');
+        if (footer && viewMid >= footer.offsetTop) newPalette = 'hero';
+
+        if (newPalette !== currentPalette) {
+          currentPalette = newPalette;
+          applyPalette(newPalette);
+        }
+
+        // Plugin scroll hook
+        BookEngine.triggerHook('onScroll', { scrollTop, viewMid, currentPalette });
+
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // ── Deep Dive Modal ──
+  function initDeepDiveModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const backdrop = document.getElementById('modalBackdrop');
+    const closeBtn = document.getElementById('modalClose');
+    const body = document.getElementById('modalBody');
+
+    function openModal(sceneIdx, ddIdx) {
+      const dd = CONTENT_DATA.scenes[sceneIdx].deepDives[ddIdx];
+      if (!dd) return;
+
+      const hasQ = !!dd.triggerQuestion;
+      const s = (n) => `modal-stagger modal-stagger-${n}`;
+      const chainOffset = hasQ ? 1 : 0;
+
+      body.innerHTML = `
+        <div class="modal-icon ${s(1)}">${dd.icon}</div>
+        <h3 class="modal-title ${s(2)}">${dd.title}</h3>
+        ${hasQ ? `
+        <div class="trigger-question ${s(3)}">
+          <div class="trigger-question-label">主动回忆 · Active Recall</div>
+          <p class="trigger-question-text">${dd.triggerQuestion}</p>
+          <button class="recall-reveal-btn" id="recallReveal">💡 揭晓作者逻辑</button>
+        </div>` : ''}
+        <div class="logic-chain-modal${hasQ ? ' chain-masked' : ''}">
+          <div class="chain-step-modal ${s(3 + chainOffset)}">
+            <div class="chain-label-modal">前 提</div>
+            <div class="chain-text-modal">${dd.chain.premise}</div>
+          </div>
+          <div class="chain-step-modal ${s(4 + chainOffset)}">
+            <div class="chain-label-modal">证 据</div>
+            <div class="chain-text-modal">${dd.chain.evidence}</div>
+          </div>
+          <div class="chain-step-modal ${s(5 + chainOffset)}">
+            <div class="chain-label-modal">结 论</div>
+            <div class="chain-text-modal">${dd.chain.conclusion}</div>
+          </div>
+        </div>`;
+      body.offsetHeight; // force reflow
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      if (hasQ) {
+        const revealBtn = document.getElementById('recallReveal');
+        if (revealBtn) {
+          revealBtn.addEventListener('click', () => {
+            body.querySelector('.logic-chain-modal').classList.remove('chain-masked');
+            revealBtn.style.display = 'none';
+          });
+        }
+      }
+      BookEngine.triggerHook('onModalOpen', { sceneIdx, ddIdx, dd });
+    }
+
+    function openGlossary() {
+      const keyTerms = CONTENT_DATA.meta.keyTerms;
+      if (!keyTerms?.length) return;
+      body.innerHTML = `
+        <div class="glossary-header modal-stagger modal-stagger-1">
+          <div class="glossary-label">术语表 · Glossary</div>
+          <h3 class="modal-title">${CONTENT_DATA.meta.title} · 关键术语</h3>
+          <p style="font-size:0.8rem;color:var(--fg-secondary);margin-top:0.5rem;line-height:1.6;">以下术语按作者在书中的<strong>特定定义</strong>整理，可能与日常含义不同。</p>
+        </div>
+        <div class="glossary-list">
+          ${keyTerms.map((kt, i) => `
+            <div class="glossary-item modal-stagger modal-stagger-${Math.min(i + 2, 5)}">
+              <div class="glossary-term">${kt.term}</div>
+              <div class="glossary-definition">${kt.definition}</div>
+            </div>
+          `).join('')}
+        </div>`;
+      body.offsetHeight;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      BookEngine.triggerHook('onModalClose');
+    }
+
+    document.addEventListener('click', e => {
+      const trigger = e.target.closest('[data-dd-idx]');
+      if (trigger) {
+        const [sIdx, dIdx] = trigger.dataset.ddIdx.split('-').map(Number);
+        openModal(sIdx, dIdx);
+        trigger.classList.add('clicked');
+      }
+      if (e.target.closest('#glossaryFab')) {
+        openGlossary();
+      }
+    });
+    backdrop.addEventListener('click', closeModal);
+    closeBtn.addEventListener('click', closeModal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  }
+
+  // ── Keyboard Navigation ──
+  function initKeyboardNav() {
+    const kbHint = document.getElementById('kbHint');
+    let hintDismissed = false;
+
+    function dismissHint() {
+      if (!hintDismissed) {
+        hintDismissed = true;
+        kbHint.classList.add('hidden');
+        window.removeEventListener('wheel', dismissHint);
+        window.removeEventListener('touchstart', dismissHint);
+      }
+    }
+    window.addEventListener('wheel', dismissHint, { passive: true, once: true });
+    window.addEventListener('touchstart', dismissHint, { passive: true, once: true });
+
+    function getAnchors() {
+      const anchors = [document.getElementById('hero')];
+      CONTENT_DATA.scenes.forEach(s => {
+        const el = document.getElementById(s.id);
+        if (el) anchors.push(el);
+      });
+      return anchors;
+    }
+
+    function currentIdx(anchors) {
+      const scrollMid = window.scrollY + window.innerHeight * 0.4;
+      let idx = 0;
+      for (let i = anchors.length - 1; i >= 0; i--) {
+        if (scrollMid >= anchors[i].offsetTop) { idx = i; break; }
+      }
+      return idx;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('modalOverlay').classList.contains('open')) return;
+      const anchors = getAnchors();
+      const cur = currentIdx(anchors);
+
+      if (e.key === 'ArrowDown' || (e.key === ' ' && !e.shiftKey)) {
+        e.preventDefault();
+        const next = Math.min(cur + 1, anchors.length - 1);
+        anchors[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      } else if (e.key === 'ArrowUp' || (e.key === ' ' && e.shiftKey)) {
+        e.preventDefault();
+        const prev = Math.max(cur - 1, 0);
+        anchors[prev].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      }
+    });
+  }
+
+  // ── Utility: Number to Chinese ──
+  function numberToChinese(n) {
+    const map = ['零','一','二','三','四','五','六','七','八','九','十'];
+    return n <= 10 ? map[n] : String(n);
+  }
+
+  // ── Register observer for book-specific elements ──
+  BookEngine._customObservers = [];
+  BookEngine.registerObserver = function(setupFn) {
+    BookEngine._customObservers.push(setupFn);
+  };
+
+  // ── Main init (called by template after all scripts load) ──
+  BookEngine.init = function() {
+    // Inject custom CSS if defined
+    if (typeof CUSTOM_CSS !== 'undefined') {
+      BookEngine.injectCSS(CUSTOM_CSS);
+    }
+
+    // Register custom components if defined
+    if (typeof CUSTOM_COMPONENTS !== 'undefined') {
+      Object.entries(CUSTOM_COMPONENTS).forEach(([type, handler]) => {
+        BookEngine.registerViz(type, handler);
+      });
+    }
+
+    // Render
+    renderApp();
+    initKeyboardNav();
+  };
+
+  // Expose applyPalette for external use
+  BookEngine.applyPalette = applyPalette;
+
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// HOW TO READ A BOOK · DATA
+// 如何阅读一本书 · Immersive Book Engine Data
+// ═══════════════════════════════════════════════════════════════
+
+const PALETTES = {
+  hero: {
+    bg: '#FAF7F2', fg: '#2C2418', accent: '#8B6914', accentDim: '#B8960E',
+    accentMid: '#D4A017', accentGlow: 'rgba(139,105,20,0.15)',
+    border: 'rgba(44,36,24,0.1)', glassBg: 'rgba(250,247,242,0.85)',
+    cardBg: 'rgba(255,255,255,0.7)', mutedFg: '#7A7062'
+  },
+  scene1: {
+    bg: '#FAF7F2', fg: '#2C2418', accent: '#8B6914', accentDim: '#B8960E',
+    accentMid: '#D4A017', accentGlow: 'rgba(139,105,20,0.15)',
+    border: 'rgba(44,36,24,0.1)', glassBg: 'rgba(250,247,242,0.85)',
+    cardBg: 'rgba(255,255,255,0.7)', mutedFg: '#7A7062'
+  },
+  scene2: {
+    bg: '#F5F0E8', fg: '#2A1F14', accent: '#A0522D', accentDim: '#CD853F',
+    accentMid: '#DEB887', accentGlow: 'rgba(160,82,45,0.15)',
+    border: 'rgba(42,31,20,0.1)', glassBg: 'rgba(245,240,232,0.85)',
+    cardBg: 'rgba(255,252,248,0.7)', mutedFg: '#8B7D6B'
+  },
+  scene3: {
+    bg: '#F2EDE5', fg: '#1E1912', accent: '#6B4C2A', accentDim: '#8B6914',
+    accentMid: '#A0845C', accentGlow: 'rgba(107,76,42,0.15)',
+    border: 'rgba(30,25,18,0.1)', glassBg: 'rgba(242,237,229,0.85)',
+    cardBg: 'rgba(255,252,246,0.7)', mutedFg: '#7A6E5D'
+  },
+  scene4: {
+    bg: '#1A1814', fg: '#E8DFD0', accent: '#D4A017', accentDim: '#B8960E',
+    accentMid: '#F0C85A', accentGlow: 'rgba(212,160,23,0.2)',
+    border: 'rgba(232,223,208,0.1)', glassBg: 'rgba(26,24,20,0.9)',
+    cardBg: 'rgba(40,35,28,0.8)', mutedFg: '#9A8E7A'
+  },
+  scene5: {
+    bg: '#F8F4EE', fg: '#2C2418', accent: '#7B6B3A', accentDim: '#9E8C50',
+    accentMid: '#BFA76A', accentGlow: 'rgba(123,107,58,0.15)',
+    border: 'rgba(44,36,24,0.1)', glassBg: 'rgba(248,244,238,0.85)',
+    cardBg: 'rgba(255,253,248,0.7)', mutedFg: '#8A7E6C'
+  },
+  scene6: {
+    bg: '#F0EBE3', fg: '#1E1912', accent: '#8B4513', accentDim: '#A0522D',
+    accentMid: '#CD853F', accentGlow: 'rgba(139,69,19,0.15)',
+    border: 'rgba(30,25,18,0.1)', glassBg: 'rgba(240,235,227,0.85)',
+    cardBg: 'rgba(255,250,244,0.7)', mutedFg: '#7A6B5A'
+  },
+  scene7: {
+    bg: '#F5F2EC', fg: '#2A2218', accent: '#5C7A3A', accentDim: '#7B9A50',
+    accentMid: '#9AB86A', accentGlow: 'rgba(92,122,58,0.15)',
+    border: 'rgba(42,34,24,0.1)', glassBg: 'rgba(245,242,236,0.85)',
+    cardBg: 'rgba(255,253,248,0.7)', mutedFg: '#7A7562'
+  },
+  scene8: {
+    bg: '#1E1A14', fg: '#E8DFD0', accent: '#C0903A', accentDim: '#D4A850',
+    accentMid: '#E8C06A', accentGlow: 'rgba(192,144,58,0.2)',
+    border: 'rgba(232,223,208,0.1)', glassBg: 'rgba(30,26,20,0.9)',
+    cardBg: 'rgba(45,38,28,0.8)', mutedFg: '#9A8E78'
+  },
+  scene9: {
+    bg: '#FBF6F0', fg: '#2A1F18', accent: '#8B3A62', accentDim: '#A8507A',
+    accentMid: '#C86A94', accentGlow: 'rgba(139,58,98,0.12)',
+    border: 'rgba(42,31,24,0.08)', glassBg: 'rgba(251,246,240,0.85)',
+    cardBg: 'rgba(255,252,248,0.7)', mutedFg: '#8A7A70'
+  },
+  scene10: {
+    bg: '#F2EEE8', fg: '#1A1610', accent: '#3A5C8B', accentDim: '#507AAA',
+    accentMid: '#6A94C0', accentGlow: 'rgba(58,92,139,0.15)',
+    border: 'rgba(26,22,16,0.1)', glassBg: 'rgba(242,238,232,0.85)',
+    cardBg: 'rgba(255,252,248,0.7)', mutedFg: '#6A7580'
+  },
+  scene11: {
+    bg: '#1A1610', fg: '#E8DFD0', accent: '#D4A017', accentDim: '#E8B830',
+    accentMid: '#F0D060', accentGlow: 'rgba(212,160,23,0.25)',
+    border: 'rgba(232,223,208,0.1)', glassBg: 'rgba(26,22,16,0.9)',
+    cardBg: 'rgba(40,35,25,0.8)', mutedFg: '#9A8E75'
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// CONTENT DATA
+// ═══════════════════════════════════════════════════════════════
+
+const CONTENT_DATA = {
+  meta: {
+    title: '如何阅读一本书',
+    titleEn: 'How to Read a Book',
+    subtitle: '沉浸式深度导读',
+    badge: '沉浸式深度导读 · HOW TO READ A BOOK · COMPLETE',
+    author: '莫提默·J. 艾德勒 / 查尔斯·范多伦',
+    authorEn: 'Mortimer J. Adler & Charles Van Doren',
+    shelf: {
+      emoji: '📖',
+      gradient: 'linear-gradient(135deg, #2C2418 0%, #8B6914 50%, #D4A017 100%)',
+      description: '阅读的元技能——四个层次、十五条规则、与作者达成共识的艺术。从被动消费者变为主动思想家的完整方法论。',
+      stats: ['11 场景', '4 部分', '方法论入口']
+    },
+    parts: [
+      { number: 1, title: '阅读的层次', titleEn: 'THE DIMENSIONS OF READING', beforeScene: 'scene-1' },
+      { number: 2, title: '分析阅读', titleEn: 'ANALYTICAL READING', beforeScene: 'scene-4' },
+      { number: 3, title: '阅读不同读物的方法', titleEn: 'APPROACHES TO DIFFERENT KINDS OF READING MATTER', beforeScene: 'scene-7' },
+      { number: 4, title: '阅读的最终目标', titleEn: 'THE ULTIMATE GOALS OF READING', beforeScene: 'scene-10' }
+    ],
+    type: 'practical',
+    coreThesis: '阅读是一种可以习得的技艺，分为四个递进层次。大多数人停留在基础阅读层面，但通过系统训练，任何人都可以掌握分析阅读和主题阅读，从而真正实现心智的成长。',
+    authorProblem: '美国教育体系制造了一个荒谬的断层：学校在小学阶段教会学生识字，然后就再也不教阅读了——仿佛阅读能力会自动成熟。结果是数百万受过高等教育的成年人，阅读水平实质上停留在六年级。艾德勒要解决的问题是：阅读作为一种复杂的心智技艺，它的完整训练体系应该是什么样的？他要证明阅读不是天赋而是技术，是可以被拆解为具体规则、分层教授、反复练习直至精通的。',
+    bookStructure: '全书按四个阅读层次递进组织为四个部分。第一部分（第1-5章）建立总框架：定义阅读的目标（为理解而读，而非为资讯而读），提出四层次模型，重点讲解基础阅读和检视阅读。第二部分（第6-13章）是全书核心，用八章篇幅详解分析阅读的十五条规则——从透视一本书的架构，到与作者达成共识，再到公正地评判一本书。第三部分（第14-20章）针对不同类型的书（实用书、文学、历史、科学、哲学）调整阅读方法。第四部分（第21章）讲解最高层次的主题阅读，以及阅读与心智成长的终极关系。整体结构是"总论→核心方法→分类应用→最高境界"的递进逻辑。',
+    readerQuestions: [
+      '艾德勒的四层次模型是否过于线性？现实中的阅读是否更像是在不同层次之间反复跳跃，而非严格递进？',
+      '在信息爆炸和碎片化阅读的时代，分析阅读的十五条规则是否仍然完全适用？哪些规则需要适配数字环境？',
+      '艾德勒对"为理解而读"和"为资讯而读"的二分法是否过于简化？获取资讯难道不是理解的必要前提吗？',
+      '主题阅读要求读者不带预设立场，让不同作者平等"对话"——但选择读哪些书、问哪些问题，本身是否已经预设了立场？',
+      '艾德勒认为最好的书值得反复阅读——但在书籍数量远超个人时间的现实中，"读透一本"和"广泛涉猎"之间的最优平衡点在哪里？'
+    ],
+    critique: '艾德勒的方法论有三个主要局限。（1）偏向西方经典论说文：全书的规则体系是为严肃非虚构论说文量身定制的，对文学作品的处理明显单薄（第14章仅用一章带过），对视觉叙事、口述传统、东方文本结构几乎没有涉及。这不是偶然——艾德勒同时是"西方伟大著作"运动的核心推动者，他的阅读观本质上是一种精英主义的经典教育观。（2）忽视阅读的社会和情感维度：艾德勒将阅读几乎完全建模为"作者-读者"之间的理智博弈，忽略了阅读作为情感体验、社群实践和身份建构的功能。读者并非只是在"理解"作者，也在通过阅读理解自己。（3）规则体系的实操门槛：十五条分析阅读规则在理论上逻辑严密，但在实践中对普通读者要求过高——大多数人需要的不是更多规则，而是更好的阅读习惯和动机维持机制。尽管如此，该书最持久的贡献在于确立了"阅读是可教授的技艺"这一理念，以及"主动阅读"的核心框架——这两点至今仍是所有阅读教育的基石。',
+    keyTerms: [
+      { term: '基础阅读', definition: '第一层次。解决"这个句子在说什么"的问题。相当于识字和基本理解，是所有高级阅读的前提。' },
+      { term: '检视阅读', definition: '第二层次。在限定时间内系统化地浏览一本书，回答"这本书在谈什么？值不值得深读？"。包括略读和粗浅阅读两种方法。' },
+      { term: '分析阅读', definition: '第三层次。全面、深入、反复地阅读一本书，直到完全理解作者的论点和论证结构。是"为了理解"而读的核心方法。' },
+      { term: '主题阅读', definition: '第四层次，最高层次。围绕一个主题同时阅读多本书，让不同作者就同一问题"对话"，最终形成自己的独立见解。' },
+      { term: '主动阅读', definition: '阅读的核心原则。带着问题去读，边读边思考，而非被动地让文字流过大脑。好的读者是"捕手"而非"观众"。' },
+      { term: '达成共识', definition: '分析阅读的关键步骤。找到作者使用的关键词汇，准确理解作者赋予它们的特定含义，而非按照自己的理解去解读。' },
+      { term: '心智成长', definition: '阅读的终极目标。不是获取资讯，而是通过与超越自己的书搏斗，让理解力从低处被拉到高处。' }
+    ]
+  },
+
+  darkScenes: ['scene4', 'scene8', 'scene11'],
+
+  scenes: [
+
+    // ═════════════════════════════════════════════════════════════
+    // PART I · 阅读的层次 · THE DIMENSIONS OF READING
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 1: 阅读的活力与艺术
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-1', number: '场景 01', palette: 'scene1',
+      title: '阅读的活力与艺术',
+      subtitle: '为什么大多数人还停留在小学阅读水平',
+      heroQuote: '太多人认为自己会读书，因为他们识字。但识字和阅读之间，隔着一个宇宙。',
+      narrative: [
+        '我们在学校里学会了识字，却没有人教我们如何真正地阅读。大多数人在小学毕业之后，阅读能力就停止了增长——他们可以读懂每一个字，却无法读懂一本书。',
+        '阅读不是被动地接收信息。一个好的读者就像一个好的捕手——棒球手投出一个球，捕手需要主动配合才能接住。同样，作者"投出"思想，读者必须主动参与才能真正"接住"它。',
+        '艾德勒提出了一个颠覆性的观点：阅读能力有四个层次，就像一座金字塔。绝大多数人一生停留在底部两层，从未体验过真正深度阅读带来的智识快感和心智成长。',
+        '这本书的使命很简单：教你从金字塔的底部，一步一步攀升到顶峰。掌握了这些技艺，任何一本值得读的书，都将向你敞开它最深处的智慧。'
+      ],
+      dataViz: { type: 'reading-pyramid' },
+      deepDives: [
+        {
+          title: '主动阅读 vs 被动阅读', icon: '⚡',
+          triggerQuestion: '你上一次读完一本书后，能清晰说出它的核心论点是什么吗？如果不能，问题出在书上，还是出在你的阅读方式上？',
+          chain: {
+            premise: '阅读和倾听一样，是在接收他人的思想传达。但接收的质量完全取决于接收者的主动程度。',
+            evidence: '被动阅读如同看电视——信息流过大脑但不留痕迹。研究表明，单纯重复阅读的记忆保持率仅为10-20%，而主动提问式阅读可达60-70%。',
+            conclusion: '阅读的核心秘密：永远带着问题读。每翻开一本书，至少要问四个问题——这本书整体在谈什么？细节上说了什么？说得对吗？跟我有什么关系？'
+          }
+        },
+        {
+          title: '棒球比喻', icon: '⚾',
+          chain: {
+            premise: '艾德勒用棒球来比喻阅读：作者是投手，读者是捕手。',
+            evidence: '投手的动作是"主动的"，这毫无疑问。但捕手的接球同样是"主动的"——他需要判断球速、角度、旋转，精准地移动手套。消极的捕手只会被球砸到脸。',
+            conclusion: '阅读也是如此。好的读者不是被动地等文字"砸到"眼睛，而是主动地捕捉、分析、整合、评判作者投出的每一个观点。'
+          }
+        },
+        {
+          title: '阅读与心智的关系', icon: '🧠',
+          chain: {
+            premise: '阅读是为了两个目的：获取资讯，或者增进理解。如果一本书你能毫不费力地读完，你只是获得了资讯。',
+            evidence: '真正的阅读是当你面对一本"超过"你的书——你一开始并不完全理解它。通过努力阅读，你的理解力从低处被拉到了高处。',
+            conclusion: '真正的阅读必然是困难的。如果觉得读书轻松，你不是在成长——你是在原地踏步。好的书应该让你的心智像肌肉一样获得锻炼。'
+          }
+        }
+      ],
+      extendedReading: [
+        '《如何阅读一本书》最初出版于1940年，由莫提默·艾德勒独自撰写。1972年，艾德勒与查尔斯·范多伦合作推出修订版，增加了主题阅读的内容，并更新了推荐书目。这本书在出版80多年后仍然畅销，证明阅读的基本方法论并未因数字时代而过时。',
+        '艾德勒是"伟大著作"（Great Books）运动的核心推动者之一。他与罗伯特·哈钦斯一起主编了54卷的《西方世界的伟大著作》，主张每个受过教育的人都应该阅读人类文明的经典。这种信念深刻影响了本书的写作——它本质上是一本"如何与伟大思想对话"的指南。',
+        '值得注意的是，本书的阅读方法主要针对"论说性"（expository）作品，即那些旨在传达知识或论点的书。对于小说、诗歌等想象文学，艾德勒在后半部分提供了不同的阅读建议，但其方法论体系的核心仍然建立在对论说性作品的分析之上。'
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 2: 阅读的四个层次
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-2', number: '场景 02', palette: 'scene2',
+      title: '阅读的四个层次',
+      subtitle: '从基础识字到融会贯通的阶梯',
+      heroQuote: '这四个层次是累积递进的。更高的层次包含更低的层次——分析阅读包含检视阅读，而检视阅读包含基础阅读。',
+      narrative: [
+        '艾德勒将阅读分为四个层次，每个层次都建立在前一个层次之上，形成一座不断攀升的金字塔。理解这个框架，就是掌握全书的钥匙。',
+        '第一层：基础阅读。识字，能理解每个句子的字面含义。这是我们在小学学会的技能，是一切阅读的起点，但远远不够。',
+        '第二层：检视阅读。在有限的时间内，快速把握一本书的全貌——它属于什么类型？讲了什么主题？结构如何？就像一个将军在战前鸟瞰整个战场。',
+        '第三层：分析阅读。不限时间地对一本书进行最深入、最完整的阅读。你要X光透视般地看穿一本书的骨架，理解每个论证，评判每个观点。这是一般阅读者能达到的最高境界。',
+        '第四层：主题阅读（又称比较阅读）。同时阅读多本关于同一主题的书，让作者们互相"对话"，从比较中构建出任何单本书都无法给你的洞见。这是阅读的终极形态。'
+      ],
+      dataViz: { type: 'four-levels' },
+      deepDives: [
+        {
+          title: '层次的累积性', icon: '📊',
+          chain: {
+            premise: '四个层次不是平行的选择，而是垂直的阶梯。',
+            evidence: '你不能跳过检视阅读直接进入分析阅读——因为你需要先知道这本书值不值得深读。你也不能跳过分析阅读直接进入主题阅读——因为你需要先理解每本书在说什么，才能让它们对话。',
+            conclusion: '学习阅读是一个渐进的过程。每掌握一个层次，你读书的效率和深度都会产生质的飞跃。'
+          }
+        },
+        {
+          title: '为什么大多数人停在第一层', icon: '🚧',
+          chain: {
+            premise: '现代教育体系在小学教完基础阅读之后，几乎不再教阅读方法。',
+            evidence: '调查显示，大学毕业生中，能真正进行分析阅读的不超过1%。大多数人用读报纸的方式读一切——快速浏览，抓住大意，然后遗忘。',
+            conclusion: '这不是智力问题，是方法问题。阅读是一种可以后天习得的技艺。你现在开始学，永远不晚。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 3: 检视阅读：系统化略读的艺术
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-3', number: '场景 03', palette: 'scene3',
+      title: '检视阅读：系统化略读的艺术',
+      subtitle: '如何在30分钟内判断一本书的价值',
+      heroQuote: '很多人以为略读是不认真的阅读。恰恰相反，系统化的略读是一种高度主动的技术——它让你用最少的时间获得最关键的信息。',
+      narrative: [
+        '检视阅读分为两种方法，它们构成了一套完整的"侦察"系统。',
+        '第一种：系统化略读。按照固定步骤扫描一本书——先看书名页和前言（搞清范围），再看目录（理解结构），然后翻阅索引（识别关键词），看关键章节的开头和结尾，最后随便翻翻，读几个段落。这一套做完，你对这本书的了解程度已经超过了大多数只是"读过"的人。',
+        '第二种：粗浅阅读。面对一本困难的书，第一次阅读时从头到尾读完，遇到不懂的地方不要停。不查字典，不看注释，不回头重读。目标是抓住你能理解的部分——这些部分将成为你第二次深读时的"锚点"。',
+        '这两种方法的共同智慧是：先得到全局视角，再深入细节。就像画家先勾勒轮廓，再填充色彩。没有人会先画完一个角落的全部细节，再去画另一个角落。'
+      ],
+      dataViz: { type: 'skim-flowchart' },
+      deepDives: [
+        {
+          title: '略读的六步法', icon: '👁️',
+          triggerQuestion: '拿到一本300页的新书，你能在30分钟内判断它是否值得花10小时做深度阅读吗？如果不能，你可能在浪费生命中最宝贵的资源——时间。',
+          chain: {
+            premise: '系统化略读不是随意翻翻，而是有严格步骤的技术活。',
+            evidence: '步骤一：读书名页和前言（1分钟）。步骤二：研究目录（2分钟）。步骤三：检查索引（2分钟）。步骤四：读出版者介绍（1分钟）。步骤五：阅读与主题最相关的章节开头和结尾（10分钟）。步骤六：随机翻阅，读散落的段落（10分钟）。总共不到30分钟。',
+            conclusion: '完成这六步，你已经可以回答三个关键问题：这本书是什么类型的？它整体在讲什么？它值不值得我花时间做分析阅读？'
+          }
+        },
+        {
+          title: '为什么第一遍不该查字典', icon: '📖',
+          chain: {
+            premise: '传统教育告诉我们，遇到不懂的就要停下来搞清楚。艾德勒说，这在很多时候是错误的。',
+            evidence: '如果你每遇到一个不懂的词就停下来查字典，你的阅读节奏会被完全打断。你会失去对整体论证的把握，最终"见树不见林"。就像听一首交响乐时，每遇到一个不认识的乐器就暂停去查——你永远无法感受到整首曲子。',
+            conclusion: '第一遍读，求的是"整体感"。不懂的地方先跳过——等你获得了全局理解，再回来处理细节，很多之前不懂的地方会自然明朗。'
+          }
+        }
+      ],
+      extendedReading: [
+        '检视阅读的精髓在于一个反直觉的洞见：读书的第一步不是"从头开始读"，而是"先判断要不要读"。这与我们从小接受的教育完全相反——学校教我们每本课本都要从第一页读到最后一页。但在真实世界中，你面对的书远远超过你的时间，选择不读什么和选择读什么同样重要。',
+        '粗浅阅读的原则——"头一次面对一本难读的书，从头到尾读一遍，碰到不懂的地方不要停下来查询或思索"——是本书最具争议性的建议之一。许多学者批评这种方法过于粗暴，但艾德勒的论点是：第一遍的目的是获得整体感，为后续的深度阅读建立框架。没有地图就出发的旅行，往往迷失在细节中。'
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART II · 分析阅读 · ANALYTICAL READING
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 4: 透视一本书的骨架
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-4', number: '场景 04', palette: 'scene4',
+      title: '透视一本书的骨架',
+      subtitle: '分析阅读第一阶段：把握整体结构',
+      heroQuote: '每本书都有一副骨架。你的任务是用X光透视它，看清骨架是如何支撑起整个论述的。',
+      narrative: [
+        '分析阅读是艾德勒这本书的核心——他用了整整八章来讲授这一层次。分析阅读分为三个阶段，共十五条规则。',
+        '第一阶段是"结构性"阅读，只有四条规则，但它们决定了你是否真正理解了一本书的整体。',
+        '规则一：分类。你必须知道自己在读什么类型的书——是实用型（教你怎么做）还是理论型（教你如何理解）？是历史、科学、还是哲学？不同类型的书需要不同的阅读策略，用错策略等于南辕北辙。',
+        '规则二：用一句话概括全书。如果你不能用一两句话说出这本书的主旨，说明你还没有真正理解它。这是一个极其严格的测试——试试看，你能用一句话概括你最近读的书吗？',
+        '规则三：列出全书的大纲。把主要部分按照逻辑关系组织起来，展示它们如何构成一个有机的整体。这不是目录的翻版，而是你自己理解的论证结构。',
+        '规则四：找出作者想解决的问题。每本书都是对某个或某些问题的回答。找到这些问题，你就找到了全书的驱动力。'
+      ],
+      dataViz: { type: 'fifteen-rules' },
+      deepDives: [
+        {
+          title: '规则一：如何给书分类', icon: '🏷️',
+          chain: {
+            premise: '判断一本书的类型是分析阅读的第一步，因为不同类型的书有完全不同的阅读方法。',
+            evidence: '实用型书籍：关心"应该怎么做"——自我提升、商业管理、烹饪手册。你需要提取行动方案。理论型书籍：关心"是什么"和"为什么"——分为历史（讲述特定时空的事件）、科学（探索普遍规律）、哲学（通过推理探讨根本问题）。',
+            conclusion: '拿起一本书，先问自己：这本书是要教我做什么事？还是要让我理解什么道理？答案决定了你整个阅读策略的走向。'
+          }
+        },
+        {
+          title: '规则二：一句话测试', icon: '💎',
+          chain: {
+            premise: '能把一本书的核心浓缩成一句话，是检验你是否真正理解它的终极标准。',
+            evidence: '示例：《国富论》——"研究国民财富的性质和原因，核心论点是自由市场通过个人追求利益的行为能够自发地促进整体福利。"《物种起源》——"所有生物通过自然选择的过程逐渐演化，适者生存使物种不断变化。"',
+            conclusion: '如果你的概括需要超过两三句话才能说清楚，说明你还没有抓住作者的核心主旨。继续读，直到你能做到这一点。'
+          }
+        },
+        {
+          title: '规则三与四：骨架与问题', icon: '🦴',
+          chain: {
+            premise: '列大纲不是机械地重复目录，而是用你自己的逻辑重建作者的论证结构。',
+            evidence: '好的大纲展示的是：作者提出了什么问题→用了什么方法来论证→得出了什么结论→不同部分之间如何相互支撑。它更像一张建筑图纸，而不是一份零件清单。',
+            conclusion: '规则四让你从"结构"回到"动力"：这本书试图回答什么问题？问题找对了，整本书的论证就变成了一条清晰的线索。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 5: 与作者达成共识
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-5', number: '场景 05', palette: 'scene5',
+      title: '与作者达成共识',
+      subtitle: '分析阅读第二阶段：诠释性阅读',
+      heroQuote: '词语只是文字，共识才是理解。如果你和作者用同一个词却指不同的意思，你们之间的对话就还没有开始。',
+      narrative: [
+        '分析阅读的第二阶段是诠释性阅读，包含规则五到规则八。如果说第一阶段让你看到了书的骨架，这一阶段要让你理解骨架上每一块肌肉的功能。',
+        '规则五是整本书中最核心的概念之一："与作者达成共识"（Coming to Terms）。一个"词"（word）和一个"术语/概念"（term）是不同的东西。词是语言单位，术语是词背后的特定含义。同一个词在不同作者那里可能代表完全不同的概念。',
+        '比如"自由"这个词——在政治学、哲学、经济学中各有不同含义。如果你用自己习惯的定义去理解作者的特殊用法，就像戴着蓝色镜片去看红色的世界——你看到的一切都是错的。',
+        '规则六：找到作者的关键命题。不是每一句话都同等重要。你需要在成千上万的句子中，找出那些承载核心论点的关键句子。它们通常是最难读的句子——如果一个句子让你停下来反复思考，它很可能就是一个关键命题。',
+        '规则七：重建论证链。命题是论证的砖块，论证是将命题连接起来的逻辑链条。你需要找到或者自己构建出这些链条：前提A + 前提B → 结论C。',
+        '规则八：判断作者解决了哪些问题，哪些没有解决。每个作者都知道自己解决了一些问题，留下了一些问题。一个诚实的作者会承认自己的不足。你需要识别出这些边界。'
+      ],
+      dataViz: { type: 'terms-exercise' },
+      deepDives: [
+        {
+          title: '"达成共识"的实操方法', icon: '🤝',
+          triggerQuestion: '当你和朋友争论一本书时，你们真的在讨论同一件事吗？如果你对"自由"的理解和作者完全不同，你的所有批评是否都建立在误解之上？',
+          chain: {
+            premise: '找到作者的关键词汇，并准确理解作者赋予它们的含义——这是理解的前提。',
+            evidence: '方法：1）标记那些作者反复使用的、具有特殊含义的词。2）寻找作者给出的明确定义。3）观察同一个词在不同语境中的使用方式。4）尝试用自己的话复述作者的意思。5）如果你无法用自己的话复述，说明你还没有达成共识。',
+            conclusion: '达成共识是一个"谈判"过程：你必须暂时放下自己的定义，走进作者的概念世界。只有双方对关键词的含义达成一致，真正的理解才能开始。'
+          }
+        },
+        {
+          title: '如何找到关键命题', icon: '🔑',
+          chain: {
+            premise: '一本书可能有数千个句子，但真正承载核心论点的可能只有几十个。',
+            evidence: '线索一：让你感到困惑或需要反复阅读的句子——它们往往是核心论点。线索二：作者用特殊格式标注的句子（粗体、斜体、独立成段）。线索三：出现在每章开头或结尾的总结性句子。线索四：那些你直觉上觉得"这很重要"的句子。',
+            conclusion: '找到关键命题后，用你自己的话重新表述它。如果你做不到，说明你还没有真正理解这个命题——继续读，直到你能做到。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 6: 公正地评判一本书
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-6', number: '场景 06', palette: 'scene6',
+      title: '公正地评判一本书',
+      subtitle: '分析阅读第三阶段：批判性阅读',
+      heroQuote: '读者不仅有权利评判一本书，更有义务这样做。但前提是——你必须先说"我理解了"，才有资格说"我不同意"。',
+      narrative: [
+        '分析阅读的第三阶段是最容易被误解的：批判性阅读。很多人以为批判就是挑毛病，但艾德勒说，真正的批判是一种智识上的礼仪和义务。',
+        '规则九（总则）：在你能说"我理解了"之前，不要说"我同意"、"我不同意"或"我暂缓评论"。这意味着你必须能够用自己的话重述作者的观点，而且这个重述要能让作者本人满意。',
+        '规则十：不要为了争辩而争辩。你的目标是解决问题，不是赢得辩论。如果你发现自己情绪化地反对一个观点，先停下来问：我是在用理性思考，还是在捍卫自己的偏见？',
+        '规则十一：区分知识和观点。当你不同意作者时，必须给出理性的理由——不能只是说"我觉得不对"。',
+        '然后是四个可以合理反驳作者的维度：作者是否缺乏相关知识（无知）？作者的事实是否有错（错误知识）？作者的推理是否合乎逻辑（逻辑性）？作者的分析是否完整（完整性）？如果你无法从这四个维度中找到任何一个进行反驳，你就必须承认——作者说的是对的。'
+      ],
+      dataViz: { type: 'critique-quiz' },
+      deepDives: [
+        {
+          title: '反驳的四个合法维度', icon: '⚖️',
+          chain: {
+            premise: '艾德勒给出了严格的标准：只有四种情况下，你有资格说"作者错了"。',
+            evidence: '维度一：作者缺乏信息（Uninformed）——他不知道与论题相关的某些知识。维度二：作者的信息有误（Misinformed）——他断言的事实是错误的。维度三：作者的推理不合逻辑（Illogical）——他的结论不能从前提推导出来。维度四：作者的分析不完整（Incomplete）——他没有论述问题的所有方面。',
+            conclusion: '这四个维度是一把双刃剑——它们既约束了读者的批评必须有理有据，也为有理有据的批评提供了清晰的框架。'
+          }
+        },
+        {
+          title: '理解先于评判', icon: '🪞',
+          chain: {
+            premise: '我们天生倾向于在理解之前就做出判断——这是人类认知的一个深层缺陷。',
+            evidence: '心理学研究证实了"确认偏误"：我们倾向于接受与已有信念一致的信息，拒绝与之矛盾的信息。艾德勒的规则九就是对抗这种偏误的武器——强迫自己先完整理解对方的论证，再做判断。',
+            conclusion: '能够准确重述一个你不同意的观点，是思维成熟的标志。这是最难的阅读技能之一，也是最有价值的。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART III · 阅读不同读物的方法
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 7: 不同类型书籍的阅读策略
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-7', number: '场景 07', palette: 'scene7',
+      title: '不同类型书籍的阅读策略',
+      subtitle: '实用型书籍 vs 理论型书籍',
+      heroQuote: '实用型书籍告诉你"应该怎么做"，理论型书籍告诉你"事情是什么"。用错方法读错类型的书，就像用显微镜看星星。',
+      narrative: [
+        '进入第三部分，艾德勒开始教你如何针对不同类型的书调整阅读策略。就像一个厨师面对不同的食材会用不同的刀法，好的读者面对不同类型的书也需要不同的"读法"。',
+        '实用型书籍的核心问题是：目标是什么？手段是什么？我接受这个目标吗？手段有效吗？当你读一本商业管理书时，不要只是点头同意——问自己：作者建议我做什么？他的建议基于什么假设？如果假设不成立，建议还有用吗？',
+        '理论型书籍的阅读则完全不同。历史书需要你识别叙事背后的因果框架——历史学家不是在记录事实，他是在"讲故事"，而每个故事都有一个视角。同一场战争，胜利方和失败方写出的历史可能面目全非。',
+        '科学书的挑战在于理解方法论：假说是什么？实验如何设计？数据是否支持结论？是否有替代解释？哲学书则要求你极其缓慢地阅读，对每一个术语的定义都锱铢必较，因为哲学的论证全部建立在定义和推理之上。'
+      ],
+      dataViz: { type: 'book-types' },
+      deepDives: [
+        {
+          title: '实用型书籍的四个核心问题', icon: '🔧',
+          chain: {
+            premise: '实用书告诉你该做什么或怎么做，但你不应该盲目遵从。',
+            evidence: '问题一：作者的目标是什么？他认为什么是值得追求的？问题二：他推荐什么手段或方法？问题三：我是否认同他的目标？（如果你不想减肥，减肥书的建议对你毫无意义。）问题四：手段是否有效？证据是否充分？',
+            conclusion: '读实用书的终极测试不是"我理解了吗"而是"我会照做吗"。如果你读完一本书觉得说得都对但一个字也不打算执行，那你不是在读书，是在自我安慰。'
+          }
+        },
+        {
+          title: '为什么要读两本以上的历史', icon: '📜',
+          chain: {
+            premise: '艾德勒警告：永远不要只从一本历史书中了解一个事件。',
+            evidence: '每个历史学家都在做选择——选择强调哪些事实、忽略哪些事实、如何解释因果关系。这不是欺骗，而是历史写作的本质。一个马克思主义历史学家和一个自由主义历史学家讲述同一段历史，你可能以为他们在讲不同的事件。',
+            conclusion: '读历史的正确方法：至少读两本讲述同一事件的不同著作。它们一致的部分可能接近事实，分歧的部分则展示了不同的解读框架——而那才是最有启发的地方。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 8: 阅读想象文学
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-8', number: '场景 08', palette: 'scene8',
+      title: '阅读想象文学',
+      subtitle: '不要抗拒作者创造的世界',
+      heroQuote: '读小说时，不要寻找命题和论证。去体验。让故事进入你的心灵，在里面住一阵子，然后再退出来思考。',
+      narrative: [
+        '到目前为止，我们讨论的所有规则都是针对"论说性"作品的——那些试图传达知识和观点的书。但想象文学（小说、诗歌、戏剧）需要完全不同的阅读姿态。',
+        '艾德勒给出了一条看似矛盾的建议：不要抗拒。当你阅读一本小说时，你的首要任务不是分析，而是沉浸。不要用理性的刀解剖一只飞翔的蝴蝶——先让它飞完整段路程。',
+        '小说的"真理"不在命题中，而在体验中。当你读完一个伟大的故事后感到的那种震动、共鸣、或不安，那就是小说给予你的"知识"——只不过这种知识无法用命题概括，它需要被经历。',
+        '只有在第一次完整阅读之后，你才应该退后一步，开始分析：这个故事的统一性在哪里？主题是什么？人物是否可信？这个虚构的世界是否内在一致？它是否扩展了你对人类生活的理解？'
+      ],
+      deepDives: [
+        {
+          title: '论说性作品 vs 想象文学', icon: '📚',
+          chain: {
+            premise: '两类作品的目的根本不同，因此阅读方法也必须不同。',
+            evidence: '论说性作品传达知识：你需要提取命题和论证。想象文学传达体验：你需要让自己被故事打动。论说性作品的好坏看论证是否严密。想象文学的好坏看它是否能让你"活在"那个世界里，并从中看到关于人性的真相。',
+            conclusion: '一个常见的错误是用分析论说性作品的方式去读小说——拼命找"这本书想告诉我什么道理"。不，先别找道理。先让故事完成它的工作。'
+          }
+        },
+        {
+          title: '评判想象文学的标准', icon: '✨',
+          chain: {
+            premise: '小说也可以被评判，但评判标准与论说性作品完全不同。',
+            evidence: '标准一：内在一致性——虚构的世界是否遵循自己建立的规则？标准二：人物的可信度——角色的行为是否符合其性格逻辑？标准三：情感真实——故事是否触动了你？标准四：启示性——它是否让你对人类生活有了新的理解？',
+            conclusion: '最伟大的文学作品同时满足以上所有标准，而且每次重读都能带来新的发现——这就是为什么经典永远值得重读。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 9: 阅读历史、科学与哲学
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-9', number: '场景 09', palette: 'scene9',
+      title: '阅读历史、科学与哲学',
+      subtitle: '三种理论性书籍的差异化策略',
+      heroQuote: '历史学家像侦探——在证据中重建叙事。科学家像法官——用实验裁决假说。哲学家像建筑师——用纯粹的推理搭建思想大厦。',
+      narrative: [
+        '理论型书籍看似都是"教你理解世界"，但历史、科学和哲学三者的阅读策略截然不同，因为它们的论证方式从根本上就不一样。',
+        '读历史，你要警惕叙事的诱惑。历史书不是事实的罗列，而是经过筛选和编排的故事。关键问题是：作者选择了哪些事实？遗漏了哪些？他的因果解释有没有替代方案？两本讲同一段历史的书，分歧之处往往最有价值——那是解读碰撞的火花。',
+        '读科学，你要理解方法。科学论证的力量不在于结论本身，而在于得出结论的过程。假说→实验→数据→结论——这个链条的每一环都可能出问题。尤其是读科普书时，要意识到简化可能带来的歪曲：为了让外行读懂，作者可能省略了关键的限定条件。',
+        '读哲学是最慢的阅读。哲学没有实验可以依赖，一切都建立在定义和推理之上。一个术语的含义改变一点点，整个论证可能崩塌。艾德勒说，读哲学时，"与作者达成共识"这条规则达到了最极致的重要性。'
+      ],
+      deepDives: [
+        {
+          title: '哲学书的特殊挑战', icon: '🏛️',
+          chain: {
+            premise: '哲学书对读者的要求最高，因为你无法借助实验或数据来验证论点。',
+            evidence: '哲学论证完全依赖于：术语的精确定义、假设前提的合理性、推理过程的严密性。如果你漏掉了一个隐含的假设，整个理解可能偏离方向。比如读康德的"绝对命令"，如果你不先理解他对"理性"的特殊定义，后面的论证对你来说就像天书。',
+            conclusion: '读哲学的秘诀：慢。每一页可能需要你花在其他类型书籍十页的时间。但这种慢不是浪费——它训练的是你最精密的思维能力。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART IV · 阅读的最终目标
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 10: 主题阅读：阅读的终极形态
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-10', number: '场景 10', palette: 'scene10',
+      title: '主题阅读：阅读的终极形态',
+      subtitle: '让不同的作者围坐在你的圆桌旁',
+      heroQuote: '主题阅读的目的不是理解任何一本书，而是理解一个主题。书只是你的素材——真正的"书"由你自己来写。',
+      narrative: [
+        '如果说分析阅读让你成为一本书的"征服者"，那么主题阅读让你成为一个领域的"主人"。这是阅读的最高层次，也是最具创造性的层次——因为你读完的那些书只是原材料，最终的"作品"是你自己的思考。',
+        '主题阅读的五个步骤构成一个精密的方法论。第一步：找到相关段落。当你同时阅读五本、十本关于同一主题的书时，不需要读完每一本——你只需要找到每本书中与你的问题相关的部分。',
+        '第二步：带领作者们达成共识。不同作者可能用不同的词表达同一个概念，也可能用同一个词表达不同的概念。你需要建立一套"你自己的"术语体系，然后把每个作者的说法"翻译"到这个体系中。',
+        '第三步：厘清问题。你不是在回答作者们的问题——你是在回答你自己的问题。即使某位作者并没有明确讨论你的问题，你也可以从他的论述中推导出他"可能的"回答。',
+        '第四步：界定议题。当不同作者对同一问题给出不同答案时，这就形成了一个"议题"。把正反方的立场和理由都整理清楚。',
+        '第五步：分析讨论。将议题按逻辑排列，呈现整个"讨论"的全貌。在这个过程中，你不是任何一位作者的代言人——你是讨论的主持人，你的职责是客观呈现。'
+      ],
+      deepDives: [
+        {
+          title: '建立你自己的术语体系', icon: '🗂️',
+          chain: {
+            premise: '主题阅读中最难的技术：把不同作者的"语言"翻译成你自己的统一框架。',
+            evidence: '假设你在研究"正义"这个主题。柏拉图谈"正义"时指城邦中各阶层各司其职。罗尔斯谈"正义"时指无知之幕后的公平选择。桑德尔谈"正义"时涉及社群美德。你需要建立自己的分类：正义作为秩序/正义作为公平/正义作为美德——然后把每位作者"放进"这个框架。',
+            conclusion: '这个过程的关键是"客观性"：你不能偏袒任何一位作者。你建立的术语体系必须能公平地容纳所有参与"讨论"的声音。'
+          }
+        },
+        {
+          title: '为什么主题阅读最具创造性', icon: '🎨',
+          chain: {
+            premise: '在其他层次的阅读中，你是跟随者。在主题阅读中，你是引导者。',
+            evidence: '分析阅读时，你在理解作者的思想。主题阅读时，你在构建一个超越任何单一作者的新框架。你提出的问题可能没有任何一本书单独回答过；你发现的议题可能任何一位作者都没有明确意识到；你形成的洞见是"涌现"出来的——它不存在于任何一本书中，而是存在于它们之间。',
+            conclusion: '这就是为什么艾德勒把主题阅读称为阅读的"终极形态"——它把阅读从一种接收活动，变成了一种创造活动。你不再是读者，你是思想家。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 11: 阅读与心智的成长
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-11', number: '场景 11', palette: 'scene11',
+      title: '阅读与心智的成长',
+      subtitle: '好书是永不枯竭的心灵伙伴',
+      heroQuote: '如果一本书你只需要读一次就能完全理解，它可能不够好。伟大的书超越你的理解力——它们总是在你之上，永远挑战你、拉伸你、让你成长。',
+      narrative: [
+        '全书的最后，艾德勒抛出了一个深刻的问题：我们到底为什么要读书？不是为了考试，不是为了谈资，不是为了"我读过多少本"的虚荣。阅读的终极目的是心智的成长。',
+        '一个重要的区分：好书 vs 伟大的书。好书你读一遍就能完全理解，从中获取了信息或知识，然后可以放下。伟大的书不一样——每次重读，你都会发现新的东西。不是因为书变了，而是因为你变了。你20岁读和40岁读的是"同一本"《论语》，但你读到的是完全不同的智慧。',
+        '艾德勒估计，值得进行分析阅读的书不超过几千本，值得进行主题阅读的书不超过几百本——而真正的"伟大的书"可能不超过几十本。阅读的技艺，很大程度上也是选择的技艺：把有限的生命，投入到真正值得深读的作品中。',
+        '但这绝不意味着其他书不值得读。检视阅读本身就是一种了不起的技能——它让你能快速筛选，高效吸收大量信息。关键是为每本书匹配正确的阅读层次：大多数书用检视阅读即可，少数好书值得分析阅读，极少数伟大的书值得反复重读和主题阅读。',
+        '最后，艾德勒留下了一个温暖的承诺：学会阅读的人，永远不会孤独。因为最伟大的头脑——从柏拉图到爱因斯坦，从孔子到达尔文——都在他们的书中等待着与你对话。你需要做的，只是学会如何倾听。'
+      ],
+      deepDives: [
+        {
+          title: '伟大的书的五个标准', icon: '👑',
+          chain: {
+            premise: '不是所有好书都是伟大的书。艾德勒给出了严格的标准。',
+            evidence: '标准一：永远值得重读——每次重读都有新发现。标准二：探讨人类永恒的问题——爱、死亡、正义、自由、真理。标准三：超越读者的理解力——它总是比你"高"一点，逼迫你成长。标准四：影响了其他重要作品——它处在一个伟大思想对话的网络中。标准五：不可替代——没有任何概括或简介能替代原作的阅读体验。',
+            conclusion: '按照这些标准，人类历史上真正"伟大"的书可能不超过一百本。但这一百本书中蕴含的智慧，足以让你终身受益。'
+          }
+        },
+        {
+          title: '阅读是一种对话', icon: '💬',
+          chain: {
+            premise: '最终，阅读是你和最伟大的头脑之间的一场跨越时空的对话。',
+            evidence: '柏拉图在两千四百年前写下了关于正义的思考，今天你翻开《理想国》，他的声音依然清晰。达尔文在一百六十年前解释了生命的演化，今天你读《物种起源》，那个论证仍然令人震撼。这些作者已经不在了，但他们的思想通过文字永恒地活着——等待着愿意主动阅读的人来与他们对话。',
+            conclusion: '学会阅读，就是获得了一把钥匙——通向人类所有伟大思想的钥匙。这把钥匙永远不会过期。'
+          }
+        }
+      ]
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════════
+  // KNOWLEDGE MAPS
+  // ═══════════════════════════════════════════════════════════════
+
+  knowledgeMaps: [
+    {
+      afterPart: 1,
+      palette: 'scene3',
+      title: '阅读层次知识地图',
+      center: '阅读的层次',
+      branches: [
+        { title: '基础阅读', items: ['识字与语法理解', '字面含义的把握', '学校教育的终点', '一切阅读的起点'] },
+        { title: '检视阅读', items: ['系统化略读六步法', '粗浅阅读：先求整体', '判断一本书是否值得深读', '建立全局心理框架'] },
+        { title: '分析阅读', items: ['三阶段十五规则', '结构→诠释→批判', '不限时间的深度理解', '与作者的完整对话'] },
+        { title: '主题阅读', items: ['多书比较与综合', '建立自己的术语体系', '超越任何单一作者', '阅读的创造性维度'] }
+      ]
+    },
+    {
+      afterPart: 2,
+      palette: 'scene6',
+      title: '分析阅读知识地图',
+      center: '分析阅读',
+      branches: [
+        { title: '结构阶段', items: ['分类：实用 vs 理论', '一句话概括主旨', '列出论证大纲', '找出核心问题'] },
+        { title: '诠释阶段', items: ['与作者达成共识', '找出关键命题', '重建论证链条', '判断解决进度'] },
+        { title: '批判阶段', items: ['理解先于评判', '四个反驳维度', '知识 vs 观点', '公正的批评礼仪'] },
+        { title: '核心能力', items: ['X光透视法', '关键词识别', '命题提炼', '论证重建'] }
+      ]
+    },
+    {
+      afterPart: 3,
+      palette: 'scene8',
+      title: '书籍类型知识地图',
+      center: '不同的读法',
+      branches: [
+        { title: '实用型书籍', items: ['目标→手段→效果', '检验假设前提', '行动导向阅读', '读后测试：你会做吗？'] },
+        { title: '历史书', items: ['叙事≠事实', '识别解读框架', '至少读两本对照', '分歧处最有价值'] },
+        { title: '科学与哲学', items: ['科学：重视方法论', '哲学：极慢精读', '术语精确度至关重要', '简化可能歪曲'] },
+        { title: '想象文学', items: ['先沉浸再分析', '不要抗拒虚构世界', '体验即是知识', '判断标准完全不同'] }
+      ]
+    },
+    {
+      afterPart: 'final',
+      palette: 'scene11',
+      title: '全书核心知识地图',
+      center: '如何阅读\n一本书',
+      branches: [
+        { title: '主动阅读', items: ['永远带着问题读', '四个基本问题', '棒球捕手隐喻', '阅读=心智锻炼'] },
+        { title: '四个层次', items: ['基础→检视→分析→主题', '层次累积递进', '每层匹配不同的书', '选择正确的阅读深度'] },
+        { title: '分类与策略', items: ['实用 vs 理论', '六种书籍类型', '每种类型不同读法', '想象文学特殊规则'] },
+        { title: '终极目标', items: ['心智的成长', '与伟大头脑对话', '好书 vs 伟大的书', '阅读即是终身学习'] }
+      ]
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════════
+  // MIND MAPS
+  // ═══════════════════════════════════════════════════════════════
+
+  mindMaps: [
+    {
+      afterPart: 4, palette: 'scene11',
+      title: '如何阅读一本书全书思维导图',
+      subtitle: 'FOUR LEVELS OF READING',
+      root: '阅读的四个层次——从被动接收到主动对话',
+      branches: [
+        {
+          text: '基础阅读',
+          children: [
+            { text: '识字与语法理解', children: ['解决"这个句子在说什么"', '学校教育的终点', '一切高级阅读的前提'] },
+            { text: '主动阅读的核心原则', children: ['棒球捕手隐喻：主动接球', '永远带着四个基本问题读', '阅读是心智锻炼而非被动接收'] },
+            { text: '阅读的目标分层', children: ['为资讯而读vs为理解而读', '只有超越自己的书才能带来成长', '娱乐-资讯-理解三层递进'] }
+          ]
+        },
+        {
+          text: '检视阅读',
+          children: [
+            { text: '系统化略读六步法', children: ['书名序言目录索引快速扫描', '判断一本书是否值得深读', '建立全局心理框架'] },
+            { text: '粗浅阅读', children: ['面对困难的书先通读不停', '不查字典不看注释不回头', '理解的部分成为二次精读的锚点'] },
+            { text: '限时阅读的价值', children: ['速度灵活性：不同的书不同的速度', '打破逐字阅读的坏习惯', '快不是目标理解才是目标'] }
+          ]
+        },
+        {
+          text: '分析阅读',
+          children: [
+            { text: '结构阶段：X光透视', children: ['分类：实用vs理论', '一句话概括全书主旨', '列出论证大纲找出核心问题'] },
+            { text: '诠释阶段：与作者达成共识', children: ['找到关键词理解作者的特定用法', '找出关键命题重建论证链条', '判断作者解决了哪些问题'] },
+            { text: '批判阶段：公正的评判', children: ['理解先于评判是铁律', '四个反驳维度：知识不足逻辑错误分析不全', '区分知识与个人观点'] },
+            { text: '十五条规则的整合', children: ['三阶段十五规则形成完整系统', '不限时间的深度理解', '与作者的完整智识对话'] }
+          ]
+        },
+        {
+          text: '主题阅读',
+          children: [
+            { text: '五步法的精密方法论', children: ['找到相关段落而非读完全书', '建立自己的中立术语体系', '让不同作者就同一问题对话'] },
+            { text: '超越单一作者的创造性', children: ['读者而非作者定义问题', '不带预设立场的客观对话', '形成独立于任何单一作者的见解'] },
+            { text: '阅读的终极目标', children: ['心智的持续成长', '与伟大头脑的跨时空对话', '好书vs伟大的书的区别'] }
+          ]
+        }
+      ]
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════════
+  // AI REFLECTION
+  // ═══════════════════════════════════════════════════════════════
+
+  aiReflection: {
+    palette: 'scene11',
+    label: '终 章',
+    title: '当AI时代遇见深度阅读',
+    subtitle: '方法论的永恒价值',
+    paragraphs: [
+      '在AI可以一秒钟"读完"一百本书的时代，人类为什么还需要学习阅读？因为AI能处理信息，但不能替你理解。理解是一种深度的认知活动——它改变的不是你的知识储备，而是你的思维结构。',
+      '艾德勒的方法论在AI时代反而更加重要：当信息获取的成本趋近于零时，筛选和理解的能力就成为了最稀缺的资源。AI可以帮你做检视阅读——但分析阅读和主题阅读中那些"与作者达成共识"、"重建论证链"、"公正评判"的能力，只有你自己的大脑才能完成。',
+      '你正在阅读的这个沉浸式导读系统，本身就是一个实验：用AI的能力来增强人类的阅读体验。但请记住——再好的工具也只是工具。真正的阅读，发生在你放下手机、翻开原书、开始与作者独自对话的那一刻。',
+      '这本书教会我们的最重要的事情是：阅读不是消费，而是创造。每一次真正的阅读，都是你和一个伟大的灵魂共同创造意义的过程。这种创造的能力，是任何技术都无法取代的人类特权。'
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // FOOTER
+  // ═══════════════════════════════════════════════════════════════
+
+  footer: {
+    title: '全书 · 终',
+    text: '"一个拥有阅读能力的人，即使独处，也永远不会孤独。"',
+    note: '沉浸式深度导读 · 基于 Claude AI 深度解读'
+  }
+};
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// HOW TO READ A BOOK — Custom Components & Styles
+// Book-specific visualizations, animations, and observers
+// ═══════════════════════════════════════════════════════════════
+
+// ── CUSTOM CSS ──────────────────────────────────────────────────
+const CUSTOM_CSS = `
+/* ═══════════════════════════════════════════════════════
+   SVG PYRAMID VISUALIZATION
+   ═══════════════════════════════════════════════════════ */
+.svg-pyramid { max-width: 500px; margin: 0 auto 20px; }
+.svg-pyramid svg { width: 100%; height: auto; }
+
+.pyramid-detail {
+  margin-top: 24px;
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  display: none;
+}
+.pyramid-detail.visible { display: block; }
+.pyramid-detail h4 {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.pyramid-detail ul { list-style: none; padding: 0; }
+.pyramid-detail li {
+  font-size: 14px;
+  line-height: 1.8;
+  padding: 4px 0;
+  padding-left: 20px;
+  position: relative;
+}
+.pyramid-detail li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: .4;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RULES GRID (15 Rules of Analytical Reading)
+   ═══════════════════════════════════════════════════════ */
+.rules-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 24px 0;
+}
+.rule-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  transition: all .3s;
+  cursor: default;
+}
+.rule-item:hover { border-color: var(--accent); }
+.rule-num {
+  font-family: var(--inter);
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  min-width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rule-text {
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.rule-stage {
+  font-size: 11px;
+  color: var(--accent);
+  font-family: var(--inter);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   COMPARISON BARS (Active vs Passive Reading)
+   ═══════════════════════════════════════════════════════ */
+.htr-comparison-section {
+  margin: 48px 0;
+  padding: 36px;
+  border-radius: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+}
+.htr-comp-title {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.htr-comp-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 24px;
+}
+.htr-comp-btn {
+  padding: 10px 24px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--sans);
+  transition: all .3s;
+  color: var(--fg);
+}
+.htr-comp-btn:first-child { border-radius: 20px 0 0 20px; }
+.htr-comp-btn:last-child { border-radius: 0 20px 20px 0; }
+.htr-comp-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.htr-comp-bars { display: flex; flex-direction: column; gap: 14px; }
+.htr-comp-row { display: flex; align-items: center; gap: 12px; }
+.htr-comp-label {
+  min-width: 80px;
+  font-size: 13px;
+  font-family: var(--sans);
+  text-align: right;
+  color: var(--muted-fg);
+}
+.htr-comp-bar-track {
+  flex: 1;
+  height: 28px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+}
+.htr-comp-bar-fill {
+  height: 100%;
+  border-radius: 14px;
+  transition: width .8s var(--ease-out);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  min-width: 40px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FLOWCHART (Skim Reading Steps)
+   ═══════════════════════════════════════════════════════ */
+.flowchart {
+  margin: 48px 0;
+  padding: 36px;
+  border-radius: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+}
+.flowchart-title {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.flow-steps {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.flow-step {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  min-width: 280px;
+  transition: all .3s;
+}
+.flow-step:hover { border-color: var(--accent); }
+.flow-step-icon { font-size: 24px; }
+.flow-step-text {
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.flow-arrow {
+  color: var(--accent);
+  font-size: 20px;
+  padding: 4px 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOK TYPE CARDS
+   ═══════════════════════════════════════════════════════ */
+.type-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.type-card {
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  transition: all .4s;
+  cursor: default;
+}
+.type-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+.type-card-icon { font-size: 32px; margin-bottom: 12px; display: block; }
+.type-card-name {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.type-card-key {
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 8px;
+  font-family: var(--inter);
+  letter-spacing: 1px;
+}
+.type-card-desc { font-size: 13px; line-height: 1.7; color: var(--muted-fg); }
+
+/* ═══════════════════════════════════════════════════════
+   QUIZ MODULE (Critique Quiz)
+   ═══════════════════════════════════════════════════════ */
+.quiz-module {
+  margin: 48px 0;
+  padding: 36px;
+  border-radius: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+}
+.quiz-title {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.quiz-subtitle {
+  font-size: 13px;
+  color: var(--muted-fg);
+  text-align: center;
+  margin-bottom: 24px;
+}
+.quiz-question {
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  text-align: center;
+  padding: 0 20px;
+}
+.quiz-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.quiz-opt {
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--card-bg);
+  cursor: pointer;
+  font-size: 14px;
+  font-family: var(--sans);
+  transition: all .3s;
+  text-align: center;
+}
+.quiz-opt:hover { border-color: var(--accent); background: var(--accent-glow); }
+.quiz-opt.selected { border-color: var(--accent); background: var(--accent-glow); font-weight: 600; }
+.quiz-opt.correct { border-color: #4CAF50; background: rgba(76,175,80,0.1); color: #2E7D32; }
+.quiz-opt.wrong { border-color: #E53935; background: rgba(229,57,53,0.1); color: #C62828; }
+.quiz-result {
+  text-align: center;
+  padding: 20px;
+  border-radius: 12px;
+  display: none;
+  margin-top: 16px;
+}
+.quiz-result.visible { display: block; }
+.quiz-result.correct-result { background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.3); }
+.quiz-result.wrong-result { background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.3); }
+.quiz-result h4 { font-family: var(--serif); font-size: 16px; margin-bottom: 8px; }
+.quiz-result p { font-size: 14px; line-height: 1.7; }
+.quiz-progress {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted-fg);
+  margin-bottom: 16px;
+  font-family: var(--inter);
+}
+.quiz-score {
+  text-align: center;
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--accent-glow);
+  display: none;
+}
+.quiz-score.visible { display: block; }
+.quiz-score h3 { font-family: var(--serif); font-size: 22px; margin-bottom: 8px; color: var(--accent); }
+.quiz-score p { font-size: 14px; line-height: 1.7; }
+
+/* ═══════════════════════════════════════════════════════
+   CLASSIFY GAME
+   ═══════════════════════════════════════════════════════ */
+.classify-game {
+  margin: 48px 0;
+  padding: 36px;
+  border-radius: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+}
+.classify-title {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.classify-subtitle {
+  font-size: 13px;
+  color: var(--muted-fg);
+  text-align: center;
+  margin-bottom: 24px;
+}
+.classify-book { text-align: center; padding: 20px; margin-bottom: 20px; }
+.classify-book-title {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.classify-book-author { font-size: 13px; color: var(--muted-fg); }
+.classify-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-width: 400px;
+  margin: 0 auto 16px;
+}
+.classify-choice {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--sans);
+  transition: all .3s;
+}
+.classify-choice:hover { border-color: var(--accent); }
+.classify-choice.correct { border-color: #4CAF50; background: rgba(76,175,80,0.1); }
+.classify-choice.wrong { border-color: #E53935; background: rgba(229,57,53,0.1); }
+.classify-feedback {
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  display: none;
+}
+.classify-feedback.visible { display: block; }
+.classify-counter {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted-fg);
+  margin-bottom: 16px;
+  font-family: var(--inter);
+}
+
+/* ═══════════════════════════════════════════════════════
+   TERMS EXERCISE
+   ═══════════════════════════════════════════════════════ */
+.terms-exercise {
+  margin: 48px 0;
+  padding: 36px;
+  border-radius: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+}
+.terms-title {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.terms-subtitle {
+  font-size: 13px;
+  color: var(--muted-fg);
+  text-align: center;
+  margin-bottom: 24px;
+}
+.terms-word { text-align: center; margin-bottom: 20px; }
+.terms-word-text {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.terms-context {
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: var(--bg);
+  margin-bottom: 20px;
+  font-family: var(--serif);
+  border-left: 3px solid var(--accent);
+}
+.terms-meanings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.terms-meaning {
+  padding: 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: center;
+  transition: all .3s;
+  font-family: var(--sans);
+}
+.terms-meaning:hover { border-color: var(--accent); }
+.terms-meaning.correct { border-color: #4CAF50; background: rgba(76,175,80,0.1); }
+.terms-meaning.wrong { border-color: #E53935; background: rgba(229,57,53,0.1); }
+.terms-explain {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--accent-glow);
+  font-size: 14px;
+  line-height: 1.7;
+  display: none;
+  text-align: center;
+}
+.terms-explain.visible { display: block; }
+
+/* ═══════════════════════════════════════════════════════
+   SELF ASSESSMENT
+   ═══════════════════════════════════════════════════════ */
+.assessment {
+  margin: 48px 0;
+  padding: 36px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(30,25,18,0.9), rgba(50,40,28,0.95));
+  color: #E8DFD0;
+  border: 1px solid rgba(139,105,20,0.3);
+}
+.assessment-title {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--accent-dim);
+  margin-bottom: 8px;
+}
+.assessment-subtitle {
+  font-size: 13px;
+  color: rgba(232,223,208,0.6);
+  text-align: center;
+  margin-bottom: 24px;
+}
+.assessment-q {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+.assessment-opts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.assessment-opt {
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(139,105,20,0.3);
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all .3s;
+  color: #E8DFD0;
+}
+.assessment-opt:hover { border-color: var(--accent-dim); background: rgba(139,105,20,0.15); }
+.assessment-opt.selected {
+  border-color: var(--accent-dim);
+  background: rgba(139,105,20,0.25);
+  font-weight: 600;
+}
+.assessment-result {
+  text-align: center;
+  padding: 24px;
+  border-radius: 12px;
+  background: rgba(139,105,20,0.15);
+  display: none;
+}
+.assessment-result.visible { display: block; }
+.assessment-result h3 {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--accent-dim);
+  margin-bottom: 12px;
+}
+.assessment-result p { font-size: 14px; line-height: 1.7; }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE OVERRIDES
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .quiz-options { grid-template-columns: 1fr; }
+  .type-cards { grid-template-columns: 1fr; }
+  .classify-choices { grid-template-columns: 1fr; }
+  .terms-meanings { grid-template-columns: 1fr; }
+  .htr-comp-toggle { flex-wrap: wrap; }
+}
+`;
+
+// ── Inject CSS ─────────────────────────────────────────────────
+BookEngine.injectCSS(CUSTOM_CSS);
+
+
+// ═══════════════════════════════════════════════════════════════
+// VISUALIZATION RENDERERS
+// ═══════════════════════════════════════════════════════════════
+
+// ── Reading Pyramid ────────────────────────────────────────────
+BookEngine.registerViz('reading-pyramid', {
+  render: function(scene, config) {
+    return '<div class="data-viz reveal">' +
+      '<div class="data-viz-title">阅读的四个层次金字塔</div>' +
+      '<div class="data-viz-subtitle">点击每一层查看详细说明</div>' +
+      '<div class="svg-pyramid">' +
+        '<svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">' +
+          '<defs>' +
+            '<linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4A017" stop-opacity="0.9"/><stop offset="100%" stop-color="#8B6914" stop-opacity="0.9"/></linearGradient>' +
+            '<linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B8960E" stop-opacity="0.7"/><stop offset="100%" stop-color="#8B6914" stop-opacity="0.7"/></linearGradient>' +
+            '<linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#A0845C" stop-opacity="0.5"/><stop offset="100%" stop-color="#8B6914" stop-opacity="0.5"/></linearGradient>' +
+            '<linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#C0B090" stop-opacity="0.3"/><stop offset="100%" stop-color="#8B6914" stop-opacity="0.3"/></linearGradient>' +
+          '</defs>' +
+          '<polygon points="200,10 260,75 140,75" fill="url(#g4)" stroke="#D4A017" stroke-width="1.5" class="pyramid-click" data-level="3" style="cursor:pointer"/>' +
+          '<polygon points="140,80 260,80 290,145 110,145" fill="url(#g3)" stroke="#B8960E" stroke-width="1.5" class="pyramid-click" data-level="2" style="cursor:pointer"/>' +
+          '<polygon points="110,150 290,150 320,215 80,215" fill="url(#g2)" stroke="#A0845C" stroke-width="1.5" class="pyramid-click" data-level="1" style="cursor:pointer"/>' +
+          '<polygon points="80,220 320,220 350,270 50,270" fill="url(#g1)" stroke="#C0B090" stroke-width="1.5" class="pyramid-click" data-level="0" style="cursor:pointer"/>' +
+          '<text x="200" y="52" text-anchor="middle" fill="#fff" font-size="12" font-weight="600" font-family="Noto Sans SC" style="pointer-events:none">主题阅读</text>' +
+          '<text x="200" y="120" text-anchor="middle" fill="#fff" font-size="12" font-weight="600" font-family="Noto Sans SC" style="pointer-events:none">分析阅读</text>' +
+          '<text x="200" y="190" text-anchor="middle" fill="#6B4C2A" font-size="12" font-weight="600" font-family="Noto Sans SC" style="pointer-events:none">检视阅读</text>' +
+          '<text x="200" y="253" text-anchor="middle" fill="#6B4C2A" font-size="12" font-weight="600" font-family="Noto Sans SC" style="pointer-events:none">基础阅读</text>' +
+          '<text x="200" y="68" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9" font-family="Inter" style="pointer-events:none">&lt;1% 的读者</text>' +
+          '<text x="200" y="136" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9" font-family="Inter" style="pointer-events:none">~5% 的读者</text>' +
+          '<text x="200" y="206" text-anchor="middle" fill="rgba(107,76,42,0.6)" font-size="9" font-family="Inter" style="pointer-events:none">~15% 的读者</text>' +
+          '<text x="200" y="266" text-anchor="middle" fill="rgba(107,76,42,0.5)" font-size="9" font-family="Inter" style="pointer-events:none">~80% 的读者</text>' +
+        '</svg>' +
+      '</div>' +
+      '<div id="pyramidDetail" class="pyramid-detail">' +
+        '<h4 id="pyramidDetailTitle"></h4>' +
+        '<ul id="pyramidDetailList"></ul>' +
+      '</div>' +
+    '</div>';
+  },
+  init: function() {
+    var levels = [
+      {name:'基础阅读 · Elementary Reading',items:['认识字词，理解句子的字面含义','能回答"这个句子在说什么？"','小学阶段学会的技能','是所有更高层次的基础，但远远不够']},
+      {name:'检视阅读 · Inspectional Reading',items:['系统化略读：30分钟掌握全书概貌','粗浅阅读：困难之处不停留，先求整体','能回答：这是什么类型的书？讲了什么？','快速判断一本书是否值得进行分析阅读']},
+      {name:'分析阅读 · Analytical Reading',items:['最完整、最深入的阅读方式','三阶段十五条规则','透视全书骨架、与作者达成共识、公正评判','能完整重述并评价作者的论证']},
+      {name:'主题阅读 · Syntopical Reading',items:['同时阅读多本同主题书籍','建立自己的术语体系，让作者们"对话"','构建超越任何单本书的洞见','阅读的最高层次——从接收者变为创造者']}
+    ];
+    document.querySelectorAll('.pyramid-click').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var lvl = parseInt(el.dataset.level);
+        var d = document.getElementById('pyramidDetail');
+        var t = document.getElementById('pyramidDetailTitle');
+        var l = document.getElementById('pyramidDetailList');
+        t.textContent = levels[lvl].name;
+        l.innerHTML = levels[lvl].items.map(function(it) { return '<li>' + it + '</li>'; }).join('');
+        d.classList.add('visible');
+      });
+    });
+  }
+});
+
+
+// ── Four Levels (Active vs Passive + Self Assessment) ──────────
+BookEngine.registerViz('four-levels', {
+  render: function(scene, config) {
+    return '<div class="htr-comparison-section reveal">' +
+      '<div class="htr-comp-title">主动阅读 vs 被动阅读：效果对比</div>' +
+      '<div class="htr-comp-toggle">' +
+        '<button class="htr-comp-btn active" data-mode="passive">被动阅读</button>' +
+        '<button class="htr-comp-btn" data-mode="active">主动阅读</button>' +
+      '</div>' +
+      '<div class="htr-comp-bars" id="htrCompBars">' +
+        '<div class="htr-comp-row"><div class="htr-comp-label">信息记忆</div><div class="htr-comp-bar-track"><div class="htr-comp-bar-fill" data-passive="15" data-active="70" style="width:15%;background:linear-gradient(90deg,#E53935,#FF5252)">15%</div></div></div>' +
+        '<div class="htr-comp-row"><div class="htr-comp-label">理解深度</div><div class="htr-comp-bar-track"><div class="htr-comp-bar-fill" data-passive="10" data-active="65" style="width:10%;background:linear-gradient(90deg,#E53935,#FF5252)">10%</div></div></div>' +
+        '<div class="htr-comp-row"><div class="htr-comp-label">批判思维</div><div class="htr-comp-bar-track"><div class="htr-comp-bar-fill" data-passive="5" data-active="55" style="width:5%;background:linear-gradient(90deg,#E53935,#FF5252)">5%</div></div></div>' +
+        '<div class="htr-comp-row"><div class="htr-comp-label">长期留存</div><div class="htr-comp-bar-track"><div class="htr-comp-bar-fill" data-passive="10" data-active="60" style="width:10%;background:linear-gradient(90deg,#E53935,#FF5252)">10%</div></div></div>' +
+        '<div class="htr-comp-row"><div class="htr-comp-label">心智成长</div><div class="htr-comp-bar-track"><div class="htr-comp-bar-fill" data-passive="5" data-active="50" style="width:5%;background:linear-gradient(90deg,#E53935,#FF5252)">5%</div></div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="assessment reveal" id="selfAssessment">' +
+      '<div class="assessment-title">你的阅读层次自评</div>' +
+      '<div class="assessment-subtitle">回答以下问题，了解你目前处于哪个阅读层次</div>' +
+      '<div id="assessmentContent"></div>' +
+    '</div>';
+  },
+  init: function() {
+    // Comparison toggle
+    document.querySelectorAll('.htr-comp-toggle').forEach(function(toggle) {
+      toggle.addEventListener('click', function(e) {
+        var btn = e.target.closest('.htr-comp-btn');
+        if (!btn) return;
+        toggle.querySelectorAll('.htr-comp-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var mode = btn.dataset.mode;
+        var colors = mode === 'active' ? 'linear-gradient(90deg,#4CAF50,#66BB6A)' : 'linear-gradient(90deg,#E53935,#FF5252)';
+        var section = toggle.closest('.htr-comparison-section');
+        section.querySelectorAll('.htr-comp-bar-fill').forEach(function(bar) {
+          var val = bar.dataset[mode];
+          bar.style.width = val + '%';
+          bar.style.background = colors;
+          bar.textContent = val + '%';
+        });
+      });
+    });
+
+    // Self Assessment
+    var questions = [
+      {q:'读完一本书后，你能用一句话说出它的主旨吗？',opts:['总是可以','大部分时候可以','有时候可以','很少能做到'],scores:[3,2,1,0]},
+      {q:'你读书时会标注和思考作者使用的关键术语吗？',opts:['系统化地标注和定义','偶尔标注','只是划线','从不'],scores:[3,2,1,0]},
+      {q:'读完后你能重建作者的论证链条（前提→证据→结论）吗？',opts:['可以，而且经常这样做','部分可以','很困难','从没尝试过'],scores:[3,2,1,0]},
+      {q:'你会主动阅读多本同主题的书来比较不同观点吗？',opts:['经常这样做','偶尔','很少','不会'],scores:[3,2,1,0]},
+      {q:'当你不同意作者时，你能给出具体的理由（而不仅仅是感觉）吗？',opts:['总是有理由','大多数时候','不太确定','主要靠直觉'],scores:[3,2,1,0]}
+    ];
+    var currentQ = 0;
+    var totalScore = 0;
+    var container = document.getElementById('assessmentContent');
+    if (!container) return;
+
+    function renderQ() {
+      if (currentQ >= questions.length) {
+        var level, desc;
+        if (totalScore >= 12) { level = '主题阅读层次'; desc = '你已经是一个高级读者，具备跨书比较和综合分析的能力。'; }
+        else if (totalScore >= 8) { level = '分析阅读层次'; desc = '你能较好地理解一本书的深层结构，但在跨书综合方面还有提升空间。'; }
+        else if (totalScore >= 4) { level = '检视阅读层次'; desc = '你能快速把握书的大意，但在深度理解和批判性思考方面还需要刻意练习。'; }
+        else { level = '基础阅读层次'; desc = '你目前的阅读主要停留在获取信息层面。本书的方法将帮助你实现质的飞跃。'; }
+        container.innerHTML =
+          '<div class="assessment-result visible">' +
+            '<h3>你当前处于：' + level + '</h3>' +
+            '<p>得分：' + totalScore + '/15</p>' +
+            '<p>' + desc + '</p>' +
+            '<p style="margin-top:12px;font-size:12px;opacity:.7">这不是终点——本书的每一个场景都在帮你攀升到更高的层次。</p>' +
+          '</div>';
+        return;
+      }
+      var q = questions[currentQ];
+      container.innerHTML =
+        '<div class="assessment-q">' + (currentQ + 1) + '/' + questions.length + '. ' + q.q + '</div>' +
+        '<div class="assessment-opts">' +
+          q.opts.map(function(o, i) { return '<div class="assessment-opt" data-idx="' + i + '">' + o + '</div>'; }).join('') +
+        '</div>';
+      container.querySelectorAll('.assessment-opt').forEach(function(opt) {
+        opt.addEventListener('click', function() {
+          var idx = parseInt(opt.dataset.idx);
+          totalScore += questions[currentQ].scores[idx];
+          opt.classList.add('selected');
+          container.querySelectorAll('.assessment-opt').forEach(function(o) { o.style.pointerEvents = 'none'; });
+          setTimeout(function() { currentQ++; renderQ(); }, 600);
+        });
+      });
+    }
+    renderQ();
+  }
+});
+
+
+// ── Skim Flowchart ─────────────────────────────────────────────
+BookEngine.registerViz('skim-flowchart', {
+  render: function(scene, config) {
+    return '<div class="flowchart reveal">' +
+      '<div class="flowchart-title">检视阅读六步法</div>' +
+      '<div class="flow-steps">' +
+        '<div class="flow-step"><div class="flow-step-icon">📋</div><div class="flow-step-text"><strong>步骤一</strong><br>读书名页和前言，搞清楚书的主题范围<br><em style="color:var(--muted-fg);font-size:12px">⏱ 约1分钟</em></div></div>' +
+        '<div class="flow-arrow">↓</div>' +
+        '<div class="flow-step"><div class="flow-step-icon">🗂️</div><div class="flow-step-text"><strong>步骤二</strong><br>研究目录，理解全书结构蓝图<br><em style="color:var(--muted-fg);font-size:12px">⏱ 约2分钟</em></div></div>' +
+        '<div class="flow-arrow">↓</div>' +
+        '<div class="flow-step"><div class="flow-step-icon">🔍</div><div class="flow-step-text"><strong>步骤三</strong><br>检查索引，识别关键术语和高频话题<br><em style="color:var(--muted-fg);font-size:12px">⏱ 约2分钟</em></div></div>' +
+        '<div class="flow-arrow">↓</div>' +
+        '<div class="flow-step"><div class="flow-step-icon">💬</div><div class="flow-step-text"><strong>步骤四</strong><br>读出版者介绍/腰封，快速获取核心摘要<br><em style="color:var(--muted-fg);font-size:12px">⏱ 约1分钟</em></div></div>' +
+        '<div class="flow-arrow">↓</div>' +
+        '<div class="flow-step"><div class="flow-step-icon">📖</div><div class="flow-step-text"><strong>步骤五</strong><br>翻阅核心章节的开头和结尾段落<br><em style="color:var(--muted-fg);font-size:12px">⏱ 约10分钟</em></div></div>' +
+        '<div class="flow-arrow">↓</div>' +
+        '<div class="flow-step"><div class="flow-step-icon">🎯</div><div class="flow-step-text"><strong>步骤六</strong><br>随机翻阅，读散落的段落，感受作者的文风<br><em style="color:var(--muted-fg);font-size:12px">⏱ 约10分钟</em></div></div>' +
+        '<div class="flow-arrow">↓</div>' +
+        '<div class="flow-step" style="border-color:var(--accent);background:var(--accent-glow)"><div class="flow-step-icon">✅</div><div class="flow-step-text"><strong>产出</strong><br>你现在可以回答：这本书是什么类型？讲了什么？值不值得深读？</div></div>' +
+      '</div>' +
+    '</div>';
+  }
+});
+
+
+// ── Fifteen Rules ──────────────────────────────────────────────
+BookEngine.registerViz('fifteen-rules', {
+  render: function(scene, config) {
+    return '<div class="data-viz reveal">' +
+      '<div class="data-viz-title">分析阅读的十五条规则</div>' +
+      '<div class="data-viz-subtitle">三个阶段，十五条规则，一套完整的深度阅读工具箱</div>' +
+      '<div class="rules-grid">' +
+        '<div class="rule-stage">第一阶段：结构性阅读 —— 这本书整体在谈什么？</div>' +
+        '<div class="rule-item"><div class="rule-num">1</div><div class="rule-text">按照书的种类与主题来分类</div></div>' +
+        '<div class="rule-item"><div class="rule-num">2</div><div class="rule-text">用最简短的文字说出整本书在谈什么</div></div>' +
+        '<div class="rule-item"><div class="rule-num">3</div><div class="rule-text">将主要部分按顺序与关联性列举出来，拟出全书的大纲</div></div>' +
+        '<div class="rule-item"><div class="rule-num">4</div><div class="rule-text">确定作者想要解决的问题</div></div>' +
+        '<div class="rule-stage" style="margin-top:16px">第二阶段：诠释性阅读 —— 细节上说了什么？</div>' +
+        '<div class="rule-item"><div class="rule-num">5</div><div class="rule-text">找出关键字，与作者达成共识</div></div>' +
+        '<div class="rule-item"><div class="rule-num">6</div><div class="rule-text">找出最重要的句子，抓住作者的核心命题</div></div>' +
+        '<div class="rule-item"><div class="rule-num">7</div><div class="rule-text">找出作者的论证，重建论证的前因后果</div></div>' +
+        '<div class="rule-item"><div class="rule-num">8</div><div class="rule-text">确定作者已经解决了哪些问题，还有哪些是未解决的</div></div>' +
+        '<div class="rule-stage" style="margin-top:16px">第三阶段：批判性阅读 —— 说得对吗？与我何干？</div>' +
+        '<div class="rule-item"><div class="rule-num">9</div><div class="rule-text">除非你已经完成大纲与诠释，否则不要轻易批评</div></div>' +
+        '<div class="rule-item"><div class="rule-num">10</div><div class="rule-text">不要争强好胜，非辩到底不可</div></div>' +
+        '<div class="rule-item"><div class="rule-num">11</div><div class="rule-text">在说出评论之前，要能区分真正的知识与个人观点</div></div>' +
+        '<div class="rule-item"><div class="rule-num">12</div><div class="rule-text">证明作者的知识不足（uninformed）</div></div>' +
+        '<div class="rule-item"><div class="rule-num">13</div><div class="rule-text">证明作者的知识有误（misinformed）</div></div>' +
+        '<div class="rule-item"><div class="rule-num">14</div><div class="rule-text">证明作者不合逻辑（illogical）</div></div>' +
+        '<div class="rule-item"><div class="rule-num">15</div><div class="rule-text">证明作者的分析不够完整（incomplete）</div></div>' +
+      '</div>' +
+    '</div>';
+  }
+});
+
+
+// ── Terms Exercise ─────────────────────────────────────────────
+BookEngine.registerViz('terms-exercise', {
+  render: function(scene, config) {
+    return '<div class="terms-exercise reveal" id="termsExercise">' +
+      '<div class="terms-title">互动练习：与作者"达成共识"</div>' +
+      '<div class="terms-subtitle">同一个词在不同语境下含义不同。你能找出作者的真正意思吗？</div>' +
+      '<div id="termsContent"></div>' +
+    '</div>';
+  },
+  init: function() {
+    var exercises = [
+      {word:'自由',context:'在这里，卢梭说的"自由"并不是指想做什么就做什么，而是指服从自己为自己制定的法律。',meanings:['想做什么就做什么','不受他人约束','服从自己制定的法律','拥有选择的权利'],correct:2,explain:'卢梭将"自由"定义为自律——遵守自己通过理性制定的规则。这与日常理解的"自由=无拘束"完全不同。这就是为什么"与作者达成共识"如此重要：如果你用自己的定义理解卢梭，你会完全误解他的论证。'},
+      {word:'革命',context:'科学革命的本质不是新发现，而是方法论的转变——从"我已经知道答案"到"我承认自己无知"。（参考自《人类简史》）',meanings:['暴力推翻政权','快速的技术进步','方法论的根本转变','群众运动'],correct:2,explain:'在这个语境中，"革命"指的是思维方式的根本转变，不是政治革命或技术进步。赫拉利强调的是认知框架的转换——从确定性到不确定性。'},
+      {word:'理性',context:'康德所说的"理性"不是聪明或会算计，而是一种能够认识普遍道德法则的先验能力。',meanings:['聪明才智','逻辑推理能力','认识道德法则的先验能力','权衡利弊的能力'],correct:2,explain:'康德的"理性"是一个高度专业化的哲学术语，指人类先天具有的认识道德普遍法则的能力。用日常含义理解这个词，会让康德的整套伦理学变得不可理解。'}
+    ];
+    var currentTerm = 0;
+    var container = document.getElementById('termsContent');
+    if (!container) return;
+
+    function renderTerm() {
+      if (currentTerm >= exercises.length) {
+        container.innerHTML = '<div style="text-align:center;padding:20px"><h4 style="font-family:var(--serif);color:var(--accent);margin-bottom:8px">练习完成！</h4><p style="font-size:14px;line-height:1.7">你已经体验了"与作者达成共识"的过程。<br>记住：每次遇到关键词，先问"作者这里是什么意思？"</p></div>';
+        return;
+      }
+      var ex = exercises[currentTerm];
+      container.innerHTML =
+        '<div class="terms-word"><div class="terms-word-text">"' + ex.word + '"</div></div>' +
+        '<div class="terms-context">' + ex.context + '</div>' +
+        '<div style="font-size:13px;color:var(--muted-fg);text-align:center;margin-bottom:12px">在这个语境中，"' + ex.word + '"最可能是什么意思？</div>' +
+        '<div class="terms-meanings">' +
+          ex.meanings.map(function(m, i) { return '<div class="terms-meaning" data-idx="' + i + '">' + m + '</div>'; }).join('') +
+        '</div>' +
+        '<div class="terms-explain" id="termsExplain"></div>' +
+        '<div class="classify-counter">' + (currentTerm + 1) + ' / ' + exercises.length + '</div>';
+
+      container.querySelectorAll('.terms-meaning').forEach(function(el) {
+        el.addEventListener('click', function() {
+          var idx = parseInt(el.dataset.idx);
+          var ex2 = exercises[currentTerm];
+          container.querySelectorAll('.terms-meaning').forEach(function(m, i) {
+            m.style.pointerEvents = 'none';
+            if (i === ex2.correct) m.classList.add('correct');
+            else if (i === idx) m.classList.add('wrong');
+          });
+          var explain = document.getElementById('termsExplain');
+          explain.textContent = ex2.explain;
+          explain.classList.add('visible');
+          setTimeout(function() { currentTerm++; renderTerm(); }, 3500);
+        });
+      });
+    }
+    renderTerm();
+  }
+});
+
+
+// ── Critique Quiz ──────────────────────────────────────────────
+BookEngine.registerViz('critique-quiz', {
+  render: function(scene, config) {
+    return '<div class="quiz-module reveal" id="critiqueQuiz">' +
+      '<div class="quiz-title">批判性阅读实战测验</div>' +
+      '<div class="quiz-subtitle">判断以下读者的批评是否符合艾德勒的批判规则</div>' +
+      '<div id="critiqueContent"></div>' +
+    '</div>';
+  },
+  init: function() {
+    var quizzes = [
+      {scenario:'读者小王读完一本经济学著作后说："这本书太无聊了，我不同意。"',question:'这个批评符合艾德勒的批判规则吗？',opts:['符合','不符合'],correct:1,explain:'违反了规则九：小王没有证明自己理解了作者的论证就急于否定。"太无聊"不是理性的反驳理由——它既不指出作者的无知、错误、不合逻辑或不完整，只是一种主观感受。'},
+      {scenario:'读者小李读完《枪炮、病菌与钢铁》后指出："作者在分析非洲历史时忽略了内部贸易网络的影响，使其地理决定论的解释不够完整。"',question:'这个批评符合艾德勒的批判规则吗？',opts:['符合','不符合'],correct:0,explain:'完全符合规则十五（分析不完整）。小李明确指出了作者未涉及的相关因素，并解释了这种遗漏如何影响整体论证。这是一个有建设性的、有据可依的批评。'},
+      {scenario:'读者小赵在朋友推荐下翻了几页就说："这个作者的三观和我不一样，完全错误。"',question:'这个批评符合艾德勒的批判规则吗？',opts:['符合','不符合'],correct:1,explain:'违反了规则九（未完整阅读就批评）、规则十（为争辩而争辩）和规则十一（混淆知识与观点）。"三观不同"不构成作者错误的证据——你必须先理解作者的完整论证，再指出具体哪里无知、有误、不合逻辑或不完整。'}
+    ];
+    var currentCQ = 0;
+    var correctCount = 0;
+    var container = document.getElementById('critiqueContent');
+    if (!container) return;
+
+    function renderCQ() {
+      if (currentCQ >= quizzes.length) {
+        container.innerHTML =
+          '<div class="quiz-score visible">' +
+            '<h3>' + correctCount + '/' + quizzes.length + ' 正确</h3>' +
+            '<p>' + (correctCount === quizzes.length ? '你已经掌握了批判性阅读的要领！' : '继续练习——记住，理解先于评判，反驳必须有据。') + '</p>' +
+          '</div>';
+        return;
+      }
+      var q = quizzes[currentCQ];
+      container.innerHTML =
+        '<div class="quiz-progress">' + (currentCQ + 1) + ' / ' + quizzes.length + '</div>' +
+        '<div style="padding:16px;border-radius:12px;background:var(--bg);margin-bottom:16px;font-family:var(--serif);font-size:14px;line-height:1.7;border-left:3px solid var(--accent)">' + q.scenario + '</div>' +
+        '<div class="quiz-question">' + q.question + '</div>' +
+        '<div class="quiz-options">' +
+          q.opts.map(function(o, i) { return '<div class="quiz-opt" data-idx="' + i + '">' + o + '</div>'; }).join('') +
+        '</div>' +
+        '<div class="quiz-result" id="critiqueResult"></div>';
+
+      container.querySelectorAll('.quiz-opt').forEach(function(opt) {
+        opt.addEventListener('click', function() {
+          var idx = parseInt(opt.dataset.idx);
+          var q2 = quizzes[currentCQ];
+          container.querySelectorAll('.quiz-opt').forEach(function(o, i) {
+            o.style.pointerEvents = 'none';
+            if (i === q2.correct) o.classList.add('correct');
+            else if (i === idx && idx !== q2.correct) o.classList.add('wrong');
+          });
+          if (idx === q2.correct) correctCount++;
+          var result = document.getElementById('critiqueResult');
+          result.className = 'quiz-result visible ' + (idx === q2.correct ? 'correct-result' : 'wrong-result');
+          result.innerHTML = '<h4>' + (idx === q2.correct ? '✓ 正确！' : '✗ 不太对') + '</h4><p>' + q2.explain + '</p>';
+          setTimeout(function() { currentCQ++; renderCQ(); }, 4000);
+        });
+      });
+    }
+    renderCQ();
+  }
+});
+
+
+// ── Book Types + Classify Game ─────────────────────────────────
+BookEngine.registerViz('book-types', {
+  render: function(scene, config) {
+    return '<div class="data-viz reveal">' +
+      '<div class="data-viz-title">书籍类型速查图鉴</div>' +
+      '<div class="data-viz-subtitle">不同类型的书需要不同的"读法"</div>' +
+      '<div class="type-cards">' +
+        '<div class="type-card"><span class="type-card-icon">🔧</span><div class="type-card-name">实用型</div><div class="type-card-key">HOW TO / SHOULD DO</div><div class="type-card-desc">教你怎么做或应该做什么。核心问题：目标是什么？手段有效吗？</div></div>' +
+        '<div class="type-card"><span class="type-card-icon">📜</span><div class="type-card-name">历史</div><div class="type-card-key">NARRATIVE + INTERPRETATION</div><div class="type-card-desc">在事实中编织叙事。核心问题：选择了哪些事实？因果解释是否唯一？</div></div>' +
+        '<div class="type-card"><span class="type-card-icon">🔬</span><div class="type-card-name">科学</div><div class="type-card-key">HYPOTHESIS + EVIDENCE</div><div class="type-card-desc">用实验和数据验证假说。核心问题：方法论是否严密？结论是否可复制？</div></div>' +
+        '<div class="type-card"><span class="type-card-icon">🏛️</span><div class="type-card-name">哲学</div><div class="type-card-key">DEFINITION + REASONING</div><div class="type-card-desc">用纯粹推理探讨根本问题。核心问题：术语是否精确？推理是否有效？</div></div>' +
+        '<div class="type-card"><span class="type-card-icon">📊</span><div class="type-card-name">社会科学</div><div class="type-card-key">DATA + FRAMEWORK</div><div class="type-card-desc">结合数据与理论框架解释社会现象。核心问题：变量控制是否充分？</div></div>' +
+        '<div class="type-card"><span class="type-card-icon">✨</span><div class="type-card-name">想象文学</div><div class="type-card-key">EXPERIENCE + TRUTH</div><div class="type-card-desc">创造一个世界让你体验。核心问题：世界是否一致？你是否被触动？</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="classify-game reveal" id="classifyGame">' +
+      '<div class="classify-title">互动：图书分类挑战</div>' +
+      '<div class="classify-subtitle">判断以下书籍属于什么类型——这是分析阅读的第一步</div>' +
+      '<div id="classifyContent"></div>' +
+    '</div>';
+  },
+  init: function() {
+    var books = [
+      {title:'《国富论》',author:'亚当·斯密',choices:['实用型','历史','科学','哲学'],correct:2,explain:'《国富论》虽然有政策建议的成分，但其核心是对经济运行规律的理论探索——属于社会科学/理论型。斯密在建立一套解释市场运作的理论体系。'},
+      {title:'《高效能人士的七个习惯》',author:'史蒂芬·柯维',choices:['实用型','科学','哲学','历史'],correct:0,explain:'典型的实用型书籍——它明确地告诉你"应该怎么做"来提升效能。关键问题是：你接受这些目标吗？这些方法有效吗？'},
+      {title:'《百年孤独》',author:'加西亚·马尔克斯',choices:['历史','哲学','想象文学','社会科学'],correct:2,explain:'虽然它包含拉美历史元素，但本质是一部想象文学作品。阅读它时应该先沉浸在马孔多的世界里，感受而非分析——这是艾德勒对文学作品的阅读建议。'},
+      {title:'《理想国》',author:'柏拉图',choices:['实用型','历史','科学','哲学'],correct:3,explain:'哲学的经典代表——通过对话和推理探讨"正义"的本质。阅读时需要极其关注术语定义（如柏拉图对"正义"的独特定义）和推理过程。'},
+      {title:'《人类简史》',author:'尤瓦尔·赫拉利',choices:['历史','科学','哲学','实用型'],correct:0,explain:'虽然包含科学和哲学元素，但核心是一部历史叙事——讲述智人从动物到上帝的演化历程。关键是识别赫拉利的解读框架，并与其他历史学家的视角对照。'}
+    ];
+    var currentBook = 0;
+    var classifyCorrect = 0;
+    var container = document.getElementById('classifyContent');
+    if (!container) return;
+
+    function renderBook() {
+      if (currentBook >= books.length) {
+        container.innerHTML =
+          '<div class="quiz-score visible">' +
+            '<h3>' + classifyCorrect + '/' + books.length + ' 分类正确</h3>' +
+            '<p>' + (classifyCorrect >= 4 ? '你已经掌握了书籍分类的技能——分析阅读的第一步！' : classifyCorrect >= 2 ? '不错的开始！多加练习，你会越来越敏锐。' : '分类需要更多练习——但这正是学习的过程！') + '</p>' +
+          '</div>';
+        return;
+      }
+      var b = books[currentBook];
+      container.innerHTML =
+        '<div class="classify-counter">' + (currentBook + 1) + ' / ' + books.length + '</div>' +
+        '<div class="classify-book">' +
+          '<div class="classify-book-title">' + b.title + '</div>' +
+          '<div class="classify-book-author">' + b.author + '</div>' +
+        '</div>' +
+        '<div class="classify-choices">' +
+          b.choices.map(function(c, i) { return '<div class="classify-choice" data-idx="' + i + '">' + c + '</div>'; }).join('') +
+        '</div>' +
+        '<div class="classify-feedback" id="classifyFeedback"></div>';
+
+      container.querySelectorAll('.classify-choice').forEach(function(choice) {
+        choice.addEventListener('click', function() {
+          var idx = parseInt(choice.dataset.idx);
+          var b2 = books[currentBook];
+          container.querySelectorAll('.classify-choice').forEach(function(c, i) {
+            c.style.pointerEvents = 'none';
+            if (i === b2.correct) c.classList.add('correct');
+            else if (i === idx && idx !== b2.correct) c.classList.add('wrong');
+          });
+          if (idx === b2.correct) classifyCorrect++;
+          var fb = document.getElementById('classifyFeedback');
+          fb.className = 'classify-feedback visible';
+          fb.style.background = idx === b2.correct ? 'rgba(76,175,80,0.1)' : 'rgba(229,57,53,0.1)';
+          fb.innerHTML = '<strong>' + (idx === b2.correct ? '✓ 正确！' : '✗ 不太对') + '</strong><br>' + b2.explain;
+          setTimeout(function() { currentBook++; renderBook(); }, 3500);
+        });
+      });
+    }
+    renderBook();
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════════════
+// INIT — run all viz init functions after render
+// ═══════════════════════════════════════════════════════════════
+
+BookEngine.registerInit(function() {
+  // Init all registered viz types that have init methods
+  ['reading-pyramid', 'four-levels', 'terms-exercise', 'critique-quiz', 'book-types'].forEach(function(type) {
+    BookEngine.initViz(type);
+  });
+});
+
+</script>
+<script>
+BookEngine.init();
+</script>
+</body>
+</html>

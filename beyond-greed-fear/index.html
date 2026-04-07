@@ -1,0 +1,3035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>超越恐惧与贪婪 · 沉浸式深度导读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   IMMERSIVE BOOK ENGINE — Shared Stylesheet
+   Layered architecture for multi-book rendering engine.
+   Each book injects its own styles into @layer book-custom.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base, layout, components, interactive, animation, book-custom, utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE LAYER
+   Root variables, reset, body defaults, texture overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+
+  /* ── Root CSS Variables (unified superset) ── */
+  :root {
+    /* Palette */
+    --bg: #F5F0E8;
+    --bg-secondary: #EDE7DA;
+    --fg: #1A1A1A;
+    --fg-secondary: #5C5546;
+    --accent: #B8860B;
+    --accent-dim: rgba(184, 134, 11, 0.12);
+    --accent-mid: rgba(184, 134, 11, 0.35);
+    --accent-glow: rgba(184, 134, 11, 0.06);
+    --border: rgba(0,0,0,0.06);
+    --glass-bg: rgba(245, 240, 232, 0.72);
+    --glass-border: rgba(255,255,255,0.3);
+    --card-bg: rgba(255,255,255,0.7);
+    --muted-fg: #7A7062;
+
+    /* Typography */
+    --serif: 'Noto Serif SC', 'Songti SC', Georgia, serif;
+    --sans: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Easing */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background-color: var(--bg);
+    color: var(--fg);
+    overflow-x: hidden;
+    line-height: 1.9;
+    transition: background-color 1.4s var(--ease-smooth),
+                color 1.4s var(--ease-smooth);
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Noise/Grain Texture Overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT LAYER
+   Progress bar, scene navigation, hero, scenes, footer
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer layout {
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 9999;
+    width: 0%;
+    transition: width 0.15s linear;
+  }
+  /* Enhanced: gradient shimmer */
+  .progress-bar {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent)) !important;
+    background-size: 200% 100%;
+    animation: progressShimmer 3s ease infinite;
+    height: 3px !important;
+  }
+
+  /* ── Scene Nav (right-side dots) ── */
+  .scene-nav {
+    position: fixed;
+    right: 2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.8s var(--ease-smooth);
+  }
+  .scene-nav.visible { opacity: 1; }
+  .scene-nav a {
+    display: block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--fg);
+    opacity: 0.15;
+    transition: all 0.5s var(--ease-out);
+    position: relative;
+    text-decoration: none;
+  }
+  .scene-nav a.active {
+    background: var(--accent);
+    opacity: 1;
+    transform: scale(1.6);
+    box-shadow: 0 0 12px var(--accent-mid);
+  }
+  .scene-nav a::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%) translateX(4px);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: all 0.3s var(--ease-out);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+  }
+  .scene-nav a:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+  /* Enhanced: glass tooltip */
+  .scene-nav a::after {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  /* ── Hero Section ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+  }
+  .hero-overline {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 3rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 0.3s forwards;
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(3.5rem, 12vw, 8rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(40px);
+    animation: fadeUp 1.4s var(--ease-out) 0.6s forwards;
+    will-change: transform;
+  }
+  .hero-subtitle {
+    font-family: var(--serif);
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 300;
+    color: var(--fg-secondary);
+    max-width: 500px;
+    letter-spacing: 0.1em;
+    margin-bottom: 4rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 1.2s var(--ease-out) 1s forwards;
+  }
+  .hero-part {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    border: 1px solid var(--accent-mid);
+    padding: 0.6rem 2rem;
+    border-radius: 100px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 1.3s forwards;
+  }
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    animation: fadeUp 1s var(--ease-out) 2s forwards;
+  }
+  .hero-scroll-hint span {
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: var(--fg-secondary);
+    text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px;
+    height: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .scroll-line::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--accent));
+    animation: scrollDrop 2s ease-in-out infinite;
+  }
+  .hero-scroll-hint .scroll-arrow {
+    font-size: 1.2rem;
+    color: var(--accent);
+    animation: bounceArrow 2s var(--ease-out) infinite;
+    opacity: 0.6;
+  }
+
+  /* ── Scene Sections ── */
+  .scene {
+    min-height: 100vh;
+    padding: 12rem 2rem 8rem;
+    position: relative;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 100vh;
+  }
+  .scene-inner {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .scene-number {
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+  }
+  .scene-title {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .scene-subtitle {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    margin-bottom: 6rem;
+    text-transform: uppercase;
+  }
+
+  /* ── Gradient Mesh Backgrounds for Scenes ── */
+  .scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background:
+      radial-gradient(ellipse at 20% 20%, var(--accent-glow) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, var(--accent-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 100%);
+    z-index: -1;
+  }
+
+  /* ── Hero Quote (cinematic, massive) ── */
+  .hero-quote-wrap {
+    margin: 2rem 0 6rem;
+    padding: 4rem 0;
+    position: relative;
+  }
+  .hero-quote-wrap::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote-wrap::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2.6rem);
+    line-height: 1.7;
+    font-weight: 300;
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--accent);
+    z-index: 1;
+  }
+  /* Enhanced: quote decoration marks */
+  .hero-quote-wrap .quote-deco {
+    position: absolute;
+    font-family: var(--serif);
+    font-size: clamp(6rem, 15vw, 12rem);
+    font-weight: 900;
+    color: var(--accent);
+    opacity: 0.06;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-quote-wrap .quote-deco-open {
+    top: -0.5em;
+    left: -0.3em;
+  }
+  .hero-quote-wrap .quote-deco-close {
+    bottom: -0.8em;
+    right: -0.1em;
+  }
+  /* Animated underline highlight on hero quote */
+  .hero-quote-highlight {
+    background: linear-gradient(120deg, var(--accent-dim) 0%, var(--accent-mid) 100%);
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+    background-position: 0 100%;
+    transition: background-size 1.8s var(--ease-out);
+    padding: 0.1em 0;
+  }
+  .reveal-wipe.revealed .hero-quote-highlight {
+    background-size: 100% 100%;
+  }
+
+  /* ── Narrative Paragraphs ── */
+  .narrative { margin-bottom: 2rem; }
+  .narrative p {
+    font-size: 1.05rem;
+    line-height: 2.1;
+    margin-bottom: 2.5rem;
+    color: var(--fg);
+    opacity: 0.82;
+  }
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  /* Enhanced: bold marker highlight */
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+    background: linear-gradient(120deg, var(--accent-dim) 0%, transparent 100%);
+    padding: 0.05em 0.2em;
+    border-radius: 3px;
+  }
+  /* Enhanced: drop cap */
+  .narrative p.drop-cap-p::first-letter {
+    font-family: var(--serif);
+    font-size: 3.5em;
+    font-weight: 900;
+    float: left;
+    line-height: 0.8;
+    margin-right: 0.08em;
+    margin-top: 0.1em;
+    color: var(--accent);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 10rem 2rem 6rem;
+  }
+  .footer-title {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+  }
+  .footer-text {
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    max-width: 460px;
+    margin: 0 auto;
+    line-height: 2;
+    opacity: 0.7;
+  }
+  .footer-next {
+    margin-top: 3rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .footer-bookshelf {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+    padding: 0.75rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--fg-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: all 0.4s var(--ease-out);
+    background: var(--accent-glow);
+  }
+  .footer-bookshelf:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .footer-bookshelf .arrow {
+    transition: transform 0.3s var(--ease-out);
+  }
+  .footer-bookshelf:hover .arrow {
+    transform: translateX(-4px);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENTS LAYER
+   Data viz, big numbers, deep-dive triggers, modals, comparisons,
+   knowledge maps, stat pills, keyboard hint
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Data Viz Container ── */
+  .data-viz {
+    margin: 4rem 0;
+    padding: 3rem 0;
+    position: relative;
+  }
+  .data-viz-title {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .svg-container {
+    width: 100%;
+    overflow: visible;
+  }
+  .svg-container svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  /* SVG path draw animation */
+  .draw-path {
+    stroke-dasharray: var(--path-length, 1000);
+    stroke-dashoffset: var(--path-length, 1000);
+    transition: stroke-dashoffset 2.5s var(--ease-out);
+  }
+  .draw-path.drawn {
+    stroke-dashoffset: 0;
+  }
+  /* Enhanced: corner accents */
+  .data-viz::before,
+  .data-viz::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: var(--accent-mid);
+    border-style: solid;
+  }
+  .data-viz::before {
+    top: 0;
+    left: 0;
+    border-width: 2px 0 0 2px;
+  }
+  .data-viz::after {
+    bottom: 0;
+    right: 0;
+    border-width: 0 2px 2px 0;
+  }
+
+  /* ── Comparison Table ── */
+  .comparison-table-viz .viz-title {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .comparison-table-viz .viz-desc {
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .comparison-table-viz .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+  .comp-table th {
+    text-align: left;
+    padding: 0.65rem 0.8rem;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent-mid);
+    white-space: nowrap;
+  }
+  .comp-table td {
+    padding: 0.6rem 0.8rem;
+    color: var(--fg);
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-table tbody tr:hover {
+    background: var(--accent-dim);
+  }
+  .comparison-table-viz .viz-note {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--fg-secondary);
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid var(--accent-mid);
+    background: var(--accent-glow);
+    line-height: 1.6;
+  }
+
+  /* ── Big Number Counter ── */
+  .big-number {
+    font-family: var(--serif);
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-shadow: 0 0 40px var(--accent-dim), 0 0 80px var(--accent-glow);
+  }
+  .big-number-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--fg-secondary);
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+  .number-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin: 3rem 0;
+    text-align: center;
+  }
+
+  /* ── Deep Dive Triggers ── */
+  .dd-trigger-section {
+    margin-top: 5rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+  }
+  .dd-trigger-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+  .dd-trigger-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .dd-trigger-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .dd-trigger {
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    /* Enhanced: 3D tilt */
+    perspective: 800px;
+    transform-style: preserve-3d;
+    transition: all 0.4s var(--ease-out), transform 0.3s var(--ease-out);
+  }
+  .dd-trigger::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-dim), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .dd-trigger:hover {
+    border-color: var(--accent-mid);
+    transform: translateY(-4px) rotateX(2deg) rotateY(-2deg);
+    box-shadow: 0 12px 40px var(--accent-dim), 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .dd-trigger:hover::before { opacity: 1; }
+  .dd-trigger-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-content {
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-title {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+  }
+  .dd-trigger-hint {
+    font-size: 0.6rem;
+    color: var(--fg-secondary);
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+  }
+  .dd-trigger-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--accent);
+    transition: transform 0.3s var(--ease-out);
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger:hover .dd-trigger-arrow {
+    transform: translateX(4px);
+  }
+  /* Breathing pulse before first click */
+  .dd-trigger:not(.clicked) {
+    animation: ddPulse 3s ease-in-out infinite;
+  }
+  .dd-trigger.clicked {
+    animation: none;
+  }
+
+  /* ── Modal Overlay ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-smooth);
+  }
+  .modal-overlay.open {
+    pointer-events: all;
+    opacity: 1;
+  }
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  }
+  .modal-drawer {
+    position: relative;
+    width: min(580px, 92vw);
+    height: 100vh;
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border-left: 1px solid var(--glass-border);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.6s var(--ease-out);
+    box-shadow: -20px 0 80px rgba(0,0,0,0.1);
+  }
+  .modal-overlay.open .modal-drawer {
+    transform: translateX(0);
+  }
+  .modal-close {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    padding: 1.5rem 2rem 0;
+  }
+  .modal-close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--fg-secondary);
+    transition: all 0.3s;
+  }
+  .modal-close-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .modal-body {
+    padding: 2rem 2.5rem 4rem;
+  }
+  @media (max-width: 640px) {
+    .modal-body { padding: 1.5rem 1.5rem 3rem; }
+  }
+  .modal-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .modal-title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Logic Chain in Modal ── */
+  .logic-chain-modal {
+    position: relative;
+  }
+  .chain-step-modal {
+    position: relative;
+    padding-left: 2rem;
+    padding-bottom: 2.5rem;
+    border-left: 1.5px solid var(--accent-mid);
+  }
+  .chain-step-modal:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+  }
+  .chain-step-modal::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 0.2rem;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--glass-bg), 0 0 0 5px var(--accent-mid);
+  }
+  .chain-label-modal {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    display: inline-block;
+    padding: 0.2rem 0.75rem;
+    background: var(--accent-dim);
+    border-radius: 3px;
+  }
+  .chain-text-modal {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--fg);
+    opacity: 0.88;
+  }
+
+  /* ── Modal Stagger Animation ── */
+  .modal-stagger {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+  }
+  .modal-overlay.open .modal-stagger {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .modal-stagger-1 { transition-delay: 0.15s; }
+  .modal-stagger-2 { transition-delay: 0.35s; }
+  .modal-stagger-3 { transition-delay: 0.55s; }
+  .modal-stagger-4 { transition-delay: 0.75s; }
+  .modal-stagger-5 { transition-delay: 0.95s; }
+  .modal-stagger-6 { transition-delay: 1.15s; }
+
+  /* ── Active Recall Mask (triggerQuestion) ── */
+  .trigger-question {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-dim);
+    border-radius: 12px;
+  }
+  .trigger-question-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .trigger-question-text {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--fg);
+    margin-bottom: 1.2rem;
+  }
+  .recall-reveal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.8rem;
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+  }
+  .recall-reveal-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .logic-chain-modal {
+    transition: filter 0.6s var(--ease-out);
+  }
+  .logic-chain-modal.chain-masked {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ── Extended Reading (Collapsible Panel) ── */
+  .extended-reading {
+    margin: 1.5rem 0 3rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .extended-reading-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.3s;
+  }
+  .extended-reading-toggle::-webkit-details-marker { display: none; }
+  .extended-reading-toggle::after {
+    content: '›';
+    margin-left: auto;
+    font-size: 1.1rem;
+    transition: transform 0.3s var(--ease-out);
+  }
+  .extended-reading[open] .extended-reading-toggle::after {
+    transform: rotate(90deg);
+  }
+  .extended-reading-toggle:hover {
+    background: var(--accent-dim);
+  }
+  .extended-reading-content {
+    padding: 0 1.5rem 1.5rem;
+  }
+  .extended-reading-content p {
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--muted-fg);
+    margin-bottom: 1.2rem;
+    opacity: 0.85;
+  }
+  .extended-reading-content p:last-child { margin-bottom: 0; }
+
+  /* ── Key Term Inline Highlight ── */
+  .key-term {
+    color: var(--accent);
+    border-bottom: 1px dashed var(--accent-mid);
+    cursor: help;
+    transition: border-color 0.3s;
+  }
+  .key-term:hover {
+    border-bottom-style: solid;
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Glossary Floating Button ── */
+  .glossary-fab {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 450;
+    padding: 0.65rem 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .glossary-fab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-dim);
+  }
+
+  /* ── Glossary Drawer Content ── */
+  .glossary-header { margin-bottom: 2rem; }
+  .glossary-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .glossary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .glossary-item {
+    padding: 1.2rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.3s;
+  }
+  .glossary-item:hover { border-color: var(--accent-mid); }
+  .glossary-term {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .glossary-definition {
+    font-size: 0.88rem;
+    line-height: 1.9;
+    color: var(--fg-secondary);
+  }
+
+  /* ── Comparison Module ── */
+  .comparison-section {
+    margin: 5rem 0;
+    padding: 3rem 0;
+  }
+  .comparison-toggle {
+    display: inline-flex;
+    gap: 0;
+    margin-bottom: 3rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .toggle-btn {
+    padding: 0.65rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border: none;
+    background: transparent;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    min-height: 44px;
+    white-space: nowrap;
+  }
+  .toggle-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 100px;
+    box-shadow: 0 4px 15px var(--accent-mid);
+  }
+  .comparison-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .comp-row-label {
+    font-family: var(--serif);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+  .comp-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+  .comp-bar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .comp-bar-tag {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    width: 2.5rem;
+    text-align: right;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .comp-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .comp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.2s var(--ease-out);
+    width: 0%;
+  }
+  /* Enhanced: animated gradient fills */
+  .comp-bar-fill.amber {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+  }
+  .comp-bar-fill.grey {
+    background: linear-gradient(90deg, var(--fg-secondary), rgba(128,128,128,0.4), var(--fg-secondary));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+    opacity: 0.5;
+  }
+  .comp-bar-value {
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 2rem;
+    color: var(--fg-secondary);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .comp-text {
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--fg-secondary);
+    margin-top: 0.4rem;
+    opacity: 0.7;
+  }
+
+  /* ── Knowledge Map ── */
+  .knowledge-map {
+    margin: 4rem 0;
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+  .km-title {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--accent);
+  }
+  .km-center {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .km-connector {
+    width: 2px;
+    height: 2rem;
+    background: linear-gradient(to bottom, var(--accent-mid), transparent);
+    margin: 0 auto;
+  }
+  .km-branches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .km-branch {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: left;
+  }
+  .km-branch-title {
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .km-branch-title::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .km-leaves {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .km-leaf {
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: var(--fg-secondary);
+    padding-left: 1rem;
+    position: relative;
+  }
+  .km-leaf::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 6px;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+
+  /* ── Mind Map (Multi-level Tree) ── */
+  .mind-map {
+    margin: 4rem 0;
+    padding: 3rem 1.5rem;
+  }
+  .mm-title {
+    text-align: center;
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+  .mm-subtitle {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--fg-secondary);
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .mm-root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto 0.5rem;
+    padding: 0.7rem 1.8rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .mm-trunk {
+    width: 2px;
+    height: 1.5rem;
+    background: var(--accent-mid);
+    margin: 0 auto;
+  }
+  .mm-level1-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .mm-l1 {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    position: relative;
+  }
+  .mm-l1-title {
+    font-family: var(--serif);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.7rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .mm-l2 {
+    margin-left: 0.6rem;
+    padding-left: 0.9rem;
+    border-left: 1px solid var(--accent-mid);
+    margin-bottom: 0.5rem;
+  }
+  .mm-l2:last-child { margin-bottom: 0; }
+  .mm-l2-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.25rem;
+    position: relative;
+    padding-left: 0.7rem;
+  }
+  .mm-l2-title::before {
+    content: '';
+    position: absolute;
+    left: -0.95rem;
+    top: 0.5em;
+    width: 0.6rem;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+  .mm-l3-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-left: 0.7rem;
+    padding-left: 0.7rem;
+    border-left: 1px dashed var(--border);
+  }
+  .mm-l3 {
+    font-size: 0.7rem;
+    line-height: 1.55;
+    color: var(--fg-secondary);
+    position: relative;
+    padding-left: 0.6rem;
+  }
+  .mm-l3::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 0.55em;
+    width: 0.5rem;
+    height: 1px;
+    background: var(--border);
+  }
+  @media (max-width: 600px) {
+    .mm-level1-wrap { grid-template-columns: 1fr; }
+    .mm-root { font-size: 0.9rem; padding: 0.6rem 1.4rem; }
+  }
+
+  /* ── Stat Pill Badges ── */
+  .stat-pill {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85em;
+    padding: 0.1em 0.5em;
+    border-radius: 100px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Keyboard Nav Hint ── */
+  .kb-hint {
+    position: fixed;
+    bottom: 2rem;
+    right: 2.5rem;
+    z-index: 400;
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: var(--fg-secondary);
+    opacity: 0.4;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: opacity 0.8s var(--ease-smooth);
+    pointer-events: none;
+  }
+  .kb-hint.hidden { opacity: 0; }
+  .kb-hint kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--accent-glow);
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    line-height: 1;
+  }
+
+  /* ── Dark Scene Accents ── */
+  .scene.dark-scene .scene-title {
+    text-shadow: 0 0 60px var(--accent-dim);
+  }
+  .scene.dark-scene .big-number {
+    text-shadow: 0 0 40px var(--accent-mid), 0 0 80px var(--accent-dim);
+  }
+
+  /* ── Dark Particles (shared floating particle system) ── */
+  .dark-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .dark-particles .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    animation: particleFloat 12s ease-in-out infinite;
+    animation-play-state: paused;
+    will-change: transform, opacity;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTIVE LAYER
+   Empty placeholder — book-specific interactive styles injected at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer interactive {
+  /* Book-specific interactive widgets go here via custom.css */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATION LAYER
+   Reveal system, keyframes, reduced-motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer animation {
+
+  /* ── Reveal System ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.15s; }
+  .reveal-delay-2 { transition-delay: 0.3s; }
+  .reveal-delay-3 { transition-delay: 0.45s; }
+  .reveal-delay-4 { transition-delay: 0.6s; }
+
+  .reveal-wipe {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.6s var(--ease-out);
+  }
+  .reveal-wipe.revealed {
+    clip-path: inset(0 0% 0 0);
+  }
+
+  /* ── Keyframes ── */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollDrop {
+    0% { top: -100%; }
+    100% { top: 100%; }
+  }
+  @keyframes progressShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes bounceArrow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+  @keyframes ddPulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+  @keyframes barGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes particleFloat {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    50% { transform: translateY(-80px) translateX(30px); opacity: 0.2; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(-160px) translateX(-20px); opacity: 0; }
+  }
+
+  /* ── Reduced Motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal { opacity: 1; transform: none; }
+    .draw-path { stroke-dashoffset: 0 !important; }
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOOK-CUSTOM LAYER
+   Empty — each book injects its own styles at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer book-custom {
+  /* Populated by book-specific custom.css / custom.js */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITIES LAYER
+   Empty placeholder for utility classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Utility classes can be added here */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS (shared only — no book-specific selectors)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .scene { padding: 7rem 1.5rem 5rem; }
+  .scene-nav { display: none; }
+  .hero-quote { font-size: 1.2rem; }
+  .number-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .glossary-fab {
+    bottom: 1rem;
+    left: 1rem;
+    font-size: 0.6rem;
+    padding: 0.5rem 1rem;
+  }
+  .trigger-question { padding: 1rem; }
+  .trigger-question-text { font-size: 0.95rem; }
+  .extended-reading-toggle { padding: 0.8rem 1.2rem; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="scene-nav" id="sceneNav"></nav>
+<div id="app"></div>
+
+<div class="kb-hint" id="kbHint">
+  <kbd>Space</kbd> / <kbd>↓</kbd> 下一场景 &nbsp; <kbd>↑</kbd> 上一场景
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-drawer" id="modalDrawer">
+    <div class="modal-close">
+      <button class="modal-close-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// BookEngine — Component Registry, Plugin System & Shared Components
+// ═══════════════════════════════════════════════════════════════
+
+window.BookEngine = (function() {
+  // ── Registry ──
+  const vizRegistry = {};
+  const initQueue = [];
+  const plugins = [];
+  const hooks = {};
+
+  // ── Public API ──
+  const engine = {
+    // Register a visualization/component renderer
+    // Usage: BookEngine.registerViz('dunbar', { render: fn, init: fn })
+    registerViz(type, handler) {
+      vizRegistry[type] = handler;
+    },
+
+    // Register an init function to run after DOM render
+    registerInit(fn) {
+      initQueue.push(fn);
+    },
+
+    // Register a plugin with lifecycle hooks
+    // Plugin: { name, onInit, onRender, onScroll, onModalOpen, onModalClose, onDestroy }
+    registerPlugin(plugin) {
+      plugins.push(plugin);
+      // Register individual hooks
+      ['onInit','onRender','onScroll','onModalOpen','onModalClose','onDestroy'].forEach(hook => {
+        if (plugin[hook]) {
+          engine.registerHook(hook, plugin[hook]);
+        }
+      });
+    },
+
+    // Register a lifecycle hook
+    registerHook(hookName, fn) {
+      if (!hooks[hookName]) hooks[hookName] = [];
+      hooks[hookName].push(fn);
+    },
+
+    // Trigger all handlers for a hook
+    triggerHook(hookName, ...args) {
+      if (hooks[hookName]) {
+        hooks[hookName].forEach(fn => {
+          try { fn(...args); } catch(e) { console.warn(`[BookEngine] Hook ${hookName} error:`, e); }
+        });
+      }
+    },
+
+    // Render a visualization by type
+    renderViz(type, scene, config) {
+      const handler = vizRegistry[type];
+      if (!handler) {
+        console.warn(`[BookEngine] Unknown viz type: ${type}`);
+        return '';
+      }
+      return typeof handler.render === 'function' ? handler.render(scene, config) : '';
+    },
+
+    // Initialize a visualization by type (called after DOM render)
+    initViz(type) {
+      const handler = vizRegistry[type];
+      if (handler && typeof handler.init === 'function') {
+        handler.init();
+      }
+    },
+
+    // Run all init functions and plugin onInit hooks
+    runInits() {
+      initQueue.forEach(fn => {
+        try { fn(); } catch(e) { console.warn('[BookEngine] Init error:', e); }
+      });
+      engine.triggerHook('onInit');
+    },
+
+    // Inject custom CSS into the document (for book-specific styles)
+    injectCSS(cssString) {
+      if (!cssString) return;
+      const style = document.createElement('style');
+      style.textContent = cssString;
+      document.head.appendChild(style);
+    },
+
+    // ── Shared Component Renderers ──
+
+    // Render comparison toggle module
+    renderComparison(comp) {
+      // Accept both comp.rows and comp.dimensions
+      const rows = comp.rows || comp.dimensions;
+      if (!comp || !rows) return '';
+      const labels = comp.labels || ['采集', '农耕'];
+      const modes = comp.modes || ['foraging', 'farming'];
+      const triggerLabel = comp.triggerLabel || '生活质量对比 · Quality of Life';
+      // Support 2 or 3 buttons (original sapiens has 3: foraging, farming, compare)
+      const showCompare = comp.showCompare !== false;
+      let html = `
+        <div class="comparison-section reveal">
+          <div class="dd-trigger-label">${triggerLabel}</div>
+          <div class="comparison-toggle">
+            <button class="toggle-btn active" data-mode="${modes[0]}">${comp.btnLabels?.[0] || labels[0] + '生活'}</button>
+            <button class="toggle-btn" data-mode="${modes[1]}">${comp.btnLabels?.[1] || labels[1] + '生活'}</button>
+            ${showCompare ? `<button class="toggle-btn" data-mode="compare">对比</button>` : ''}
+          </div>
+          <div class="comparison-rows">`;
+      rows.forEach((row, i) => {
+        html += `
+            <div class="comp-row reveal reveal-delay-${Math.min(i+1,4)}" data-comp-row>
+              <div class="comp-row-label">${row.label}</div>
+              <div class="comp-bars">
+                <div class="comp-bar-wrapper" data-bar="${modes[0]}">
+                  <span class="comp-bar-tag">${labels[0]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill amber" data-score="${row[modes[0]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[0]].score}/10</span>
+                </div>
+                <div class="comp-bar-wrapper" data-bar="${modes[1]}" style="display:none;">
+                  <span class="comp-bar-tag">${labels[1]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill grey" data-score="${row[modes[1]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[1]].score}/10</span>
+                </div>
+              </div>
+              <div class="comp-text" data-text-${modes[0]}>${row[modes[0]].text}</div>
+              <div class="comp-text" data-text-${modes[1]} style="display:none;">${row[modes[1]].text}</div>
+            </div>`;
+      });
+      html += `</div></div>`;
+      return html;
+    },
+
+    // Render knowledge map
+    renderKnowledgeMap(map) {
+      if (!map) return '';
+      const centerText = map.center || map.centerNode || '';
+      const centerStyle = map.centerStyle ? ` style="${map.centerStyle}"` : '';
+      const branchesStyle = map.branchesStyle ? ` style="${map.branchesStyle}"` : '';
+      let html = `
+        <section class="knowledge-map" data-palette="${map.palette || 'hero'}">
+          <div class="km-title reveal">${map.title}</div>
+          <div class="km-center reveal reveal-delay-1"${centerStyle}>${centerText}</div>
+          <div class="km-connector reveal reveal-delay-1"></div>
+          <div class="km-branches"${branchesStyle}>`;
+      map.branches.forEach((branch, i) => {
+        const delay = i < 2 ? 2 : 3;
+        const items = branch.leaves || branch.items || [];
+        html += `
+            <div class="km-branch reveal reveal-delay-${delay}">
+              <div class="km-branch-title">${branch.title}</div>
+              <div class="km-leaves">
+                ${items.map(item => `<div class="km-leaf">${item}</div>`).join('')}
+              </div>
+            </div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // Render mind map (multi-level tree)
+    renderMindMap(map) {
+      if (!map || !map.branches) return '';
+      const renderL3 = (items) => {
+        if (!items || items.length === 0) return '';
+        return `<div class="mm-l3-list">${items.map(t => `<div class="mm-l3">${t}</div>`).join('')}</div>`;
+      };
+      const renderL2 = (children) => {
+        if (!children || children.length === 0) return '';
+        return children.map(c => {
+          if (typeof c === 'string') {
+            return `<div class="mm-l2"><div class="mm-l2-title">${c}</div></div>`;
+          }
+          return `<div class="mm-l2"><div class="mm-l2-title">${c.text}</div>${renderL3(c.children)}</div>`;
+        }).join('');
+      };
+      let html = `<section class="mind-map" data-palette="${map.palette || 'hero'}">`;
+      html += `<div class="mm-title reveal">${map.title}</div>`;
+      if (map.subtitle) html += `<div class="mm-subtitle reveal">${map.subtitle}</div>`;
+      html += `<div class="mm-root reveal reveal-delay-1">${map.root}</div>`;
+      html += `<div class="mm-trunk reveal reveal-delay-1"></div>`;
+      html += `<div class="mm-level1-wrap">`;
+      map.branches.forEach((b, i) => {
+        const delay = i < 2 ? 2 : 3;
+        html += `<div class="mm-l1 reveal reveal-delay-${delay}">`;
+        html += `<div class="mm-l1-title">${b.text}</div>`;
+        html += renderL2(b.children);
+        html += `</div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // ── Shared Initializers ──
+
+    // Initialize comparison toggle behavior
+    initComparison() {
+      document.querySelectorAll('.comparison-toggle').forEach(toggle => {
+        toggle.addEventListener('click', e => {
+          const btn = e.target.closest('.toggle-btn');
+          if (!btn) return;
+          toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const section = toggle.closest('.comparison-section');
+          engine.updateCompBars(btn.dataset.mode, section);
+        });
+      });
+    },
+
+    updateCompBars(mode, section) {
+      const modes = [];
+      section.querySelectorAll('.toggle-btn').forEach(b => {
+        if (b.dataset.mode !== 'compare') modes.push(b.dataset.mode);
+      });
+      const isCompare = mode === 'compare';
+      section.querySelectorAll('[data-comp-row]').forEach(row => {
+        modes.forEach(m => {
+          const bar = row.querySelector(`[data-bar="${m}"]`);
+          const text = row.querySelector(`[data-text-${m}]`);
+          if (bar) bar.style.display = (isCompare || m === mode) ? 'flex' : 'none';
+          if (text) text.style.display = (isCompare || m === mode) ? 'block' : 'none';
+        });
+      });
+      engine.animateCompBars(section);
+    },
+
+    animateCompBars(section) {
+      (section || document).querySelectorAll('.comp-bar-fill').forEach(bar => {
+        if (bar.closest('.comp-bar-wrapper').style.display === 'none') return;
+        bar.style.width = '0%';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.style.width = (parseInt(bar.dataset.score) / 10 * 100) + '%';
+        }));
+      });
+    },
+
+    // Animate counter (shared utility)
+    animateCounter(el, from, to, duration, suffix) {
+      const start = performance.now();
+      function formatVal(val) {
+        if (suffix === '万' || suffix === '%') return val;
+        if (val >= 1000000) return (val / 1000000).toFixed(0) + 'M';
+        if (val >= 10000 && !suffix) return Math.round(val / 1000) + 'K';
+        return val;
+      }
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = Math.round(from + (to - from) * eased);
+        el.textContent = formatVal(val) + (p >= 1 && suffix ? suffix : (p < 1 && suffix === '+' ? '' : ''));
+        if (p >= 1) el.textContent = formatVal(to) + (suffix || '');
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    },
+
+    // Animate SVG data viz bars
+    animateDataViz(container) {
+      const bars = container.querySelectorAll('.draw-bar');
+      bars.forEach((bar, i) => {
+        const targetW = parseFloat(bar.dataset.targetW);
+        setTimeout(() => {
+          bar.style.transition = 'width 1.5s var(--ease-out)';
+          bar.style.width = targetW + 'px';
+        }, i * 300);
+      });
+      const labels = container.querySelectorAll('.bar-label');
+      labels.forEach((lbl, i) => {
+        setTimeout(() => {
+          lbl.style.transition = 'opacity 0.6s';
+          lbl.style.opacity = '1';
+        }, 800 + i * 300);
+      });
+    },
+
+    // Get registered viz types
+    getVizTypes() { return Object.keys(vizRegistry); },
+
+    // Get plugins
+    getPlugins() { return plugins.map(p => p.name); }
+  };
+
+  // ── Built-in Viz: comparison-table ──
+  engine.registerViz('comparison-table', {
+    render(scene, config) {
+      const d = config.data;
+      if (!d || !d.columns || !d.rows) return '';
+      let html = `<div class="data-viz comparison-table-viz reveal" data-viz="comparison-table">`;
+      if (config.title) html += `<h4 class="viz-title">${config.title}</h4>`;
+      if (config.description) html += `<p class="viz-desc">${config.description}</p>`;
+      html += `<div class="table-scroll"><table class="comp-table">`;
+      html += `<thead><tr>${d.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
+      html += `<tbody>`;
+      d.rows.forEach(row => {
+        html += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+      });
+      html += `</tbody></table></div>`;
+      if (d.note) html += `<p class="viz-note">${d.note}</p>`;
+      html += `</div>`;
+      return html;
+    }
+  });
+
+  return engine;
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// Immersive Book Engine — Core Rendering & Interaction System
+// ═══════════════════════════════════════════════════════════════
+
+(function() {
+  'use strict';
+
+  // ── DOM References ──
+  const app = document.getElementById('app');
+  const sceneNav = document.getElementById('sceneNav');
+
+  // ── Palette System ──
+  // Unified superset: 13 color variables
+  const PALETTE_KEYS = [
+    ['bg',          '--bg'],
+    ['bgSecondary', '--bg-secondary'],
+    ['fg',          '--fg'],
+    ['fgSecondary', '--fg-secondary'],
+    ['accent',      '--accent'],
+    ['accentDim',   '--accent-dim'],
+    ['accentMid',   '--accent-mid'],
+    ['accentGlow',  '--accent-glow'],
+    ['border',      '--border'],
+    ['glassBg',     '--glass-bg'],
+    ['glassBorder', '--glass-border'],
+    ['cardBg',      '--card-bg'],
+    ['mutedFg',     '--muted-fg']
+  ];
+
+  function applyPalette(name) {
+    const p = PALETTES[name];
+    if (!p) return;
+    const s = document.documentElement.style;
+    PALETTE_KEYS.forEach(([key, prop]) => {
+      // Fallback: cardBg → glassBg, mutedFg → fgSecondary, etc.
+      const val = p[key]
+        || (key === 'cardBg' ? p.glassBg : null)
+        || (key === 'mutedFg' ? p.fgSecondary : null)
+        || (key === 'bgSecondary' ? p.bg : null)
+        || (key === 'glassBorder' ? p.border : null);
+      if (val) s.setProperty(prop, val);
+    });
+    document.body.style.backgroundColor = p.bg;
+    document.body.style.color = p.fg;
+  }
+
+  // ── Render Engine ──
+  function renderApp() {
+    const { meta, scenes } = CONTENT_DATA;
+    const parts = meta.parts || [];
+    const knowledgeMaps = CONTENT_DATA.knowledgeMaps || [];
+    const mindMaps = CONTENT_DATA.mindMaps || [];
+    const aiReflection = CONTENT_DATA.aiReflection || null;
+    let html = '';
+
+    // Hero
+    html += `
+      <section class="hero" id="hero">
+        <div class="hero-overline">${meta.author || meta.authorEn || ''} · ${meta.titleEn || meta.bookSub || ''}</div>
+        <h1 class="hero-title" id="heroTitle">${meta.title || meta.book || ''}</h1>
+        <p class="hero-subtitle">${meta.subtitle || meta.partTitle || ''}</p>
+        <div class="hero-part">${meta.badge || (meta.part ? meta.part + (meta.partSub ? ' · ' + meta.partSub : '') : '')}</div>
+        <div class="hero-scroll-hint">
+          <span>向下滚动</span>
+          <div class="scroll-arrow">↓</div>
+          <div class="scroll-line"></div>
+        </div>
+      </section>`;
+
+    // Hero extra content (e.g., timeline explorer for sapiens)
+    if (typeof CONTENT_DATA.renderHeroExtra === 'function') {
+      html += CONTENT_DATA.renderHeroExtra();
+    }
+
+    // Determine dark scenes from data or palette analysis
+    const darkScenes = CONTENT_DATA.darkScenes || [];
+
+    // Render scenes
+    scenes.forEach((scene, idx) => {
+      const isDark = darkScenes.includes(scene.palette);
+
+      // Part divider BEFORE scene (declarative)
+      const partBefore = parts.find(p => p.beforeScene === scene.id);
+      if (partBefore && partBefore.number > 1) {
+        // Knowledge map for the previous part
+        const kmBefore = knowledgeMaps.find(km => km.afterPart === partBefore.number - 1);
+        if (kmBefore) {
+          html += BookEngine.renderKnowledgeMap(kmBefore);
+        }
+        // Mind map for the previous part
+        const mmBefore = mindMaps.find(mm => mm.afterPart === partBefore.number - 1);
+        if (mmBefore) {
+          html += BookEngine.renderMindMap(mmBefore);
+        }
+        // Part intro
+        const prevScene = idx > 0 ? scenes[idx - 1] : null;
+        const introPalette = scene.palette;
+        html += `
+          <section class="hero" id="part${partBefore.number}-intro" data-palette="${introPalette}" style="min-height:80vh;">
+            <div class="hero-overline reveal" style="animation:none;">第${numberToChinese(partBefore.number)}部分</div>
+            <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">${partBefore.title}</h1>
+            <p class="hero-subtitle reveal reveal-delay-2" style="animation:none;">${partBefore.titleEn || ''}</p>
+          </section>`;
+      }
+
+      // Scene section
+      html += `<section class="scene${isDark ? ' dark-scene' : ''}" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner" style="position:relative;z-index:1;">`;
+
+      // Dark mode particles
+      if (isDark && !scene.starField) {
+        html += `<div class="dark-particles">${Array.from({length:20}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, d = 8+Math.random()*16, delay = Math.random()*10;
+          return `<div class="particle" style="left:${x}%;top:${y}%;animation-duration:${d}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+      // Star field
+      if (scene.starField) {
+        html += `<div class="star-field">${Array.from({length:50}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, size = 1+Math.random()*2, delay = Math.random()*6, dur = 3+Math.random()*4;
+          return `<div class="star" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+
+      // Scene header
+      html += `
+        <div class="reveal scene-number">${scene.number || ('场景 ' + String(idx+1).padStart(2,'0'))}</div>
+        <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
+        <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle || ''}</div>`;
+
+      // Hero Quote
+      if (scene.heroQuote) {
+        html += `
+        <div class="hero-quote-wrap reveal-wipe">
+          <span class="quote-deco quote-deco-open">「</span>
+          <span class="quote-deco quote-deco-close">」</span>
+          <blockquote class="hero-quote"><span class="hero-quote-highlight">${scene.heroQuote}</span></blockquote>
+        </div>`;
+      }
+
+      // Narrative (with keyTerm highlighting)
+      if (scene.narrative?.length) {
+        const kt = CONTENT_DATA.meta.keyTerms || [];
+        html += `<div class="narrative">`;
+        scene.narrative.forEach((p, pi) => {
+          let text = p;
+          if (kt.length) {
+            kt.forEach(k => {
+              const escaped = k.term.replace(/[.*+?^${}()|[\]\\]/g, '\\<!-- ENGINE_JS -->');
+              text = text.replace(new RegExp(`(?:<[^>]*>.*?<\\/[^>]*>)|(?:${escaped})`, 'g'), match => {
+                if (match.startsWith('<')) return match; // inside HTML tag, skip
+                return `<span class="key-term" title="${k.definition}">${match}</span>`;
+              });
+            });
+          }
+          const cls = pi === 0 ? ' drop-cap-p' : '';
+          html += `<p class="reveal${cls}">${text}</p>`;
+        });
+        html += `</div>`;
+      }
+
+      // Extended Reading (collapsible background panel)
+      if (scene.extendedReading?.length) {
+        html += `
+          <details class="extended-reading reveal">
+            <summary class="extended-reading-toggle">📖 展开深度背景</summary>
+            <div class="extended-reading-content">
+              ${scene.extendedReading.map(p => `<p>${p}</p>`).join('')}
+            </div>
+          </details>`;
+      }
+
+      // Data Viz — dispatch to registry
+      if (scene.dataViz) {
+        const vizType = typeof scene.dataViz === 'string' ? scene.dataViz : scene.dataViz.type;
+        const vizConfig = typeof scene.dataViz === 'string' ? { type: vizType } : scene.dataViz;
+        html += BookEngine.renderViz(vizType, scene, vizConfig);
+      }
+
+      // Extra renderers for this scene (book-specific injections)
+      if (scene.extraRender) {
+        scene.extraRender.forEach(fn => {
+          if (typeof fn === 'function') html += fn(scene);
+          else if (typeof fn === 'string') html += fn;
+        });
+      }
+
+      // Comparison
+      if (scene.comparison) {
+        html += BookEngine.renderComparison(scene.comparison);
+      }
+
+      // Interactive module — dispatch to registry
+      if (scene.interactive) {
+        const intType = scene.interactive.type;
+        html += BookEngine.renderViz(intType, scene, scene.interactive);
+      }
+
+      // Deep Dives
+      if (scene.deepDives?.length) {
+        html += `<div class="dd-trigger-section reveal"><div class="dd-trigger-label">深度解析 · Deep Dive</div><div class="dd-trigger-grid">`;
+        scene.deepDives.forEach((dd, i) => {
+          html += `
+            <div class="dd-trigger reveal reveal-delay-${Math.min(i+1, 4)}" data-dd-idx="${idx}-${i}">
+              <span class="dd-trigger-icon">${dd.icon}</span>
+              <div class="dd-trigger-content">
+                <div class="dd-trigger-title">${dd.title}</div>
+                <div class="dd-trigger-hint">点击展开完整论证链</div>
+              </div>
+              <span class="dd-trigger-arrow">→</span>
+            </div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // Key Takeaway
+      if (scene.keyTakeaway) {
+        html += `<div class="reveal" style="margin-top:3rem;padding:1.5rem;background:var(--accent-glow);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:0.85rem;line-height:1.8;color:var(--fg-secondary);">
+          <strong style="color:var(--accent);font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;">核心收获</strong><br>${scene.keyTakeaway}</div>`;
+      }
+
+      html += `</div></section>`; // end scene-inner + scene
+    });
+
+    // Final knowledge map (after last part)
+    const lastPart = parts.length > 0 ? Math.max(...parts.map(p => p.number)) : 0;
+    knowledgeMaps.filter(km => km.afterPart >= lastPart || km.afterPart === 'final').forEach(km => {
+      html += BookEngine.renderKnowledgeMap(km);
+    });
+
+    // Final mind maps (after last part)
+    mindMaps.filter(mm => mm.afterPart >= lastPart || mm.afterPart === 'final').forEach(mm => {
+      html += BookEngine.renderMindMap(mm);
+    });
+
+    // AI Reflection / Epilogue
+    if (aiReflection) {
+      const epiloguePalette = aiReflection.palette || (scenes.length > 0 ? scenes[scenes.length - 1].palette : 'hero');
+      html += `
+        <section class="scene epilogue-section" id="epilogue" data-palette="${epiloguePalette}" style="min-height:auto; padding: clamp(4rem,10vw,8rem) 0;">
+          <div class="scene-inner">
+            <div class="reveal scene-number" style="opacity:0.4;">${aiReflection.label || '写在最后'}</div>
+            <h2 class="reveal scene-title reveal-delay-1" style="font-size:clamp(1.8rem,5vw,3rem);">${aiReflection.title}</h2>
+            <div class="reveal scene-subtitle reveal-delay-2">${aiReflection.subtitle || ''}</div>
+            ${aiReflection.heroQuote ? `
+            <div class="hero-quote-wrap reveal-wipe">
+              <blockquote class="hero-quote" style="font-size:clamp(1rem,2.5vw,1.4rem);">${aiReflection.heroQuote}</blockquote>
+            </div>` : ''}
+            <div class="narrative">
+              ${(aiReflection.paragraphs || []).map(p => `<p class="reveal">${p}</p>`).join('')}
+            </div>
+          </div>
+        </section>`;
+    }
+
+    // Glossary floating button (only if keyTerms exist)
+    if (CONTENT_DATA.meta.keyTerms?.length) {
+      html += `<button class="glossary-fab" id="glossaryFab" title="术语表">📖 术语表</button>`;
+    }
+
+    // Footer
+    html += `
+      <footer class="footer" data-palette="hero">
+        <div class="reveal footer-title">${CONTENT_DATA.footer?.title || '全书 · 终'}</div>
+        <p class="reveal footer-text reveal-delay-1">${CONTENT_DATA.footer?.text || ''}</p>
+        ${CONTENT_DATA.footer?.note ? `<div class="reveal footer-next reveal-delay-2" style="opacity:0.4;margin-top:3rem;font-size:0.7rem;">${CONTENT_DATA.footer.note}</div>` : ''}
+        <a href="../index.html" class="footer-bookshelf reveal reveal-delay-3"><span class="arrow">←</span> 返回书架</a>
+      </footer>`;
+
+    app.innerHTML = html;
+
+    // Build nav dots
+    let navHtml = '';
+    scenes.forEach(s => {
+      navHtml += `<a href="#${s.id}" data-scene="${s.id}" data-label="${s.title}"></a>`;
+    });
+    sceneNav.innerHTML = navHtml;
+
+    // Trigger hook
+    BookEngine.triggerHook('onRender');
+
+    // Init systems
+    initScrollSystem();
+    initDeepDiveModal();
+    BookEngine.initComparison();
+    BookEngine.runInits();
+  }
+
+  // ── Scroll System ──
+  function initScrollSystem() {
+    const scenes = document.querySelectorAll('.scene');
+    const navLinks = document.querySelectorAll('.scene-nav a');
+    const progressBar = document.getElementById('progressBar');
+    const nav = document.getElementById('sceneNav');
+
+    // Reveal observer
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => revealObs.observe(el));
+
+    // Data viz observer
+    const vizObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateDataViz(e.target);
+          vizObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('[data-viz]').forEach(el => vizObs.observe(el));
+
+    // Big number counter observer
+    const countObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const target = parseInt(e.target.dataset.countTo);
+          const suffix = e.target.dataset.suffix || '';
+          BookEngine.animateCounter(e.target, 0, target, 2000, suffix);
+          countObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count-to]').forEach(el => countObs.observe(el));
+
+    // Comparison observer
+    const compObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateCompBars();
+          compObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.comparison-section').forEach(el => compObs.observe(el));
+
+    // Custom observers (registered by books)
+    if (BookEngine._customObservers) {
+      BookEngine._customObservers.forEach(obs => obs());
+    }
+
+    // Scroll handler — palette + progress + nav
+    let currentPalette = 'hero';
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+        nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
+
+        // Hero parallax
+        const heroTitle = document.getElementById('heroTitle');
+        if (heroTitle && scrollTop < window.innerHeight) {
+          heroTitle.style.transform = `translateY(${scrollTop * 0.15}px)`;
+        }
+
+        // Determine active palette
+        const viewMid = scrollTop + window.innerHeight * 0.45;
+        let newPalette = 'hero';
+        document.querySelectorAll('[data-palette]').forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            newPalette = s.dataset.palette;
+          }
+        });
+        // Nav active dot
+        scenes.forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            navLinks.forEach(l => l.classList.toggle('active', l.dataset.scene === s.id));
+          }
+        });
+        // Footer reset
+        const footer = document.querySelector('.footer');
+        if (footer && viewMid >= footer.offsetTop) newPalette = 'hero';
+
+        if (newPalette !== currentPalette) {
+          currentPalette = newPalette;
+          applyPalette(newPalette);
+        }
+
+        // Plugin scroll hook
+        BookEngine.triggerHook('onScroll', { scrollTop, viewMid, currentPalette });
+
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // ── Deep Dive Modal ──
+  function initDeepDiveModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const backdrop = document.getElementById('modalBackdrop');
+    const closeBtn = document.getElementById('modalClose');
+    const body = document.getElementById('modalBody');
+
+    function openModal(sceneIdx, ddIdx) {
+      const dd = CONTENT_DATA.scenes[sceneIdx].deepDives[ddIdx];
+      if (!dd) return;
+
+      const hasQ = !!dd.triggerQuestion;
+      const s = (n) => `modal-stagger modal-stagger-${n}`;
+      const chainOffset = hasQ ? 1 : 0;
+
+      body.innerHTML = `
+        <div class="modal-icon ${s(1)}">${dd.icon}</div>
+        <h3 class="modal-title ${s(2)}">${dd.title}</h3>
+        ${hasQ ? `
+        <div class="trigger-question ${s(3)}">
+          <div class="trigger-question-label">主动回忆 · Active Recall</div>
+          <p class="trigger-question-text">${dd.triggerQuestion}</p>
+          <button class="recall-reveal-btn" id="recallReveal">💡 揭晓作者逻辑</button>
+        </div>` : ''}
+        <div class="logic-chain-modal${hasQ ? ' chain-masked' : ''}">
+          <div class="chain-step-modal ${s(3 + chainOffset)}">
+            <div class="chain-label-modal">前 提</div>
+            <div class="chain-text-modal">${dd.chain.premise}</div>
+          </div>
+          <div class="chain-step-modal ${s(4 + chainOffset)}">
+            <div class="chain-label-modal">证 据</div>
+            <div class="chain-text-modal">${dd.chain.evidence}</div>
+          </div>
+          <div class="chain-step-modal ${s(5 + chainOffset)}">
+            <div class="chain-label-modal">结 论</div>
+            <div class="chain-text-modal">${dd.chain.conclusion}</div>
+          </div>
+        </div>`;
+      body.offsetHeight; // force reflow
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      if (hasQ) {
+        const revealBtn = document.getElementById('recallReveal');
+        if (revealBtn) {
+          revealBtn.addEventListener('click', () => {
+            body.querySelector('.logic-chain-modal').classList.remove('chain-masked');
+            revealBtn.style.display = 'none';
+          });
+        }
+      }
+      BookEngine.triggerHook('onModalOpen', { sceneIdx, ddIdx, dd });
+    }
+
+    function openGlossary() {
+      const keyTerms = CONTENT_DATA.meta.keyTerms;
+      if (!keyTerms?.length) return;
+      body.innerHTML = `
+        <div class="glossary-header modal-stagger modal-stagger-1">
+          <div class="glossary-label">术语表 · Glossary</div>
+          <h3 class="modal-title">${CONTENT_DATA.meta.title} · 关键术语</h3>
+          <p style="font-size:0.8rem;color:var(--fg-secondary);margin-top:0.5rem;line-height:1.6;">以下术语按作者在书中的<strong>特定定义</strong>整理，可能与日常含义不同。</p>
+        </div>
+        <div class="glossary-list">
+          ${keyTerms.map((kt, i) => `
+            <div class="glossary-item modal-stagger modal-stagger-${Math.min(i + 2, 5)}">
+              <div class="glossary-term">${kt.term}</div>
+              <div class="glossary-definition">${kt.definition}</div>
+            </div>
+          `).join('')}
+        </div>`;
+      body.offsetHeight;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      BookEngine.triggerHook('onModalClose');
+    }
+
+    document.addEventListener('click', e => {
+      const trigger = e.target.closest('[data-dd-idx]');
+      if (trigger) {
+        const [sIdx, dIdx] = trigger.dataset.ddIdx.split('-').map(Number);
+        openModal(sIdx, dIdx);
+        trigger.classList.add('clicked');
+      }
+      if (e.target.closest('#glossaryFab')) {
+        openGlossary();
+      }
+    });
+    backdrop.addEventListener('click', closeModal);
+    closeBtn.addEventListener('click', closeModal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  }
+
+  // ── Keyboard Navigation ──
+  function initKeyboardNav() {
+    const kbHint = document.getElementById('kbHint');
+    let hintDismissed = false;
+
+    function dismissHint() {
+      if (!hintDismissed) {
+        hintDismissed = true;
+        kbHint.classList.add('hidden');
+        window.removeEventListener('wheel', dismissHint);
+        window.removeEventListener('touchstart', dismissHint);
+      }
+    }
+    window.addEventListener('wheel', dismissHint, { passive: true, once: true });
+    window.addEventListener('touchstart', dismissHint, { passive: true, once: true });
+
+    function getAnchors() {
+      const anchors = [document.getElementById('hero')];
+      CONTENT_DATA.scenes.forEach(s => {
+        const el = document.getElementById(s.id);
+        if (el) anchors.push(el);
+      });
+      return anchors;
+    }
+
+    function currentIdx(anchors) {
+      const scrollMid = window.scrollY + window.innerHeight * 0.4;
+      let idx = 0;
+      for (let i = anchors.length - 1; i >= 0; i--) {
+        if (scrollMid >= anchors[i].offsetTop) { idx = i; break; }
+      }
+      return idx;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('modalOverlay').classList.contains('open')) return;
+      const anchors = getAnchors();
+      const cur = currentIdx(anchors);
+
+      if (e.key === 'ArrowDown' || (e.key === ' ' && !e.shiftKey)) {
+        e.preventDefault();
+        const next = Math.min(cur + 1, anchors.length - 1);
+        anchors[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      } else if (e.key === 'ArrowUp' || (e.key === ' ' && e.shiftKey)) {
+        e.preventDefault();
+        const prev = Math.max(cur - 1, 0);
+        anchors[prev].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      }
+    });
+  }
+
+  // ── Utility: Number to Chinese ──
+  function numberToChinese(n) {
+    const map = ['零','一','二','三','四','五','六','七','八','九','十'];
+    return n <= 10 ? map[n] : String(n);
+  }
+
+  // ── Register observer for book-specific elements ──
+  BookEngine._customObservers = [];
+  BookEngine.registerObserver = function(setupFn) {
+    BookEngine._customObservers.push(setupFn);
+  };
+
+  // ── Main init (called by template after all scripts load) ──
+  BookEngine.init = function() {
+    // Inject custom CSS if defined
+    if (typeof CUSTOM_CSS !== 'undefined') {
+      BookEngine.injectCSS(CUSTOM_CSS);
+    }
+
+    // Register custom components if defined
+    if (typeof CUSTOM_COMPONENTS !== 'undefined') {
+      Object.entries(CUSTOM_COMPONENTS).forEach(([type, handler]) => {
+        BookEngine.registerViz(type, handler);
+      });
+    }
+
+    // Render
+    renderApp();
+    initKeyboardNav();
+  };
+
+  // Expose applyPalette for external use
+  BookEngine.applyPalette = applyPalette;
+
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// BEYOND GREED AND FEAR · DATA
+// 超越恐惧与贪婪 · Immersive Book Engine Data
+// ═══════════════════════════════════════════════════════════════
+
+const PALETTES = {
+  hero: {
+    bg: '#1A0F28', bgSecondary: '#24163A', fg: '#E4DED6', fgSecondary: '#9A8FB0',
+    accent: '#B388E8', accentDim: 'rgba(179,136,232,0.12)', accentMid: 'rgba(179,136,232,0.35)',
+    accentGlow: 'rgba(179,136,232,0.06)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(26,15,40,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Part I: What Is Behavioral Finance
+  scene1: {
+    bg: '#F2EEF6', bgSecondary: '#E6E0EE', fg: '#1C1428', fgSecondary: '#5E5070',
+    accent: '#6B3FA0', accentDim: 'rgba(107,63,160,0.10)', accentMid: 'rgba(107,63,160,0.30)',
+    accentGlow: 'rgba(107,63,160,0.05)', border: 'rgba(28,20,40,0.06)',
+    glassBg: 'rgba(242,238,246,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene2: {
+    bg: '#16101E', bgSecondary: '#1E1630', fg: '#DCD8D0', fgSecondary: '#8A8098',
+    accent: '#9B6DD7', accentDim: 'rgba(155,109,215,0.10)', accentMid: 'rgba(155,109,215,0.30)',
+    accentGlow: 'rgba(155,109,215,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(22,16,30,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Part II: Prediction & Market Sentiment
+  scene3: {
+    bg: '#F0EDE4', bgSecondary: '#E4E0D4', fg: '#1A1C22', fgSecondary: '#5A5E6A',
+    accent: '#2E6B8C', accentDim: 'rgba(46,107,140,0.10)', accentMid: 'rgba(46,107,140,0.30)',
+    accentGlow: 'rgba(46,107,140,0.05)', border: 'rgba(26,28,34,0.06)',
+    glassBg: 'rgba(240,237,228,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene4: {
+    bg: '#F5F0E0', bgSecondary: '#EBE4CE', fg: '#2A2011', fgSecondary: '#7A6C4E',
+    accent: '#C49B2A', accentDim: 'rgba(196,155,42,0.10)', accentMid: 'rgba(196,155,42,0.35)',
+    accentGlow: 'rgba(196,155,42,0.05)', border: 'rgba(42,32,17,0.06)',
+    glassBg: 'rgba(245,240,224,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // Part III: Individual Investors
+  scene5: {
+    bg: '#120E18', bgSecondary: '#1A1424', fg: '#E0DCD4', fgSecondary: '#908880',
+    accent: '#E07040', accentDim: 'rgba(224,112,64,0.10)', accentMid: 'rgba(224,112,64,0.30)',
+    accentGlow: 'rgba(224,112,64,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(18,14,24,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene6: {
+    bg: '#EEF2F0', bgSecondary: '#E0E8E4', fg: '#141C1A', fgSecondary: '#4A5A56',
+    accent: '#2E7D5A', accentDim: 'rgba(46,125,90,0.10)', accentMid: 'rgba(46,125,90,0.30)',
+    accentGlow: 'rgba(46,125,90,0.05)', border: 'rgba(20,28,26,0.06)',
+    glassBg: 'rgba(238,242,240,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // Part IV: Institutional Investors & Corporate Finance
+  scene7: {
+    bg: '#F4F0EC', bgSecondary: '#EAE4DC', fg: '#1E1A16', fgSecondary: '#6A6054',
+    accent: '#8B5E2A', accentDim: 'rgba(139,94,42,0.10)', accentMid: 'rgba(139,94,42,0.30)',
+    accentGlow: 'rgba(139,94,42,0.05)', border: 'rgba(30,26,22,0.06)',
+    glassBg: 'rgba(244,240,236,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene8: {
+    bg: '#0E1218', bgSecondary: '#161C26', fg: '#D8D4CC', fgSecondary: '#7A8694',
+    accent: '#4A8EC0', accentDim: 'rgba(74,142,192,0.10)', accentMid: 'rgba(74,142,192,0.30)',
+    accentGlow: 'rgba(74,142,192,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(14,18,24,0.88)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Part V-VI: Corporate Finance & Derivatives
+  scene9: {
+    bg: '#F2F0F4', bgSecondary: '#E6E2EC', fg: '#1A1820', fgSecondary: '#5A566A',
+    accent: '#7B52AB', accentDim: 'rgba(123,82,171,0.10)', accentMid: 'rgba(123,82,171,0.30)',
+    accentGlow: 'rgba(123,82,171,0.05)', border: 'rgba(26,24,32,0.06)',
+    glassBg: 'rgba(242,240,244,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// CONTENT DATA
+// ═══════════════════════════════════════════════════════════════
+
+const CONTENT_DATA = {
+  meta: {
+    title: '超越恐惧与贪婪',
+    titleEn: 'BEYOND GREED AND FEAR',
+    subtitle: '行为金融学与投资心理学',
+    badge: '沉浸式深度导读 · BEHAVIORAL FINANCE · COMPLETE',
+    author: '赫什·舍夫林',
+    authorEn: 'Hersh Shefrin',
+    shelf: {
+      emoji: '📈',
+      gradient: 'linear-gradient(135deg, #1A0F28 0%, #4A2C6E 50%, #7B52AB 100%)',
+      description: '行为金融学奠基之作。舍夫林揭示投资者如何被偏见、情绪和认知捷径所左右——以及这些心理陷阱如何系统性地扭曲市场价格。',
+      stats: ['9 场景', '4 部分', '深度不均匀']
+    },
+    type: 'finance',
+    coreThesis: '行为金融学由三大主题构成：启发式驱动偏差、框架依赖和市场非有效性。所有金融从业者——无论多么聪明、多么有经验——最终都会让偏见、过度自信和情绪蒙蔽判断、误导行动。',
+    authorProblem: '传统金融学建立在"理性人"假设之上，但现实中的投资者显然不是理性的。舍夫林试图回答：心理偏差如何系统性地影响金融决策？这些偏差是随机噪音还是可预测的模式？如果是可预测的，它们如何从个人层面传导到市场层面，导致价格持续偏离基本面？最终——我们能否利用对这些偏差的理解来设计更好的投资决策和金融制度？',
+    bookStructure: '全书按影响范围递进组织为四个部分：Part I 建立理论框架（三大主题 + 前景理论），Part II 将框架应用于市场预测和分析师行为，Part III 深入个人投资者的具体偏差（处置效应、自我控制），Part IV 扩展至机构投资者和公司金融（收购、IPO）。每一部分都遵循"心理机制 → 实证证据 → 市场后果"的论证结构。最后以"如何利用偏差知识改善决策"作结。',
+    readerQuestions: [
+      '你自己的投资组合中，是否存在处置效应的痕迹——持有亏损股票的时间是否系统性地长于盈利股票？',
+      '如果知道偏差的存在不能消除偏差，那学习行为金融学的实际价值到底是什么？它改变的是认知还是制度？',
+      '舍夫林论证市场非有效性时，主要依赖2000年以前的实证数据。在算法交易和被动投资主导的当代市场中，这些异象是否已经被套利消除？',
+      '行为金融学将投资错误归因于心理偏差，但制度激励（如分析师的利益冲突）是否才是更根本的原因？心理解释和制度解释哪个更有力？',
+      '舍夫林的框架是否过于侧重"个体偏差的加总"，而忽视了市场作为复杂系统的涌现特性——比如流动性危机和级联崩盘？'
+    ],
+    critique: '《超越恐惧与贪婪》的主要局限：(1)出版于2000年，大量实证数据来自1980-90年代，未涵盖2008金融危机、量化革命和加密货币时代的新证据；(2)对"去偏差"的讨论相对薄弱——书中80%篇幅用于诊断偏差，只有约20%讨论如何应对，且缺乏具体的操作框架；(3)对行为金融学自身的局限性反思不足——该领域的"可复制性危机"（许多经典实验难以重复）和"事后解释过度灵活"（任何市场现象都能用某种偏差来解释）问题未被触及；(4)作为教科书级综述，深度不均匀——前景理论和处置效应的讨论精彩，但公司金融部分（Part V-VI）较为概括。尽管如此，本书仍是行为金融学领域最清晰、最系统的入门综述之一，其三大主题框架至今仍是该领域的标准组织方式。',
+    keyTerms: [
+      { term: '过度自信', definition: '人们对自己预测未来事件的能力表现出过多信心。后果是大多数人交易过于频繁，因为他们高估了自己的信息优势。' },
+      { term: '损失厌恶', definition: '人们对损失的敏感度远大于对等额收益的感受。这导致投资者持有亏损头寸太久（企图回本），而过早卖出盈利头寸。' },
+      { term: '处置效应', definition: '舍夫林和斯塔特曼提出的术语，指投资者倾向于过早卖出赢家、过久持有输家的系统性行为模式。' },
+      { term: '代表性偏差', definition: '根据近期表现模式来判断概率，忽视基准概率和样本量。投资者因此追逐"热门"股票和基金，把短期趋势当作长期规律。' },
+      { term: '锚定', definition: '判断被先前接触到的数字所"锚定"，即使该数字与决策无关。分析师的盈利预测常被前期数据过度锚定，导致对新信息反应不足。' },
+      { term: '框架依赖', definition: '同一决策问题的不同表述方式会导致不同选择。投资者对"获利90%概率"和"亏损10%概率"的反应截然不同，尽管信息等价。' },
+      { term: '心理账户', definition: '人们将资金分配到不同的心理"账户"中分别管理，而非视为可替代的整体。这导致投资组合如金字塔般分层——底层求安全，顶层求暴富。' },
+      { term: '羊群效应', definition: '投资者模仿他人行为而非依据自身分析做出决策。在市场狂热和恐慌中尤为显著，是泡沫和崩盘的重要驱动力。' }
+    ],
+    parts: [
+      { number: 1, title: '什么是行为金融学', titleEn: 'WHAT IS BEHAVIORAL FINANCE', beforeScene: 'scene-1' },
+      { number: 2, title: '预测与市场情绪', titleEn: 'PREDICTION AND SENTIMENT', beforeScene: 'scene-3' },
+      { number: 3, title: '个人投资者', titleEn: 'INDIVIDUAL INVESTORS', beforeScene: 'scene-5' },
+      { number: 4, title: '机构投资者与公司金融', titleEn: 'INSTITUTIONS AND CORPORATE FINANCE', beforeScene: 'scene-7' }
+    ]
+  },
+
+  darkScenes: ['scene2', 'scene5', 'scene8'],
+
+  scenes: [
+
+    // ═════════════════════════════════════════════════════════════
+    // PART I · 什么是行为金融学 · WHAT IS BEHAVIORAL FINANCE
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 1: 三大主题 [ANCHOR]
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-1', number: '第一部分 · 场景 01', palette: 'scene1',
+      title: '行为金融学的三大主题',
+      subtitle: 'THREE THEMES OF BEHAVIORAL FINANCE',
+      heroQuote: '所有金融从业者最终都会让偏见、过度自信和情绪蒙蔽他们的判断、误导他们的行动。行为金融学的任务是理解这些错误为何发生，以及它们如何系统性地影响市场。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '传统金融学 vs 行为金融学：核心假设对比',
+        description: '舍夫林三大主题的根基——行为金融学不是否定传统理论，而是替换其关于人的假设',
+        data: {
+          columns: ['维度', '传统金融学', '行为金融学', '实际后果'],
+          rows: [
+            ['决策方式', '期望效用最大化', '启发式驱动（心理捷径）', '系统性偏差：过度自信、代表性、锚定'],
+            ['信息处理', '贝叶斯更新、理性概率评估', '框架依赖、损失厌恶', '同一信息的不同呈现方式导致不同决策'],
+            ['风险态度', '稳定、一致的风险偏好', '参考点依赖，盈亏区域不同', '盈利时保守（卖赢家），亏损时冒险（留输家）'],
+            ['市场效率', '价格反映所有信息', '系统性偏差导致持续错误定价', 'PEAD、封闭式基金折扣、IPO异象'],
+            ['套利', '无限制套利纠正错误定价', '套利有成本和风险，偏差可持续', '错误定价可长期存在，利用需要耐心和纪律'],
+            ['投资者差异', '错误随机分布、互相抵消', '偏差方向一致、相互强化', '散户和机构犯同方向的错误，只是形式不同']
+          ],
+          note: '舍夫林的核心论点：传统金融学是一个有用的基准，但不是完整的图景。行为金融学补充而非取代传统理论。'
+        }
+      },
+      narrative: [
+        '2000年，在有效市场假说仍被视为金融学正统信条的时代，圣克拉拉大学教授赫什·舍夫林出版了《超越恐惧与贪婪》——第一本系统性地将心理学应用于整个金融领域的著作。这本书不是对传统金融学的小修小补，而是一次根本性的挑战：<b>如果市场参与者不是理性的，那么建立在理性假设之上的整个金融理论大厦就需要重新审视。</b>',
+        '舍夫林将行为金融学组织为<b>三大主题</b>。第一个主题是<b>启发式驱动偏差</b>（heuristic-driven bias）：人们依赖心理捷径来做判断，这些捷径在日常生活中通常管用，但在金融决策中会产生系统性的、可预测的错误。过度自信、代表性偏差、锚定与调整不足——这些不是偶然的失误，而是人类认知系统的内建缺陷。',
+        '第二个主题是<b>框架依赖</b>（frame dependence）：人们的决策不仅取决于信息的内容，还取决于信息的呈现方式。同一个投资机会，用"盈利概率80%"和"亏损概率20%"来描述，会引发截然不同的行为——尽管这两种描述在逻辑上完全等价。损失厌恶、心理账户、自我控制问题都是框架依赖的具体表现。',
+        '第三个主题是<b>市场非有效性</b>（inefficient markets）：当上述偏差和框架效应不是随机分布而是系统性地指向同一方向时，它们就不会在市场层面相互抵消，而是会导致价格持续偏离基本面。错误定价不是噪音——它是可预测的、可利用的、但也是难以消除的。',
+        '舍夫林的贡献在于，他不仅罗列偏差，而是展示了这些偏差如何从个人层面传导到市场层面，从散户行为传导到机构决策，从股票市场传导到债券市场、期权市场和公司金融领域。<b>行为金融学不是传统金融学的附录——它是一面镜子，让我们看到"理性人"假设背后被忽视的真实人性。</b>'
+      ],
+      deepDives: [
+        {
+          title: '启发式：为什么捷径是危险的', icon: '\u26A0',
+          triggerQuestion: '你的大脑每天做出数千个判断，大部分靠"直觉"。如果这些直觉在进化上是有用的，为什么它们在投资中反而成了陷阱？什么改变了？',
+          chain: {
+            premise: '启发式（heuristics）是人类在信息不完整、时间有限时用来做快速判断的心理捷径。它们在进化环境中高效可靠，但金融市场的统计特性与人类祖先面对的自然环境截然不同。',
+            evidence: '舍夫林重点讨论了四种启发式偏差：(1)代表性——投资者看到一只股票连涨三个月就认为它是"好股票"，把短期模式当作长期规律，忽视均值回归；(2)过度自信——基金经理平均每年换手率超过75%，而研究显示频繁交易的投资者收益率比买入持有低1.5个百分点以上；(3)锚定——分析师的盈利预测被上期数据过度锚定，对新信息调整不足，导致盈利意外后股价出现可预测的漂移；(4)模糊性规避——投资者偏好自认为"了解"的投资标的，导致本国偏好和行业集中，牺牲了分散化收益。',
+            conclusion: '这些偏差之所以危险，不是因为它们偶尔出现，而是因为它们始终存在、方向一致、且极难通过自我意识来消除。你可以知道过度自信的存在，但你仍然会过度自信——因为如果你不自信，你就不会认为自己"知道"过度自信了。这是行为金融学最令人不安的洞见：认知偏差是自我强化的。'
+          }
+        },
+        {
+          title: '框架依赖：信息的包装如何改变决策', icon: '\uD83D\uDDBC',
+          chain: {
+            premise: '传统经济学假设人们对等价的信息做出相同的反应。但如果决策取决于问题的"框架"而非实质内容，那么所有基于偏好一致性的经济模型都需要修正。',
+            evidence: '舍夫林通过大量案例展示框架效应的威力：退休储蓄计划中，将默认选项从"不参加"改为"自动参加"（允许退出），参与率从40%跃升至90%——选择相同，但框架不同。在投资中，投资者将资金分入"安全层"和"投机层"等心理账户，分别用不同标准评估，而非像理论要求的那样考虑整体组合的风险回报特征。损失厌恶使得人们在面对亏损时变得冒险（赌一把回本），面对盈利时变得保守（落袋为安）——这正是处置效应的根源。',
+            conclusion: '框架依赖揭示了一个深层现实：人类并没有一套稳定的、内在一致的偏好体系在等着被"发现"。我们的偏好在很大程度上是被情境建构出来的。这对金融理论的冲击是根本性的——如果偏好不稳定，那么"效用最大化"这个概念本身就需要被重新思考。'
+          }
+        },
+        {
+          title: '市场非有效性：偏差如何汇聚成错误定价', icon: '\uD83C\uDFAF',
+          chain: {
+            premise: '有效市场假说承认个体投资者可能犯错，但认为这些错误是随机的、互相抵消的。只有当偏差是系统性的——大量投资者同时犯同一方向的错误——价格才会持续偏离基本面。',
+            evidence: '舍夫林论证了这正是现实情况。盈利公告后的价格漂移（PEAD）显示市场对盈利意外反应不足——好消息后股价在数周内继续上涨，坏消息后继续下跌。这种可预测的价格模式不应在有效市场中存在。封闭式基金以大幅折扣或溢价交易，偏离其净资产价值，而这些折扣/溢价与投资者情绪高度相关。IPO市场则呈现短期低估、长期高估的模式——与投资者的代表性偏差和过度乐观一致。',
+            conclusion: '市场非有效性不意味着"任何人都能轻松赚钱"。套利是有成本和风险的——做空被高估的股票需要保证金、面临逼空风险、还可能在价格回归前被迫平仓。舍夫林的论点是：市场确实存在系统性错误定价，但利用这些错误需要理解其心理根源、接受短期的不确定性、并拥有足够长的投资期限。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 2: 框架依赖与前景理论 [ANCHOR]
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-2', number: '第一部分 · 场景 02', palette: 'scene2',
+      title: '前景理论：重新理解风险',
+      subtitle: 'PROSPECT THEORY AND FRAME DEPENDENCE',
+      heroQuote: '投资者不是在收益和损失之间做理性权衡。他们对损失的痛感是对等额收益快感的两倍——这种不对称性扭曲了几乎所有的金融决策。',
+      narrative: [
+        '传统金融学假设投资者按期望效用理论做决策——他们评估的是最终财富状态，偏好是一致的，风险态度不随情境改变。但卡尼曼和特沃斯基的<b>前景理论</b>揭示了一个完全不同的图景，而舍夫林正是将这一理论系统性应用于金融领域的先驱之一。',
+        '前景理论的核心有三点。第一，<b>参考点依赖</b>：人们评估的不是"最终财富"，而是"相对于某个参考点的变化"。买入价、历史最高价、心理预期价——这些参考点决定了你感受到的是"收益"还是"损失"，即使客观的财富数额相同。',
+        '第二，<b>损失厌恶</b>：失去100元的心理痛苦大约是获得100元快乐的两倍。这个简单事实的金融含义是深远的：它解释了为什么投资者持有亏损股票不愿止损（实现损失的痛苦太大），为什么人们在盈利时过早卖出（害怕"到手的利润飞走"），为什么股权风险溢价如此之高（投资者需要额外的回报来补偿持有波动资产的心理痛苦）。',
+        '第三，<b>递减敏感性</b>：从亏损1000到亏损2000的痛苦增量，小于从0到亏损1000的痛苦增量。这意味着已经深套的投资者反而更愿意冒险——"反正已经亏了这么多，不差这一点了"。这种心态在交易员和赌徒中同样常见，舍夫林称之为"回本执念"（get-evenitis）。',
+        '框架依赖是前景理论的直接推论。如果参考点决定了你对收益和损失的感知，那么谁设定了参考点，谁就在操控你的决策。基金公司展示的"年化收益率"而非"某月最大回撤"，保险公司强调的"万一发生"而非"99%不会发生"——这些都是精心选择的框架。'
+      ],
+      deepDives: [
+        {
+          title: '心理账户：你的大脑如何把一个钱包变成十个信封', icon: '💰',
+          triggerQuestion: '一个人会同时持有年利率18%的信用卡债务和年回报5%的储蓄账户——这在理性框架下是荒谬的。但几乎所有人都在某种程度上做着类似的事。前景理论如何解释这种普遍的"精神分裂"？',
+          chain: {
+            premise: '理查德·塞勒（Richard Thaler）在前景理论的基础上发展出了<b>心理账户（mental accounting）</b>理论，舍夫林将其视为理解个人投资者行为的最有力工具之一。核心观察是：人们不像经济学假设的那样把所有金钱视为完全可替代的——他们在心理上把钱分装进不同的"账户"，每个账户有不同的规则和风险容忍度。',
+            evidence: '舍夫林用了一个经典实验来说明心理账户的力量。<b>情景A：</b>你花$200买了一张演唱会门票，到了现场发现门票丢了。你会再花$200买一张吗？大多数人说不会。<b>情景B：</b>你准备到现场买票，到了发现口袋里丢了$200现金，但信用卡还在。你还会买$200的票吗？大多数人说会。两个情景中你的经济损失完全相同（$200），但心理账户不同：在情景A中，再买一张票意味着"这场演唱会花了$400"（同一个心理账户累加了），这在直觉上"太贵了"；在情景B中，丢的现金属于"一般性损失"账户，买票花的$200属于"娱乐"账户，两者互不干扰。<b>在投资领域，心理账户的后果是灾难性的。</b>舍夫林描述了一种极为常见的投资组合结构：投资者同时持有（1）"安全"的低收益储蓄或国债——这是"保命钱"账户，绝不能亏损；（2）高风险的投机性股票——这是"赌一把"账户，亏了也无所谓。这种结构在理性框架下毫无道理：如果你的"赌一把"账户亏了50%，"保命钱"账户赚了3%，你的整体财富实际上大幅缩水了——但你的心理感受是"保命钱安全着呢，只是赌金亏了"。更极端的例子是行为金融学家梅尔·斯塔曼（Meir Statman）发现的"金字塔式"投资组合——底层是保险和国债（安全感），中层是蓝筹股和债券基金（希望），顶层是彩票和期权（梦想）。这个金字塔中的每一层对应不同的心理需求，但作为一个整体，它几乎必然是低效的——投资者为"安全感"支付了过高的代价（底层资产回报太低），同时为"梦想"承担了不必要的风险（顶层资产期望回报为负）。',
+            conclusion: '心理账户理论揭示了一个深层悖论：<b>帮助我们应对日常生活复杂性的心理简化策略（把钱分装进不同的"信封"），在金融决策中系统性地让我们变穷。</b>理性的做法是把所有资产视为一个整体组合来优化——但这要求我们克服一种根深蒂固的心理本能。舍夫林的建议不是要求投资者变成"完全理性"（这不可能），而是至少意识到自己的心理账户划分，然后问一个简单的问题：如果我把所有这些钱混在一起，我还会做同样的配置吗？如果答案是否，你的心理账户正在损害你的财富。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART II · 预测与市场情绪 · PREDICTION AND SENTIMENT
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 3: 市场预测的幻觉 [ANCHOR]
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-3', number: '第二部分 · 场景 03', palette: 'scene3',
+      title: '市场预测的幻觉',
+      subtitle: 'THE ILLUSION OF VALIDITY IN PREDICTION',
+      heroQuote: '人们对自己预测能力的信心与其预测的准确性几乎没有关系。最自信的预测者往往是最不准确的。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '核心认知偏差：心理机制与市场后果',
+        description: '舍夫林在全书中反复讨论的关键偏差——它们不是孤立现象，而是相互强化的系统',
+        data: {
+          columns: ['认知偏差', '心理机制', '典型表现', '市场层面后果'],
+          rows: [
+            ['过度自信', '主观置信区间过窄，高估自身判断', '分析师"90%确信"的预测只涵盖50%的实际结果', '交易过于频繁，收益率反而下降'],
+            ['代表性偏差', '根据近期模式外推，忽视基准概率', '连涨3个月的股票被当作"好股票"', '追逐热门基金/股票，忽视均值回归'],
+            ['锚定', '判断被先前数字过度牵引', '分析师盈利预测被上期数据锚定', '盈利公告后价格漂移（PEAD）'],
+            ['损失厌恶', '损失的痛感 ≈ 2x 等额收益的快感', '持有亏损不卖、盈利过早卖出', '处置效应 → 赢家动量被抑制'],
+            ['事后聪明', '事后重构记忆："我早就知道"', '每次崩盘后都有人声称提前预见', '持续高估自身预测能力，不从错误中学习'],
+            ['羊群效应', '模仿他人决策而非独立分析', '牛市末期全民炒股，恐慌时集体抛售', '泡沫膨胀和崩盘加速的核心动力']
+          ],
+          note: '关键洞见：这些偏差不是独立存在的。过度自信让你忽视锚定，代表性偏差强化羊群效应，损失厌恶加剧事后聪明——它们构成一个自我强化的偏差网络。'
+        }
+      },
+      narrative: [
+        '1987年10月19日，"黑色星期一"，道琼斯指数一天之内暴跌22.6%。在此之前一周，华尔街大多数分析师仍然看好后市。他们的预测模型、技术指标、基本面分析——没有一个发出了警报。事后，同样这批分析师又纷纷声称自己"早就看到了迹象"。舍夫林将此作为第二部分的开篇案例，追问一个根本性问题：<b>金融从业者真的能预测市场吗？还是他们只是自认为能？</b>',
+        '答案是后者。舍夫林引用了大量实证研究表明，专业分析师的市场预测准确率与掷硬币相差无几。但真正令人警醒的不是预测不准——而是<b>预测不准的人不知道自己不准</b>。这就是过度自信的核心机制：人们的主观置信区间远比它应有的宽度更窄。当分析师说他"90%确信"市场明年会涨时，他设定的范围只涵盖了实际结果的约50%。',
+        '过度自信有多种来源。<b>有效性幻觉</b>（illusion of validity）让人们把分析的深度误认为预测的准确性——你做了越多的研究，你就越"觉得"自己的预测是对的，尽管额外的研究可能只增加了信心而没有增加准确性。<b>事后聪明偏差</b>（hindsight bias）让人们在事后重构记忆——"我早就知道会这样"——从而持续高估自己的预测能力。',
+        '舍夫林特别分析了华尔街投资通讯（investment newsletters）的预测记录。那些拥有最多订阅者的通讯往往不是最准确的，而是最自信的、最善于讲故事的。投资者选择分析师的标准与选择好故事的标准相同——连贯性、自信、细节丰富——而这些标准与预测准确性几乎无关。',
+        '最讽刺的是，<b>对自身偏差的了解并不能消除偏差。</b>舍夫林记录了许多金融专家在明确知道过度自信这一概念后，仍然在实际决策中表现出过度自信。知道问题的存在和解决问题是两回事。'
+      ],
+      deepDives: [
+        {
+          title: '过度自信的三个维度', icon: '\uD83C\uDFAF',
+          triggerQuestion: '如果让你估计道琼斯指数一年后的值，你给出的90%置信区间会包含真实结果吗？研究显示，大多数人给出的"90%置信区间"只包含约50%的实际结果。这意味着什么？',
+          chain: {
+            premise: '过度自信不是一种单一现象，而是至少有三个可区分的维度：过度精确（miscalibration）、过度估计自身能力（overestimation）、和过度排名（overplacement——认为自己比多数人强）。',
+            evidence: '舍夫林引用的证据：(1)过度精确——让专业分析师给出盈利预测的置信区间，他们设定的90%区间只涵盖了约60%的实际结果。(2)过度估计——美国散户投资者中，约75%认为自己的选股能力高于平均水平，这在数学上是不可能的。Barber和Odean对66000个经纪账户的研究表明，交易最频繁的20%投资者（最自信的群体）的年收益率比市场低5.5个百分点。(3)过度排名——基金经理几乎普遍认为自己属于行业前半部分，甚至那些连续数年跑输基准的经理也是如此。',
+            conclusion: '过度自信的代价不是心理上的——它直接反映为真金白银的损失。交易越频繁，成本越高，而驱动频繁交易的正是对自身信息优势的过度自信。舍夫林总结得精辟：不是信息让投资者赚钱，而是对信息的正确评估让投资者赚钱。大多数人有太多信息、太少怀疑。'
+          }
+        },
+        {
+          title: '情绪指标与市场转折', icon: '\uD83D\uDCC9',
+          chain: {
+            premise: '如果投资者的情绪系统性地偏离理性——在牛市中过度乐观，在熊市中过度悲观——那么情绪本身就可以作为一个逆向指标。',
+            evidence: '舍夫林讨论了多种情绪指标：Investors Intelligence调查中看涨和看跌分析师的比例、共同基金现金持有比例、IPO发行量和首日涨幅。当看涨比例极高（大多数人都乐观）时，市场往往接近顶部；当看跌比例极高时，市场往往接近底部。1999年底，科技股泡沫巅峰期，看涨比例达到了历史最高水平。20世纪70年代中期的熊市底部，看涨比例跌至历史最低。情绪指标不是精确的择时工具，但它们揭示了一个重要真理：当"所有人"都同意市场方向时，转折往往已经不远了。',
+            conclusion: '情绪指标的有效性恰恰证明了市场的非有效性。如果市场是有效的，公开可得的情绪数据不可能包含预测未来收益的信息。但它们确实包含了——因为市场参与者的集体情绪不是理性地处理信息，而是系统性地在乐观和悲观之间过度摆动。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 4: 盈利公告与分析师偏差 [ANCHOR]
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-4', number: '第二部分 · 场景 04', palette: 'scene4',
+      title: '盈利公告：锚定与反应不足',
+      subtitle: 'BIASED REACTIONS TO EARNINGS ANNOUNCEMENTS',
+      heroQuote: '分析师不是不聪明。他们的问题恰恰相反——他们太聪明了，聪明到编造出精妙的理由来解释自己的偏差，而非纠正它。',
+      narrative: [
+        '每个季度，上市公司发布盈利报告，华尔街分析师竞相更新预测，股价随之剧烈波动。这个过程看似是市场高效处理信息的典范。但舍夫林通过仔细的实证分析揭示了一个不同的故事：<b>分析师对盈利信息的反应是系统性地有偏的。</b>',
+        '第一个偏差是<b>锚定</b>。分析师的盈利预测被前期数据过度锚定。当公司发布超预期的盈利时，分析师确实会上调预测，但调整幅度不够——他们的新预测仍然被旧的锚所拉住。这导致了所谓的<b>盈利公告后漂移</b>（post-earnings announcement drift, PEAD）：正面盈利意外后股价在随后数周继续上涨，负面盈利意外后股价继续下跌。',
+        '第二个偏差是<b>过度乐观</b>。分析师的盈利预测平均而言偏高——不是偶然的，而是系统性的。部分原因是心理上的（过度自信和乐观是人类的默认状态），部分原因是制度上的（分析师与投行业务之间的利益冲突使得"买入"评级远多于"卖出"评级）。',
+        '第三个偏差是<b>代表性</b>。当一家公司连续几个季度超预期时，分析师倾向于外推这种趋势，预测更高的增长——即使统计数据显示盈利增长率会均值回归。反过来，连续低于预期的公司被过度看空。这种模式在明星股和灾难股中尤其显著。',
+        '这些偏差不是个人的弱点——它们是系统性的、可预测的、在整个行业中广泛存在的。盈利公告后漂移至今仍是金融学中最稳健的异象之一，它的持续存在直接挑战了有效市场假说。'
+      ],
+      deepDives: [
+        {
+          title: 'PEAD：最持久的市场异象——为什么40年来没有人能套利掉它', icon: '📈',
+          triggerQuestion: '盈利公告后漂移（PEAD）从1968年被Ball和Brown首次记录以来，已经持续存在了近60年。如果市场是有效的，套利者早该消除它——为什么他们没有？',
+          chain: {
+            premise: 'PEAD是行为金融学中最令有效市场假说（EMH）难堪的异象。它的含义简单到令人尴尬：<b>当公司发布好于预期的盈利时，股价在公告日上涨后继续向上漂移长达60-90个交易日；发布差于预期时反之。</b>如果你在正面意外后买入、负面意外后做空，长期年化超额回报约为8-10%。这种策略的逻辑如此简单、数据如此公开、利润如此可观——为什么没有被套利消除？',
+            evidence: '舍夫林引用了多项研究来剖析PEAD的成因和持续机制。<b>成因层面：</b>锚定效应是核心。分析师在更新盈利预测时被前期数字锚定，更新幅度不足。Bernard和Thomas（1989）的研究显示，如果第一季度盈利超预期10%，分析师对第二季度的预测平均只上调3-4%——漏掉了大部分趋势延续的信息。投资者又被分析师的保守预测锚定，形成了双重滞后。<b>持续机制层面：</b>为什么知道这个异象的机构投资者不去套利？原因是多重的。（1）<b>交易成本</b>——PEAD在小盘股和低流动性股票中最显著，而这些股票的交易成本最高。Lesmond、Schill和Zhou（2004）估计，扣除交易成本后PEAD策略的超额回报下降约2/3。（2）<b>短期业绩考核</b>——PEAD策略的持有期是60-90天，在此期间可能经历显著回撤。基金经理面临月度和季度排名压力，很少有人能承受"我们的PEAD策略这个月跑输了基准3%"这种汇报。（3）<b>执行的不确定性</b>——盈利"意外"的定义本身就有歧义。使用不同的预期基准（分析师共识 vs 时间序列模型 vs 管理层指引），同一份盈利报告可能被归类为正面意外或负面意外。Livnat和Mendenhall（2006）发现，仅改变预期基准的定义，PEAD策略的回报率就会波动30-50%。',
+            conclusion: '舍夫林通过PEAD案例阐明了一个更大的论点：<b>市场异象的持续存在不需要所有人都是"非理性的"——只需要套利的成本和风险足够高，使得理性的套利者无法将价格推向"正确"水平。</b>这就是安德烈·施莱弗所说的"套利的极限"——有效市场假说的逻辑漏洞不在于套利者不存在，而在于套利本身是有风险、有成本、有约束的。PEAD告诉我们一个令人不安的真相：即使你知道市场在哪里犯了错，要从这个错误中获利也远没有理论上那么简单。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART III · 个人投资者 · INDIVIDUAL INVESTORS
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 5: 处置效应与"回本执念" [ANCHOR]
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-5', number: '第三部分 · 场景 05', palette: 'scene5',
+      title: '处置效应：为什么你卖赢家、留输家',
+      subtitle: 'GET-EVENITIS AND THE DISPOSITION EFFECT',
+      heroQuote: '投资者最大的敌人不是市场波动，而是自己内心深处那个声音："再等等，它会涨回来的。"',
+      narrative: [
+        '舍夫林和他的合作者迈尔·斯塔特曼在1985年提出了<b>处置效应</b>（disposition effect）这个术语，用来描述投资者的一个令人困惑的行为模式：<b>他们倾向于过早卖出盈利的股票，却过久地持有亏损的股票。</b>这种行为在经济上是非理性的——如果一只股票有上涨动力，你应该继续持有；如果它在下跌，你应该止损。但大多数投资者做的恰恰相反。',
+        '舍夫林将持有亏损头寸的顽固行为称为<b>"回本执念"</b>（get-evenitis）——一种强迫性地想要等待亏损头寸回到买入价的心态。这不是理性的投资分析，而是一种心理疾病。买入价是一个任意的参考点——市场不知道也不在乎你的买入价是多少。但对投资者而言，买入价就是那个"参考点"，围绕它，前景理论的所有机制开始运作。',
+        '为什么会这样？前景理论给出了精确的解释。在盈利区域，价值函数是凹的（递减敏感性），投资者表现为风险厌恶——"已经赚了不少了，落袋为安吧"。在亏损区域，价值函数是凸的，投资者表现为风险寻求——"反正已经亏了，不如赌一把，也许会涨回来"。加上损失厌恶（卖出亏损意味着把"纸面损失"变成"确定损失"，心理痛苦加倍），处置效应就几乎成了必然。',
+        'Terrance Odean对10000个经纪账户的实证研究提供了铁证：投资者卖出盈利头寸的概率是卖出亏损头寸概率的<b>1.5倍</b>。更讽刺的是，那些被过早卖出的赢家在随后12个月平均跑赢市场3.4%，而那些被顽固持有的输家则继续跑输。投资者不仅做了错误的决定——他们做的决定系统性地摧毁了价值。',
+        '舍夫林指出，处置效应还有税务上的代价。理性的投资者应该在年底卖出亏损头寸来获取税收减免（tax-loss harvesting），但处置效应驱使他们做了完全相反的事——卖出盈利（触发税款）、保留亏损（放弃税收利益）。这是一个心理偏差转化为真实财务损失的完美案例。'
+      ],
+      dataViz: {
+        type: 'comparison-table',
+        title: '处置效应：理性行为 vs 实际行为',
+        description: 'Odean对10,000个经纪账户的实证研究——投资者系统性地做了最糟糕的选择',
+        data: {
+          columns: ['情境', '理性行为', '实际行为', '财务后果'],
+          rows: [
+            ['盈利头寸', '继续持有（动量效应，未来仍可能上涨）', '过早卖出（"落袋为安"）', '卖出的赢家随后12个月平均跑赢市场3.4%'],
+            ['亏损头寸', '止损卖出（释放资金+税收减免）', '顽固持有（"回本执念"）', '持有的输家继续跑输，且放弃税收利益'],
+            ['卖出概率', '根据基本面和预期回报决定', '赢家卖出率 = 输家的1.5倍', '系统性地摧毁价值'],
+            ['年底操作', '税收损失收割（卖出亏损）', '相反——卖出盈利（触发税款）', '心理偏差转化为额外税收成本']
+          ],
+          note: '核心机制：前景理论的价值函数——盈利区域凹（风险厌恶→早卖），亏损区域凸（风险寻求→死扛）。买入价成为参考点，市场不在乎你的买入价，但你的大脑在乎。'
+        }
+      },
+      deepDives: [
+        {
+          title: '前景理论如何制造处置效应', icon: '\uD83D\uDCC9',
+          triggerQuestion: '你买了一只股票，涨了30%。另一只跌了30%。你急需现金，必须卖掉一只。你会卖哪只？大多数人选择卖赢家——但这几乎总是错误的选择。为什么？',
+          chain: {
+            premise: '前景理论预测投资者在盈利时风险厌恶（急于锁定收益），在亏损时风险寻求（宁愿赌博也不愿确认损失）。处置效应正是这一预测的直接验证。',
+            evidence: '机制分解：(1)买入价成为参考点，将投资自动分为"盈利"和"亏损"两个框架。(2)在盈利框架中，递减敏感性使得额外收益的边际快乐递减——"已经赚了30%，再涨10%也不过是从30%变成40%"——锁定利润的冲动战胜了等待。(3)在亏损框架中，损失厌恶使得"实现损失"的痛苦远大于纸面损失——按卖出键的那一刻，损失从"可能的"变成"确定的"，心理会计被迫关闭这笔"亏损账户"。(4)自我控制失败——投资者知道应该止损，但情绪上做不到。舍夫林称之为"计划者与执行者"之间的冲突。',
+            conclusion: '处置效应的深层含义远超出个人投资决策。当大量投资者同时表现出处置效应时，它会在市场层面产生可观测的效果：盈利公告后的正面价格漂移被延缓（因为好消息被投资者的过早卖出所吸收），而负面价格漂移则被放大（因为持有输家的投资者不卖出，减少了卖压，使价格下跌更缓慢但更持久）。'
+          }
+        },
+        {
+          title: '心理账户与投资组合金字塔', icon: '\uD83C\uDFDB',
+          chain: {
+            premise: '传统投资组合理论要求投资者将全部资产视为一个整体来优化。但如果投资者在心理上将资金划分为多个独立"账户"，每个账户有不同的目标和风险态度，那么他们的实际组合将严重偏离最优。',
+            evidence: '舍夫林描述了投资者构建投资组合的方式更像是搭建金字塔而非优化整体：底层是"安全层"——银行存款、国债、保险，目标是防止"老无所依"；中间是"收入层"——债券、分红股票，目标是维持生活水平；顶层是"投机层"——期权、彩票型股票，目标是"一夜暴富"。每一层都被独立管理，层与层之间的相关性被忽视。结果是：底层过度保守（持有太多低收益资产），顶层过度激进（高风险的"赌博"资金），整体组合的风险回报特征远劣于一个经过整体优化的组合。',
+            conclusion: '心理账户不仅影响个人投资者。金融产品的设计者深谙此道：保本基金同时满足了"安全层"的需求（保本）和"投机层"的需求（可能的高回报），因此总能吸引大量资金——即使其费用结构使得预期回报低于简单的指数基金。理解心理账户不是为了消除它（那几乎不可能），而是为了避免被它利用。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 6: 退休储蓄与自我控制 [BRIDGE]
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-6', number: '第三部分 · 场景 06', palette: 'scene6',
+      title: '退休储蓄：短视与自我控制的战争',
+      subtitle: 'RETIREMENT SAVING, MYOPIA, AND SELF-CONTROL',
+      heroQuote: '人们知道他们应该为退休储蓄更多。他们计划为退休储蓄更多。但到了月底，钱已经花完了。意图与行动之间的鸿沟，正是行为金融学要解释的核心谜题。',
+      narrative: [
+        '舍夫林的一个核心论点是：投资者不仅被认知偏差所困扰，还与<b>自我控制</b>问题做着永无止境的斗争。他借用了塞勒和谢夫林早期提出的"计划者-执行者"模型来解释这一点：你的内心住着两个自我——一个理性的"计划者"知道应该为30年后的退休多存钱，但一个冲动的"执行者"总是被眼前的消费欲望所驱动。',
+        '数据触目惊心。在美国，<b>大部分401(k)计划参与者的储蓄率远低于他们自认为的"理想水平"</b>。当被问及"你觉得应该存多少"时，平均回答是收入的14%。但实际储蓄率中位数只有6%左右。这8个百分点的差距不是因为信息不足——人们知道应该存多少——而是因为执行者不听计划者的话。',
+        '舍夫林讨论了两种加剧问题的心理偏差。第一是<b>短视损失厌恶</b>（myopic loss aversion）：如果你每天查看股市，你看到亏损的天数几乎与看到盈利的天数一样多。由于损失厌恶，频繁查看意味着频繁承受心理痛苦——这让投资者把资金从股票转向债券和现金，牺牲了长期的大量复利收益。如果同一个人只每年查看一次，他看到亏损的概率大大降低，就更愿意承担股票风险。<b>查看频率改变了风险承受能力——这是框架依赖在时间维度上的表现。</b>',
+        '第二是<b>现状偏好</b>（status quo bias）：人们倾向于维持当前的选择，即使改变明显更好。在退休计划中，默认储蓄率的设置比任何宣传教育都更有效。塞勒和贝纳茨设计的"明天存更多"（Save More Tomorrow）计划利用了这一洞见：让员工承诺将未来的加薪自动转入储蓄账户。因为"未来的钱"感觉不像"现在的钱"那么真实，人们更容易同意。该计划将参与者的储蓄率从3.5%提升至13.6%。',
+        '这些发现的政策含义是深远的：<b>与其呼吁人们"更自律"（这不管用），不如设计更好的制度默认值。</b>行为金融学不仅解释偏差——它提供了用偏差来对抗偏差的工具。'
+      ],
+      deepDives: [
+        {
+          title: '短视损失厌恶与股权溢价之谜', icon: '\uD83D\uDC53',
+          chain: {
+            premise: '经济学中有一个著名的"股权溢价之谜"：股票相对于债券的长期超额收益（约6%每年）高得不合理——要用传统效用理论解释这个溢价，投资者需要拥有极度荒谬的风险厌恶系数。',
+            evidence: '贝纳茨和塞勒提出了一个行为学解释：问题不在于投资者有多厌恶风险，而在于他们多频繁地评估投资组合。如果一个投资者每天看一次股市，他有约46%的天数会看到亏损——损失厌恶使这些亏损天的心理痛苦大于盈利天的快乐，净效果是痛苦多于快乐。但如果他只每年看一次，看到亏损的概率降至约25%。如果每20年看一次，几乎不会看到亏损。投资者要求高额股权溢价来补偿频繁评估带来的心理痛苦，而非真正的长期财务风险。',
+            conclusion: '这个解释的惊人之处在于：它暗示股权溢价之所以存在，部分原因是投资者查看投资组合的频率太高了。如果他们能"忘记"自己持有股票20年，他们会对股票估值更高，股价会上涨，股权溢价会缩小。换句话说，一些最重要的市场现象不是由基本面驱动的，而是由投资者打开经纪账户APP的频率驱动的。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART IV · 机构投资者与公司金融 · INSTITUTIONS & CORPORATE FINANCE
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 7: 机构投资者的偏差 [ANCHOR]
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-7', number: '第四部分 · 场景 07', palette: 'scene7',
+      title: '机构投资者：专业并不免疫',
+      subtitle: 'INSTITUTIONAL INVESTORS AND PROFESSIONAL BIAS',
+      heroQuote: '专业知识让你更擅长构建自信的解释——而不一定是正确的判断。机构投资者的偏差更隐蔽，但并不比散户更少。',
+      narrative: [
+        '一个常见的反驳是：即使散户存在偏差，精明的机构投资者会利用这些偏差来套利，最终将市场推向有效。舍夫林用整整一个部分来反驳这个观点，论证<b>机构投资者同样深受行为偏差的影响——只是表现形式不同。</b>',
+        '在<b>开放式共同基金</b>领域，舍夫林揭示了三个问题。第一是<b>"热手"幻觉</b>——投资者追逐近期表现优异的基金，认为好业绩会持续。但大量研究表明，基金过去的业绩几乎不能预测未来表现（除了在费用的维度上：高费用基金持续跑输低费用基金）。第二是<b>框架效应与混淆</b>——基金公司利用幸存者偏差（关闭表现差的基金，只展示表现好的）、选择性展示时间窗口、使用不同的基准来美化业绩。第三是<b>风格漂移</b>——标称"价值型"的基金经理在成长股行情好时偷偷转向成长风格，然后声称自己是"灵活的价值投资者"。',
+        '在<b>封闭式基金</b>领域，一个长期存在的谜题是：为什么这些基金经常以大幅折扣交易？如果基金持有的资产价值100元，为什么基金的市场价格只有85元？传统金融学用管理费用和流动性来解释，但这些因素无法解释折扣率的巨大波动。舍夫林论证，封闭式基金的折扣/溢价是投资者情绪的温度计——当散户乐观时，溢价扩大；当散户悲观时，折扣加深。',
+        '在<b>资产管理行业</b>整体层面，框架效应同样无处不在。投资委员会评估基金经理时，过度依赖近期表现（代表性偏差），用过窄的风格分类来评判（锚定），在更换经理时受后悔厌恶驱使（"如果我换了经理，新经理也不行怎么办？不如维持现状"）。整个机构投资的决策链条——从资产配置到经理选择到业绩评估——都被行为偏差所渗透。',
+        '舍夫林的结论并不是"机构投资者和散户一样蠢"，而是更微妙的：<b>专业知识改变了偏差的形式，但没有消除偏差本身。</b>机构投资者不太会因为邻居推荐一只股票就买入，但他们会因为一个精心编制的研究报告（一个更精致的"故事"）而偏离理性。'
+      ],
+      deepDives: [
+        {
+          title: '主动基金的困境：为什么"平均"击败了"专业"', icon: '🏆',
+          triggerQuestion: '如果机构投资者的偏差如此系统性，它在多大程度上解释了一个令人尴尬的事实——长期来看，大多数主动管理基金跑不赢被动指数？',
+          chain: {
+            premise: '舍夫林在讨论机构偏差时暗示但没有完全展开一个推论：<b>行为偏差不仅存在于个别基金经理身上，它内嵌于整个主动管理行业的激励结构之中。</b>这意味着主动基金的系统性跑输不是因为基金经理"不够聪明"——恰恰相反，他们的聪明才是问题的一部分。',
+            evidence: 'SPIVA（Standard & Poor\'s Indices Versus Active）的年度报告持续追踪主动基金 vs 指数的成绩单。2023年底的数据显示：<b>在过去15年中，93%的美国大盘主动基金跑输了S&P 500指数。</b>国际市场的数据类似：15年期内，90%以上的欧洲、日本、新兴市场主动基金跑输了各自的基准指数。舍夫林的行为框架为这个现象提供了几层解释。<b>第一层：过度交易。</b>Barber和Odean的研究发现，交易量最大的投资组合（无论散户还是机构）回报最差。机构的过度交易不是因为"手痒"，而是因为过度自信——基金经理系统性地高估自己处理新信息的速度和准确性，于是频繁调仓。每一次交易都产生成本（佣金、滑点、市场冲击），这些成本在统计意义上几乎完全是浪费的。<b>第二层：代表性偏差导致的风格追逐。</b>当"成长股"连续几年跑赢时，许多名义上的"价值型"基金经理会被代表性偏差拉向成长风格——他们的大脑把近期趋势解读为未来的预测信号。这种风格漂移意味着他们在成长股估值最高时大量买入，然后在均值回归时遭受损失。<b>第三层：行业的"选美博弈"结构。</b>基金经理的报酬和职业安全不取决于绝对回报，而取决于相对排名。这激励了一种舍夫林所说的"趋同行为"——没有人愿意做出与同行差异太大的配置，因为如果你独树一帜而且错了，你会被解雇；如果你跟大家一起错了，那只是"市场不好"。结果：主动基金的持仓越来越像指数——但收取的费用远高于指数基金。',
+            conclusion: '舍夫林的分析最终指向一个令整个主动管理行业不安的结论：<b>主动管理的核心承诺——"我们能通过专业分析来超越市场平均水平"——在统计上是不成立的，而行为金融学解释了为什么它在结构上不可能成立。</b>不是因为没有优秀的基金经理（少数人确实能持续超越），而是因为行业的激励结构、考核周期和心理偏差使得整个行业的加权平均表现必然低于指数减去费用。这就是为什么巴菲特在2007年用100万美元打赌：任何对冲基金组合在10年内都无法跑赢标普500指数基金——他在2017年赢了这个赌注。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 8: 公司金融中的行为偏差 [ANCHOR]
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-8', number: '第四部分 · 场景 08', palette: 'scene8',
+      title: '公司金融：从IPO狂热到赢家诅咒',
+      subtitle: 'CORPORATE FINANCE, IPOS, AND THE WINNER\'S CURSE',
+      heroQuote: '在企业收购的竞标中，胜出者往往是那个最严重高估了标的价值的竞标者。这就是赢家诅咒——赢得竞标的那一刻，也许就是你开始亏钱的那一刻。',
+      narrative: [
+        '行为金融学不仅适用于股票市场——它对公司金融决策有同样深刻的影响。舍夫林在最后几个部分将分析视角转向了企业的管理者和决策者，揭示了<b>过度自信和框架效应如何扭曲兼并收购、IPO定价和分析师预测</b>。',
+        '在<b>企业收购</b>中，赢家诅咒（winner\'s curse）是一个经典的行为现象。当多家公司竞标同一个收购目标时，最终胜出的往往是出价最高的——而出价最高的往往也是最过度自信的。罗尔（Roll）的"自大假说"指出，许多收购的真正动机不是经济上的协同效应，而是CEO的过度自信——他们高估自己整合企业的能力，高估收购后的协同收益，低估整合的难度和风险。',
+        '实证数据令人警醒：<b>大量研究显示，收购方的股东在收购公告后平均遭受价值损失。</b>被收购方的股东获得了溢价，但这个溢价从哪里来？很大程度上来自收购方股东的口袋。如果CEO的自信是准确的，收购应该创造价值而非转移价值。收购后的长期表现数据进一步证实了悲观结论：大多数大型收购未能实现承诺的协同效应。',
+        '<b>IPO市场</b>是另一个行为偏差的集中展示区。舍夫林总结了IPO的三个著名异象：(1)短期低估——IPO首日平均涨幅约15%，意味着承销商系统性地低估了发行价。(2)长期高估——IPO在上市后3-5年的表现平均跑输市场。(3)"热发行"周期——IPO发行量和首日涨幅具有高度的周期性，在市场情绪高涨时集中爆发。',
+        '这三个异象都有行为学解释。短期低估反映了承销商为了确保发行成功而故意留下"钱在桌上"（也保护自己免受后悔）。长期高估反映了投资者对新公司"故事"的过度乐观和代表性偏差。热发行周期反映了情绪的传染——当市场上到处是成功IPO的故事时，更多公司（和投资者）被吸引进来，直到泡沫破裂。'
+      ],
+      deepDives: [
+        {
+          title: '赢家诅咒与CEO过度自信', icon: '\uD83C\uDFC6',
+          triggerQuestion: '如果你参加一场拍卖，你出价最高赢得了标的。你应该感到高兴还是担忧？想想看：所有比你聪明或同样聪明的竞标者都认为这个标的不值你出的价。',
+          chain: {
+            premise: '在共同价值拍卖（所有竞标者对标的的真实价值估计不同）中，赢家倾向于支付超过真实价值的价格。这种现象被称为赢家诅咒。在企业收购中，CEO的过度自信使赢家诅咒更加严重。',
+            evidence: '舍夫林引用了大量收购案例：(1)1988年RJR Nabisco竞标战中，KKR最终以250亿美元（当时有史以来最大的杠杆收购）胜出，但许多分析师认为这个价格过高。(2)AOL-时代华纳的合并被广泛认为是企业史上最糟糕的交易之一，AOL的CEO对"互联网-媒体协同"的过度自信导致了数百亿美元的价值毁灭。(3)更系统的研究表明，管理层持有过多本公司期权（高自信的信号）的CEO更倾向于进行收购，而这些收购的平均回报显著为负。马尔门迪尔和泰特的研究将CEO过度自信量化，发现"过度自信"CEO的收购比"非过度自信"CEO的收购多摧毁约4.4%的股东价值。',
+            conclusion: '赢家诅咒在企业收购中的持续存在，是行为金融学最有力的证据之一。如果CEO是理性的，他们应该在竞标时考虑到赢家诅咒并降低出价。但过度自信使他们相信"这次不同"——自己的判断比竞争对手更准确，自己的整合能力更强。董事会和独立顾问理论上应该纠正这种偏差，但他们自身也容易被CEO的自信叙事所说服（锚定 + 权威效应）。'
+          }
+        },
+        {
+          title: '分析师的结构性乐观', icon: '\uD83D\uDD2E',
+          chain: {
+            premise: '如果华尔街分析师的盈利预测和股票评级系统性地偏向乐观，那么依赖分析师研究来做决策的投资者将持续做出偏差的判断。',
+            evidence: '舍夫林记录了分析师偏差的规模：在他研究的样本中，"买入"和"强力买入"评级的数量约为"卖出"和"强力卖出"的10倍以上。盈利预测平均高出实际数据约9%。这种乐观不完全是心理原因——制度激励也在起作用：分析师需要维持与被覆盖公司的关系以获取信息和投行业务，发布"卖出"评级会损害这种关系。但舍夫林强调，即使在控制了利益冲突因素后，分析师的预测仍然表现出过度乐观和过度自信。心理偏差和制度激励相互强化，产生了一个系统性偏向乐观的信息生态系统。',
+            conclusion: '对普通投资者而言，这意味着不能将分析师的研究报告视为客观信息——它们是在心理偏差和制度激励双重作用下产生的、系统性偏向乐观的"故事"。正确的做法不是忽视分析师（他们仍然掌握大量有价值的细节信息），而是在使用他们的预测时主动向下调整，并对"一致看好"的标的保持高度警惕。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 9: 超越偏差 [ANCHOR]
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-9', number: '第四部分 · 场景 09', palette: 'scene9',
+      title: '超越偏差：行为金融学的启示',
+      subtitle: 'BEYOND BIAS: IMPLICATIONS AND THE ROAD AHEAD',
+      heroQuote: '行为金融学的终极目标不是证明人是非理性的——而是通过理解非理性的规律，帮助人们做出更好的决策。',
+      narrative: [
+        '在全书的最后，舍夫林将视角从诊断转向治疗：<b>既然我们知道了这些偏差的存在和机制，我们能做些什么？</b>他的答案既诚实又微妙——没有魔法可以消除人类的认知局限，但有一些原则可以帮助我们减少偏差造成的损害。',
+        '第一个原则是<b>承认偏差的存在</b>。这听起来平庸，但在金融行业中做到这一点异常困难。华尔街的文化奖励自信和果断——一个承认自己可能犯错的交易员或分析师，在职业竞争中处于劣势。舍夫林引用了大量"聪明人犯蠢错"的案例，不是为了嘲笑他们，而是为了说明：<b>自认为不受偏差影响——这本身就是最危险的偏差。</b>',
+        '第二个原则是<b>建立系统性的纠偏机制</b>。既然个人很难通过意志力消除偏差（知道锚定效应的存在并不能让你免疫于锚定），那就需要制度层面的设计。舍夫林讨论了几种方法：投资清单（checklist）迫使你在做决策前回答一组标准化问题，减少系统1的直觉主导；反向思维训练（考虑"我可能是错的"）强制激活系统2的质疑功能；决策日志（记录每个投资决策的理由和当时的信心水平）让你事后对比，打破事后聪明偏差。',
+        '第三个原则是<b>利用偏差而非仅仅抵抗它</b>。如果你知道其他投资者的处置效应会导致赢家被过早卖出、输家被过久持有，你就可以利用这一点——买入刚公布正面盈利意外的股票（价格漂移尚未完成），卖出负面意外的股票。如果你知道市场在情绪极端时最容易犯错，你就可以用情绪指标作为择时辅助。',
+        '舍夫林以一种审慎的乐观结束全书。行为金融学不会取代传统金融学——它会补充传统金融学，就像医学不会因为发现了疾病就否认健康的存在。<b>有效市场假说是一个有用的基准，但它不是完整的图景。</b>完整的图景需要同时理解市场在长期中趋向效率的力量，和投资者的心理偏差在短期和中期持续制造偏离的力量。',
+        '最终的洞见也许是：<b>投资中最重要的知识不是关于市场的——而是关于你自己的。</b>了解你自己的偏差倾向，设计保护你免受自身弱点伤害的系统，在恐惧时保持纪律，在贪婪时保持怀疑——这不能保证你战胜市场，但可以大大降低你被自己打败的概率。'
+      ],
+      deepDives: [
+        {
+          title: '去偏差的悖论', icon: '\uD83E\uDE9E',
+          triggerQuestion: '如果知道偏差的存在不能消除偏差，那学习行为金融学还有什么用？这门学科会不会只是让人变得更愤世嫉俗而不是更明智？',
+          chain: {
+            premise: '行为金融学面临一个根本悖论：它证明了认知偏差极难通过自我意识来消除，但它的存在本身似乎预设了这种知识是有用的。如果知道偏差不能消除偏差，那研究偏差的价值何在？',
+            evidence: '舍夫林的回答是多层次的。首先，虽然知道偏差不能消除偏差，但它可以让你设计绕过偏差的系统——不是靠意志力纠正直觉，而是用规则和流程限制直觉的影响范围。系统性投资策略（量化策略）正是这一思路的产物：让算法而非人脑做出买卖决定。其次，对偏差的了解在群体层面比个体层面更有价值——一个理解行为金融学的投资委员会可以设计更好的决策流程，即使每个成员个人仍然有偏差。最后，行为金融学最大的实际贡献可能不在投资领域，而在制度设计领域——退休计划的默认值设定、消费者保护法规、金融产品的信息披露要求——这些制度改进已经改善了数百万人的财务状况。',
+            conclusion: '行为金融学的价值不在于让个人变成"理性人"——那是不可能的。它的价值在于让我们承认人不是理性的这一事实，并在这个事实的基础上设计更好的制度、产品和决策流程。舍夫林的书不是一本教你"如何战胜市场"的投资指南——它是一面镜子，让你看到那个你以为理性但实际上充满偏差的自己。看到自己的局限性，也许才是超越恐惧与贪婪的第一步。'
+          }
+        },
+        {
+          title: '行为金融学与有效市场：互补而非对立', icon: '\u2696',
+          chain: {
+            premise: '行为金融学经常被描述为有效市场假说的"敌人"。但舍夫林的立场更加微妙——他认为两者描述了同一现实的不同方面。',
+            evidence: '有效市场假说抓住了一个重要的真理：在竞争激烈的市场中，信息确实会被迅速纳入价格。大量的市场异象（如小盘股效应、价值效应）在被学术论文发表后就减弱或消失了——这正是市场趋向效率的证据。但行为金融学抓住了另一个同样重要的真理：系统性的心理偏差不断产生新的错误定价。市场效率和市场偏差并存——如同身体同时拥有免疫系统和容易感染的弱点。免疫系统（套利力量）持续工作，但病毒（新的偏差表现形式）也在持续演变。',
+            conclusion: '舍夫林的综合立场对实务有深刻含义：不要假设市场总是正确的（那是天真的有效市场信徒），也不要假设市场总是错误的（那是天真的行为金融信徒）。正确的态度是保持怀疑但不愤世嫉俗——在大多数时候尊重市场价格，但在情绪极端、偏差最显著的时刻，敢于与市场共识作对。这需要纪律、耐心和对自身偏差的持续警惕——而这正是投资中最稀缺的品质。'
+          }
+        }
+      ]
+    }
+  ],
+  knowledgeMaps: [
+    {
+      afterPart: 2, palette: 'scene2',
+      title: '行为偏差全景图', center: '三大主题<br>的交织',
+      branches: [
+        { title: '启发式偏差', leaves: ['锚定效应', '可得性偏差', '代表性启发式'] },
+        { title: '框架依赖', leaves: ['前景理论(损失厌恶)', '心理账户', '狭隘框架'] },
+        { title: '市场无效', leaves: ['过度反应', '反应不足', '动量与反转并存'] },
+        { title: '预测的幻觉', leaves: ['过度自信', '事后偏差', '控制幻觉'] },
+        { title: 'PEAD异常', leaves: ['盈利公告漂移', '市场对信息反应迟缓', '最稳健的市场异象'] },
+      ]
+    },
+    {
+      afterPart: 4, palette: 'scene8',
+      title: '行为金融的实践应用', center: '从偏差<br>到决策',
+      branches: [
+        { title: '处置效应', leaves: ['卖赢留亏', '前景理论的直接推论', '税务上的自我惩罚'] },
+        { title: '退休储蓄', leaves: ['短视损失厌恶', '默认值的力量', '制度设计>意志力'] },
+        { title: '机构投资者的偏差', leaves: ['群体思维', '基准依赖', '短期业绩压力'] },
+        { title: 'IPO狂热与赢家诅咒', leaves: ['过度乐观定价', '长期回报不足', '情绪驱动的泡沫'] },
+        { title: '去偏见的悖论', leaves: ['知道偏差≠消除偏差', '系统化流程替代直觉', '制度改进>个人修炼'] },
+      ]
+    }
+  ],
+  mindMaps: [
+    {
+      afterPart: 4, palette: 'scene9',
+      title: '《超越贪婪与恐惧》全书思维导图',
+      subtitle: 'BEYOND GREED AND FEAR — COMPLETE MIND MAP',
+      root: '市场不是理性的——但偏差是可预测的',
+      branches: [
+        {
+          text: '什么是行为金融学',
+          children: [
+            { text: '启发式偏差', children: ['代表性偏差', '可得性偏差', '锚定与调整不足'] },
+            { text: '框架依赖', children: ['前景理论', '损失厌恶', '心理账户'] },
+            { text: '市场无效的证据', children: ['过度反应与反应不足', '长期反转效应', '有效市场假说的裂缝'] },
+          ]
+        },
+        {
+          text: '预测与市场情绪',
+          children: [
+            { text: '分析师的系统偏差', children: ['过度自信普遍存在', '事后偏差扭曲记忆', '控制幻觉误导判断'] },
+            { text: '盈利公告漂移(PEAD)', children: ['市场对信息反应迟缓', '最稳健的市场异象', '套利限制阻碍修正'] },
+            { text: '情绪与波动', children: ['投资者情绪指标', '噪声交易者风险', '情绪驱动的定价偏差'] },
+          ]
+        },
+        {
+          text: '个人投资者',
+          children: [
+            { text: '处置效应', children: ['卖赢留亏的本能', '前景理论的直接推论', '税务上的自我惩罚'] },
+            { text: '退休储蓄行为', children: ['短视损失厌恶', '默认值的力量', '制度设计优于意志力'] },
+            { text: '过度交易', children: ['过度自信驱动频繁买卖', '交易成本侵蚀收益', '男性比女性交易更多'] },
+          ]
+        },
+        {
+          text: '机构投资者与公司金融',
+          children: [
+            { text: '机构的群体行为', children: ['群体思维与从众', '基准依赖束缚决策', '短期业绩压力扭曲策略'] },
+            { text: 'IPO与赢家诅咒', children: ['过度乐观定价', '长期回报显著不足', '情绪驱动的泡沫循环'] },
+            { text: '去偏见的悖论', children: ['知道偏差不等于消除偏差', '系统化流程替代直觉', '制度改进重于个人修炼'] },
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// BEYOND GREED AND FEAR · CUSTOM COMPONENTS
+// 超越恐惧与贪婪 · Custom visualizations and styles
+// ═══════════════════════════════════════════════════════════════
+
+// No custom components yet — all rendering handled by engine defaults
+
+</script>
+<script>
+BookEngine.init();
+</script>
+</body>
+</html>

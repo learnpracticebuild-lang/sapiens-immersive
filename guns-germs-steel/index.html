@@ -1,0 +1,3223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>枪炮、病菌与钢铁 · 沉浸式深度导读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   IMMERSIVE BOOK ENGINE — Shared Stylesheet
+   Layered architecture for multi-book rendering engine.
+   Each book injects its own styles into @layer book-custom.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base, layout, components, interactive, animation, book-custom, utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE LAYER
+   Root variables, reset, body defaults, texture overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+
+  /* ── Root CSS Variables (unified superset) ── */
+  :root {
+    /* Palette */
+    --bg: #F5F0E8;
+    --bg-secondary: #EDE7DA;
+    --fg: #1A1A1A;
+    --fg-secondary: #5C5546;
+    --accent: #B8860B;
+    --accent-dim: rgba(184, 134, 11, 0.12);
+    --accent-mid: rgba(184, 134, 11, 0.35);
+    --accent-glow: rgba(184, 134, 11, 0.06);
+    --border: rgba(0,0,0,0.06);
+    --glass-bg: rgba(245, 240, 232, 0.72);
+    --glass-border: rgba(255,255,255,0.3);
+    --card-bg: rgba(255,255,255,0.7);
+    --muted-fg: #7A7062;
+
+    /* Typography */
+    --serif: 'Noto Serif SC', 'Songti SC', Georgia, serif;
+    --sans: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Easing */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background-color: var(--bg);
+    color: var(--fg);
+    overflow-x: hidden;
+    line-height: 1.9;
+    transition: background-color 1.4s var(--ease-smooth),
+                color 1.4s var(--ease-smooth);
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Noise/Grain Texture Overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT LAYER
+   Progress bar, scene navigation, hero, scenes, footer
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer layout {
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 9999;
+    width: 0%;
+    transition: width 0.15s linear;
+  }
+  /* Enhanced: gradient shimmer */
+  .progress-bar {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent)) !important;
+    background-size: 200% 100%;
+    animation: progressShimmer 3s ease infinite;
+    height: 3px !important;
+  }
+
+  /* ── Scene Nav (right-side dots) ── */
+  .scene-nav {
+    position: fixed;
+    right: 2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.8s var(--ease-smooth);
+  }
+  .scene-nav.visible { opacity: 1; }
+  .scene-nav a {
+    display: block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--fg);
+    opacity: 0.15;
+    transition: all 0.5s var(--ease-out);
+    position: relative;
+    text-decoration: none;
+  }
+  .scene-nav a.active {
+    background: var(--accent);
+    opacity: 1;
+    transform: scale(1.6);
+    box-shadow: 0 0 12px var(--accent-mid);
+  }
+  .scene-nav a::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%) translateX(4px);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: all 0.3s var(--ease-out);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+  }
+  .scene-nav a:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+  /* Enhanced: glass tooltip */
+  .scene-nav a::after {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  /* ── Hero Section ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+  }
+  .hero-overline {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 3rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 0.3s forwards;
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(3.5rem, 12vw, 8rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(40px);
+    animation: fadeUp 1.4s var(--ease-out) 0.6s forwards;
+    will-change: transform;
+  }
+  .hero-subtitle {
+    font-family: var(--serif);
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 300;
+    color: var(--fg-secondary);
+    max-width: 500px;
+    letter-spacing: 0.1em;
+    margin-bottom: 4rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 1.2s var(--ease-out) 1s forwards;
+  }
+  .hero-part {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    border: 1px solid var(--accent-mid);
+    padding: 0.6rem 2rem;
+    border-radius: 100px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 1.3s forwards;
+  }
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    animation: fadeUp 1s var(--ease-out) 2s forwards;
+  }
+  .hero-scroll-hint span {
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: var(--fg-secondary);
+    text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px;
+    height: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .scroll-line::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--accent));
+    animation: scrollDrop 2s ease-in-out infinite;
+  }
+  .hero-scroll-hint .scroll-arrow {
+    font-size: 1.2rem;
+    color: var(--accent);
+    animation: bounceArrow 2s var(--ease-out) infinite;
+    opacity: 0.6;
+  }
+
+  /* ── Scene Sections ── */
+  .scene {
+    min-height: 100vh;
+    padding: 12rem 2rem 8rem;
+    position: relative;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 100vh;
+  }
+  .scene-inner {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .scene-number {
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+  }
+  .scene-title {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .scene-subtitle {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    margin-bottom: 6rem;
+    text-transform: uppercase;
+  }
+
+  /* ── Gradient Mesh Backgrounds for Scenes ── */
+  .scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background:
+      radial-gradient(ellipse at 20% 20%, var(--accent-glow) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, var(--accent-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 100%);
+    z-index: -1;
+  }
+
+  /* ── Hero Quote (cinematic, massive) ── */
+  .hero-quote-wrap {
+    margin: 2rem 0 6rem;
+    padding: 4rem 0;
+    position: relative;
+  }
+  .hero-quote-wrap::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote-wrap::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2.6rem);
+    line-height: 1.7;
+    font-weight: 300;
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--accent);
+    z-index: 1;
+  }
+  /* Enhanced: quote decoration marks */
+  .hero-quote-wrap .quote-deco {
+    position: absolute;
+    font-family: var(--serif);
+    font-size: clamp(6rem, 15vw, 12rem);
+    font-weight: 900;
+    color: var(--accent);
+    opacity: 0.06;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-quote-wrap .quote-deco-open {
+    top: -0.5em;
+    left: -0.3em;
+  }
+  .hero-quote-wrap .quote-deco-close {
+    bottom: -0.8em;
+    right: -0.1em;
+  }
+  /* Animated underline highlight on hero quote */
+  .hero-quote-highlight {
+    background: linear-gradient(120deg, var(--accent-dim) 0%, var(--accent-mid) 100%);
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+    background-position: 0 100%;
+    transition: background-size 1.8s var(--ease-out);
+    padding: 0.1em 0;
+  }
+  .reveal-wipe.revealed .hero-quote-highlight {
+    background-size: 100% 100%;
+  }
+
+  /* ── Narrative Paragraphs ── */
+  .narrative { margin-bottom: 2rem; }
+  .narrative p {
+    font-size: 1.05rem;
+    line-height: 2.1;
+    margin-bottom: 2.5rem;
+    color: var(--fg);
+    opacity: 0.82;
+  }
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  /* Enhanced: bold marker highlight */
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+    background: linear-gradient(120deg, var(--accent-dim) 0%, transparent 100%);
+    padding: 0.05em 0.2em;
+    border-radius: 3px;
+  }
+  /* Enhanced: drop cap */
+  .narrative p.drop-cap-p::first-letter {
+    font-family: var(--serif);
+    font-size: 3.5em;
+    font-weight: 900;
+    float: left;
+    line-height: 0.8;
+    margin-right: 0.08em;
+    margin-top: 0.1em;
+    color: var(--accent);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 10rem 2rem 6rem;
+  }
+  .footer-title {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+  }
+  .footer-text {
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    max-width: 460px;
+    margin: 0 auto;
+    line-height: 2;
+    opacity: 0.7;
+  }
+  .footer-next {
+    margin-top: 3rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .footer-bookshelf {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+    padding: 0.75rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--fg-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: all 0.4s var(--ease-out);
+    background: var(--accent-glow);
+  }
+  .footer-bookshelf:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .footer-bookshelf .arrow {
+    transition: transform 0.3s var(--ease-out);
+  }
+  .footer-bookshelf:hover .arrow {
+    transform: translateX(-4px);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENTS LAYER
+   Data viz, big numbers, deep-dive triggers, modals, comparisons,
+   knowledge maps, stat pills, keyboard hint
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Data Viz Container ── */
+  .data-viz {
+    margin: 4rem 0;
+    padding: 3rem 0;
+    position: relative;
+  }
+  .data-viz-title {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .svg-container {
+    width: 100%;
+    overflow: visible;
+  }
+  .svg-container svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  /* SVG path draw animation */
+  .draw-path {
+    stroke-dasharray: var(--path-length, 1000);
+    stroke-dashoffset: var(--path-length, 1000);
+    transition: stroke-dashoffset 2.5s var(--ease-out);
+  }
+  .draw-path.drawn {
+    stroke-dashoffset: 0;
+  }
+  /* Enhanced: corner accents */
+  .data-viz::before,
+  .data-viz::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: var(--accent-mid);
+    border-style: solid;
+  }
+  .data-viz::before {
+    top: 0;
+    left: 0;
+    border-width: 2px 0 0 2px;
+  }
+  .data-viz::after {
+    bottom: 0;
+    right: 0;
+    border-width: 0 2px 2px 0;
+  }
+
+  /* ── Comparison Table ── */
+  .comparison-table-viz .viz-title {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .comparison-table-viz .viz-desc {
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .comparison-table-viz .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+  .comp-table th {
+    text-align: left;
+    padding: 0.65rem 0.8rem;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent-mid);
+    white-space: nowrap;
+  }
+  .comp-table td {
+    padding: 0.6rem 0.8rem;
+    color: var(--fg);
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-table tbody tr:hover {
+    background: var(--accent-dim);
+  }
+  .comparison-table-viz .viz-note {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--fg-secondary);
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid var(--accent-mid);
+    background: var(--accent-glow);
+    line-height: 1.6;
+  }
+
+  /* ── Big Number Counter ── */
+  .big-number {
+    font-family: var(--serif);
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-shadow: 0 0 40px var(--accent-dim), 0 0 80px var(--accent-glow);
+  }
+  .big-number-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--fg-secondary);
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+  .number-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin: 3rem 0;
+    text-align: center;
+  }
+
+  /* ── Deep Dive Triggers ── */
+  .dd-trigger-section {
+    margin-top: 5rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+  }
+  .dd-trigger-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+  .dd-trigger-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .dd-trigger-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .dd-trigger {
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    /* Enhanced: 3D tilt */
+    perspective: 800px;
+    transform-style: preserve-3d;
+    transition: all 0.4s var(--ease-out), transform 0.3s var(--ease-out);
+  }
+  .dd-trigger::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-dim), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .dd-trigger:hover {
+    border-color: var(--accent-mid);
+    transform: translateY(-4px) rotateX(2deg) rotateY(-2deg);
+    box-shadow: 0 12px 40px var(--accent-dim), 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .dd-trigger:hover::before { opacity: 1; }
+  .dd-trigger-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-content {
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-title {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+  }
+  .dd-trigger-hint {
+    font-size: 0.6rem;
+    color: var(--fg-secondary);
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+  }
+  .dd-trigger-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--accent);
+    transition: transform 0.3s var(--ease-out);
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger:hover .dd-trigger-arrow {
+    transform: translateX(4px);
+  }
+  /* Breathing pulse before first click */
+  .dd-trigger:not(.clicked) {
+    animation: ddPulse 3s ease-in-out infinite;
+  }
+  .dd-trigger.clicked {
+    animation: none;
+  }
+
+  /* ── Modal Overlay ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-smooth);
+  }
+  .modal-overlay.open {
+    pointer-events: all;
+    opacity: 1;
+  }
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  }
+  .modal-drawer {
+    position: relative;
+    width: min(580px, 92vw);
+    height: 100vh;
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border-left: 1px solid var(--glass-border);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.6s var(--ease-out);
+    box-shadow: -20px 0 80px rgba(0,0,0,0.1);
+  }
+  .modal-overlay.open .modal-drawer {
+    transform: translateX(0);
+  }
+  .modal-close {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    padding: 1.5rem 2rem 0;
+  }
+  .modal-close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--fg-secondary);
+    transition: all 0.3s;
+  }
+  .modal-close-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .modal-body {
+    padding: 2rem 2.5rem 4rem;
+  }
+  @media (max-width: 640px) {
+    .modal-body { padding: 1.5rem 1.5rem 3rem; }
+  }
+  .modal-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .modal-title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Logic Chain in Modal ── */
+  .logic-chain-modal {
+    position: relative;
+  }
+  .chain-step-modal {
+    position: relative;
+    padding-left: 2rem;
+    padding-bottom: 2.5rem;
+    border-left: 1.5px solid var(--accent-mid);
+  }
+  .chain-step-modal:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+  }
+  .chain-step-modal::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 0.2rem;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--glass-bg), 0 0 0 5px var(--accent-mid);
+  }
+  .chain-label-modal {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    display: inline-block;
+    padding: 0.2rem 0.75rem;
+    background: var(--accent-dim);
+    border-radius: 3px;
+  }
+  .chain-text-modal {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--fg);
+    opacity: 0.88;
+  }
+
+  /* ── Modal Stagger Animation ── */
+  .modal-stagger {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+  }
+  .modal-overlay.open .modal-stagger {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .modal-stagger-1 { transition-delay: 0.15s; }
+  .modal-stagger-2 { transition-delay: 0.35s; }
+  .modal-stagger-3 { transition-delay: 0.55s; }
+  .modal-stagger-4 { transition-delay: 0.75s; }
+  .modal-stagger-5 { transition-delay: 0.95s; }
+  .modal-stagger-6 { transition-delay: 1.15s; }
+
+  /* ── Active Recall Mask (triggerQuestion) ── */
+  .trigger-question {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-dim);
+    border-radius: 12px;
+  }
+  .trigger-question-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .trigger-question-text {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--fg);
+    margin-bottom: 1.2rem;
+  }
+  .recall-reveal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.8rem;
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+  }
+  .recall-reveal-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .logic-chain-modal {
+    transition: filter 0.6s var(--ease-out);
+  }
+  .logic-chain-modal.chain-masked {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ── Extended Reading (Collapsible Panel) ── */
+  .extended-reading {
+    margin: 1.5rem 0 3rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .extended-reading-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.3s;
+  }
+  .extended-reading-toggle::-webkit-details-marker { display: none; }
+  .extended-reading-toggle::after {
+    content: '›';
+    margin-left: auto;
+    font-size: 1.1rem;
+    transition: transform 0.3s var(--ease-out);
+  }
+  .extended-reading[open] .extended-reading-toggle::after {
+    transform: rotate(90deg);
+  }
+  .extended-reading-toggle:hover {
+    background: var(--accent-dim);
+  }
+  .extended-reading-content {
+    padding: 0 1.5rem 1.5rem;
+  }
+  .extended-reading-content p {
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--muted-fg);
+    margin-bottom: 1.2rem;
+    opacity: 0.85;
+  }
+  .extended-reading-content p:last-child { margin-bottom: 0; }
+
+  /* ── Key Term Inline Highlight ── */
+  .key-term {
+    color: var(--accent);
+    border-bottom: 1px dashed var(--accent-mid);
+    cursor: help;
+    transition: border-color 0.3s;
+  }
+  .key-term:hover {
+    border-bottom-style: solid;
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Glossary Floating Button ── */
+  .glossary-fab {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 450;
+    padding: 0.65rem 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .glossary-fab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-dim);
+  }
+
+  /* ── Glossary Drawer Content ── */
+  .glossary-header { margin-bottom: 2rem; }
+  .glossary-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .glossary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .glossary-item {
+    padding: 1.2rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.3s;
+  }
+  .glossary-item:hover { border-color: var(--accent-mid); }
+  .glossary-term {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .glossary-definition {
+    font-size: 0.88rem;
+    line-height: 1.9;
+    color: var(--fg-secondary);
+  }
+
+  /* ── Comparison Module ── */
+  .comparison-section {
+    margin: 5rem 0;
+    padding: 3rem 0;
+  }
+  .comparison-toggle {
+    display: inline-flex;
+    gap: 0;
+    margin-bottom: 3rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .toggle-btn {
+    padding: 0.65rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border: none;
+    background: transparent;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    min-height: 44px;
+    white-space: nowrap;
+  }
+  .toggle-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 100px;
+    box-shadow: 0 4px 15px var(--accent-mid);
+  }
+  .comparison-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .comp-row-label {
+    font-family: var(--serif);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+  .comp-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+  .comp-bar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .comp-bar-tag {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    width: 2.5rem;
+    text-align: right;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .comp-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .comp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.2s var(--ease-out);
+    width: 0%;
+  }
+  /* Enhanced: animated gradient fills */
+  .comp-bar-fill.amber {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+  }
+  .comp-bar-fill.grey {
+    background: linear-gradient(90deg, var(--fg-secondary), rgba(128,128,128,0.4), var(--fg-secondary));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+    opacity: 0.5;
+  }
+  .comp-bar-value {
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 2rem;
+    color: var(--fg-secondary);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .comp-text {
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--fg-secondary);
+    margin-top: 0.4rem;
+    opacity: 0.7;
+  }
+
+  /* ── Knowledge Map ── */
+  .knowledge-map {
+    margin: 4rem 0;
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+  .km-title {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--accent);
+  }
+  .km-center {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .km-connector {
+    width: 2px;
+    height: 2rem;
+    background: linear-gradient(to bottom, var(--accent-mid), transparent);
+    margin: 0 auto;
+  }
+  .km-branches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .km-branch {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: left;
+  }
+  .km-branch-title {
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .km-branch-title::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .km-leaves {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .km-leaf {
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: var(--fg-secondary);
+    padding-left: 1rem;
+    position: relative;
+  }
+  .km-leaf::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 6px;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+
+  /* ── Mind Map (Multi-level Tree) ── */
+  .mind-map {
+    margin: 4rem 0;
+    padding: 3rem 1.5rem;
+  }
+  .mm-title {
+    text-align: center;
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+  .mm-subtitle {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--fg-secondary);
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .mm-root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto 0.5rem;
+    padding: 0.7rem 1.8rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .mm-trunk {
+    width: 2px;
+    height: 1.5rem;
+    background: var(--accent-mid);
+    margin: 0 auto;
+  }
+  .mm-level1-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .mm-l1 {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    position: relative;
+  }
+  .mm-l1-title {
+    font-family: var(--serif);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.7rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .mm-l2 {
+    margin-left: 0.6rem;
+    padding-left: 0.9rem;
+    border-left: 1px solid var(--accent-mid);
+    margin-bottom: 0.5rem;
+  }
+  .mm-l2:last-child { margin-bottom: 0; }
+  .mm-l2-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.25rem;
+    position: relative;
+    padding-left: 0.7rem;
+  }
+  .mm-l2-title::before {
+    content: '';
+    position: absolute;
+    left: -0.95rem;
+    top: 0.5em;
+    width: 0.6rem;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+  .mm-l3-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-left: 0.7rem;
+    padding-left: 0.7rem;
+    border-left: 1px dashed var(--border);
+  }
+  .mm-l3 {
+    font-size: 0.7rem;
+    line-height: 1.55;
+    color: var(--fg-secondary);
+    position: relative;
+    padding-left: 0.6rem;
+  }
+  .mm-l3::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 0.55em;
+    width: 0.5rem;
+    height: 1px;
+    background: var(--border);
+  }
+  @media (max-width: 600px) {
+    .mm-level1-wrap { grid-template-columns: 1fr; }
+    .mm-root { font-size: 0.9rem; padding: 0.6rem 1.4rem; }
+  }
+
+  /* ── Stat Pill Badges ── */
+  .stat-pill {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85em;
+    padding: 0.1em 0.5em;
+    border-radius: 100px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Keyboard Nav Hint ── */
+  .kb-hint {
+    position: fixed;
+    bottom: 2rem;
+    right: 2.5rem;
+    z-index: 400;
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: var(--fg-secondary);
+    opacity: 0.4;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: opacity 0.8s var(--ease-smooth);
+    pointer-events: none;
+  }
+  .kb-hint.hidden { opacity: 0; }
+  .kb-hint kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--accent-glow);
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    line-height: 1;
+  }
+
+  /* ── Dark Scene Accents ── */
+  .scene.dark-scene .scene-title {
+    text-shadow: 0 0 60px var(--accent-dim);
+  }
+  .scene.dark-scene .big-number {
+    text-shadow: 0 0 40px var(--accent-mid), 0 0 80px var(--accent-dim);
+  }
+
+  /* ── Dark Particles (shared floating particle system) ── */
+  .dark-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .dark-particles .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    animation: particleFloat 12s ease-in-out infinite;
+    animation-play-state: paused;
+    will-change: transform, opacity;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTIVE LAYER
+   Empty placeholder — book-specific interactive styles injected at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer interactive {
+  /* Book-specific interactive widgets go here via custom.css */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATION LAYER
+   Reveal system, keyframes, reduced-motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer animation {
+
+  /* ── Reveal System ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.15s; }
+  .reveal-delay-2 { transition-delay: 0.3s; }
+  .reveal-delay-3 { transition-delay: 0.45s; }
+  .reveal-delay-4 { transition-delay: 0.6s; }
+
+  .reveal-wipe {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.6s var(--ease-out);
+  }
+  .reveal-wipe.revealed {
+    clip-path: inset(0 0% 0 0);
+  }
+
+  /* ── Keyframes ── */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollDrop {
+    0% { top: -100%; }
+    100% { top: 100%; }
+  }
+  @keyframes progressShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes bounceArrow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+  @keyframes ddPulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+  @keyframes barGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes particleFloat {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    50% { transform: translateY(-80px) translateX(30px); opacity: 0.2; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(-160px) translateX(-20px); opacity: 0; }
+  }
+
+  /* ── Reduced Motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal { opacity: 1; transform: none; }
+    .draw-path { stroke-dashoffset: 0 !important; }
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOOK-CUSTOM LAYER
+   Empty — each book injects its own styles at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer book-custom {
+  /* Populated by book-specific custom.css / custom.js */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITIES LAYER
+   Empty placeholder for utility classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Utility classes can be added here */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS (shared only — no book-specific selectors)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .scene { padding: 7rem 1.5rem 5rem; }
+  .scene-nav { display: none; }
+  .hero-quote { font-size: 1.2rem; }
+  .number-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .glossary-fab {
+    bottom: 1rem;
+    left: 1rem;
+    font-size: 0.6rem;
+    padding: 0.5rem 1rem;
+  }
+  .trigger-question { padding: 1rem; }
+  .trigger-question-text { font-size: 0.95rem; }
+  .extended-reading-toggle { padding: 0.8rem 1.2rem; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="scene-nav" id="sceneNav"></nav>
+<div id="app"></div>
+
+<div class="kb-hint" id="kbHint">
+  <kbd>Space</kbd> / <kbd>↓</kbd> 下一场景 &nbsp; <kbd>↑</kbd> 上一场景
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-drawer" id="modalDrawer">
+    <div class="modal-close">
+      <button class="modal-close-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// BookEngine — Component Registry, Plugin System & Shared Components
+// ═══════════════════════════════════════════════════════════════
+
+window.BookEngine = (function() {
+  // ── Registry ──
+  const vizRegistry = {};
+  const initQueue = [];
+  const plugins = [];
+  const hooks = {};
+
+  // ── Public API ──
+  const engine = {
+    // Register a visualization/component renderer
+    // Usage: BookEngine.registerViz('dunbar', { render: fn, init: fn })
+    registerViz(type, handler) {
+      vizRegistry[type] = handler;
+    },
+
+    // Register an init function to run after DOM render
+    registerInit(fn) {
+      initQueue.push(fn);
+    },
+
+    // Register a plugin with lifecycle hooks
+    // Plugin: { name, onInit, onRender, onScroll, onModalOpen, onModalClose, onDestroy }
+    registerPlugin(plugin) {
+      plugins.push(plugin);
+      // Register individual hooks
+      ['onInit','onRender','onScroll','onModalOpen','onModalClose','onDestroy'].forEach(hook => {
+        if (plugin[hook]) {
+          engine.registerHook(hook, plugin[hook]);
+        }
+      });
+    },
+
+    // Register a lifecycle hook
+    registerHook(hookName, fn) {
+      if (!hooks[hookName]) hooks[hookName] = [];
+      hooks[hookName].push(fn);
+    },
+
+    // Trigger all handlers for a hook
+    triggerHook(hookName, ...args) {
+      if (hooks[hookName]) {
+        hooks[hookName].forEach(fn => {
+          try { fn(...args); } catch(e) { console.warn(`[BookEngine] Hook ${hookName} error:`, e); }
+        });
+      }
+    },
+
+    // Render a visualization by type
+    renderViz(type, scene, config) {
+      const handler = vizRegistry[type];
+      if (!handler) {
+        console.warn(`[BookEngine] Unknown viz type: ${type}`);
+        return '';
+      }
+      return typeof handler.render === 'function' ? handler.render(scene, config) : '';
+    },
+
+    // Initialize a visualization by type (called after DOM render)
+    initViz(type) {
+      const handler = vizRegistry[type];
+      if (handler && typeof handler.init === 'function') {
+        handler.init();
+      }
+    },
+
+    // Run all init functions and plugin onInit hooks
+    runInits() {
+      initQueue.forEach(fn => {
+        try { fn(); } catch(e) { console.warn('[BookEngine] Init error:', e); }
+      });
+      engine.triggerHook('onInit');
+    },
+
+    // Inject custom CSS into the document (for book-specific styles)
+    injectCSS(cssString) {
+      if (!cssString) return;
+      const style = document.createElement('style');
+      style.textContent = cssString;
+      document.head.appendChild(style);
+    },
+
+    // ── Shared Component Renderers ──
+
+    // Render comparison toggle module
+    renderComparison(comp) {
+      // Accept both comp.rows and comp.dimensions
+      const rows = comp.rows || comp.dimensions;
+      if (!comp || !rows) return '';
+      const labels = comp.labels || ['采集', '农耕'];
+      const modes = comp.modes || ['foraging', 'farming'];
+      const triggerLabel = comp.triggerLabel || '生活质量对比 · Quality of Life';
+      // Support 2 or 3 buttons (original sapiens has 3: foraging, farming, compare)
+      const showCompare = comp.showCompare !== false;
+      let html = `
+        <div class="comparison-section reveal">
+          <div class="dd-trigger-label">${triggerLabel}</div>
+          <div class="comparison-toggle">
+            <button class="toggle-btn active" data-mode="${modes[0]}">${comp.btnLabels?.[0] || labels[0] + '生活'}</button>
+            <button class="toggle-btn" data-mode="${modes[1]}">${comp.btnLabels?.[1] || labels[1] + '生活'}</button>
+            ${showCompare ? `<button class="toggle-btn" data-mode="compare">对比</button>` : ''}
+          </div>
+          <div class="comparison-rows">`;
+      rows.forEach((row, i) => {
+        html += `
+            <div class="comp-row reveal reveal-delay-${Math.min(i+1,4)}" data-comp-row>
+              <div class="comp-row-label">${row.label}</div>
+              <div class="comp-bars">
+                <div class="comp-bar-wrapper" data-bar="${modes[0]}">
+                  <span class="comp-bar-tag">${labels[0]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill amber" data-score="${row[modes[0]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[0]].score}/10</span>
+                </div>
+                <div class="comp-bar-wrapper" data-bar="${modes[1]}" style="display:none;">
+                  <span class="comp-bar-tag">${labels[1]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill grey" data-score="${row[modes[1]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[1]].score}/10</span>
+                </div>
+              </div>
+              <div class="comp-text" data-text-${modes[0]}>${row[modes[0]].text}</div>
+              <div class="comp-text" data-text-${modes[1]} style="display:none;">${row[modes[1]].text}</div>
+            </div>`;
+      });
+      html += `</div></div>`;
+      return html;
+    },
+
+    // Render knowledge map
+    renderKnowledgeMap(map) {
+      if (!map) return '';
+      const centerText = map.center || map.centerNode || '';
+      const centerStyle = map.centerStyle ? ` style="${map.centerStyle}"` : '';
+      const branchesStyle = map.branchesStyle ? ` style="${map.branchesStyle}"` : '';
+      let html = `
+        <section class="knowledge-map" data-palette="${map.palette || 'hero'}">
+          <div class="km-title reveal">${map.title}</div>
+          <div class="km-center reveal reveal-delay-1"${centerStyle}>${centerText}</div>
+          <div class="km-connector reveal reveal-delay-1"></div>
+          <div class="km-branches"${branchesStyle}>`;
+      map.branches.forEach((branch, i) => {
+        const delay = i < 2 ? 2 : 3;
+        const items = branch.leaves || branch.items || [];
+        html += `
+            <div class="km-branch reveal reveal-delay-${delay}">
+              <div class="km-branch-title">${branch.title}</div>
+              <div class="km-leaves">
+                ${items.map(item => `<div class="km-leaf">${item}</div>`).join('')}
+              </div>
+            </div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // Render mind map (multi-level tree)
+    renderMindMap(map) {
+      if (!map || !map.branches) return '';
+      const renderL3 = (items) => {
+        if (!items || items.length === 0) return '';
+        return `<div class="mm-l3-list">${items.map(t => `<div class="mm-l3">${t}</div>`).join('')}</div>`;
+      };
+      const renderL2 = (children) => {
+        if (!children || children.length === 0) return '';
+        return children.map(c => {
+          if (typeof c === 'string') {
+            return `<div class="mm-l2"><div class="mm-l2-title">${c}</div></div>`;
+          }
+          return `<div class="mm-l2"><div class="mm-l2-title">${c.text}</div>${renderL3(c.children)}</div>`;
+        }).join('');
+      };
+      let html = `<section class="mind-map" data-palette="${map.palette || 'hero'}">`;
+      html += `<div class="mm-title reveal">${map.title}</div>`;
+      if (map.subtitle) html += `<div class="mm-subtitle reveal">${map.subtitle}</div>`;
+      html += `<div class="mm-root reveal reveal-delay-1">${map.root}</div>`;
+      html += `<div class="mm-trunk reveal reveal-delay-1"></div>`;
+      html += `<div class="mm-level1-wrap">`;
+      map.branches.forEach((b, i) => {
+        const delay = i < 2 ? 2 : 3;
+        html += `<div class="mm-l1 reveal reveal-delay-${delay}">`;
+        html += `<div class="mm-l1-title">${b.text}</div>`;
+        html += renderL2(b.children);
+        html += `</div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // ── Shared Initializers ──
+
+    // Initialize comparison toggle behavior
+    initComparison() {
+      document.querySelectorAll('.comparison-toggle').forEach(toggle => {
+        toggle.addEventListener('click', e => {
+          const btn = e.target.closest('.toggle-btn');
+          if (!btn) return;
+          toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const section = toggle.closest('.comparison-section');
+          engine.updateCompBars(btn.dataset.mode, section);
+        });
+      });
+    },
+
+    updateCompBars(mode, section) {
+      const modes = [];
+      section.querySelectorAll('.toggle-btn').forEach(b => {
+        if (b.dataset.mode !== 'compare') modes.push(b.dataset.mode);
+      });
+      const isCompare = mode === 'compare';
+      section.querySelectorAll('[data-comp-row]').forEach(row => {
+        modes.forEach(m => {
+          const bar = row.querySelector(`[data-bar="${m}"]`);
+          const text = row.querySelector(`[data-text-${m}]`);
+          if (bar) bar.style.display = (isCompare || m === mode) ? 'flex' : 'none';
+          if (text) text.style.display = (isCompare || m === mode) ? 'block' : 'none';
+        });
+      });
+      engine.animateCompBars(section);
+    },
+
+    animateCompBars(section) {
+      (section || document).querySelectorAll('.comp-bar-fill').forEach(bar => {
+        if (bar.closest('.comp-bar-wrapper').style.display === 'none') return;
+        bar.style.width = '0%';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.style.width = (parseInt(bar.dataset.score) / 10 * 100) + '%';
+        }));
+      });
+    },
+
+    // Animate counter (shared utility)
+    animateCounter(el, from, to, duration, suffix) {
+      const start = performance.now();
+      function formatVal(val) {
+        if (suffix === '万' || suffix === '%') return val;
+        if (val >= 1000000) return (val / 1000000).toFixed(0) + 'M';
+        if (val >= 10000 && !suffix) return Math.round(val / 1000) + 'K';
+        return val;
+      }
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = Math.round(from + (to - from) * eased);
+        el.textContent = formatVal(val) + (p >= 1 && suffix ? suffix : (p < 1 && suffix === '+' ? '' : ''));
+        if (p >= 1) el.textContent = formatVal(to) + (suffix || '');
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    },
+
+    // Animate SVG data viz bars
+    animateDataViz(container) {
+      const bars = container.querySelectorAll('.draw-bar');
+      bars.forEach((bar, i) => {
+        const targetW = parseFloat(bar.dataset.targetW);
+        setTimeout(() => {
+          bar.style.transition = 'width 1.5s var(--ease-out)';
+          bar.style.width = targetW + 'px';
+        }, i * 300);
+      });
+      const labels = container.querySelectorAll('.bar-label');
+      labels.forEach((lbl, i) => {
+        setTimeout(() => {
+          lbl.style.transition = 'opacity 0.6s';
+          lbl.style.opacity = '1';
+        }, 800 + i * 300);
+      });
+    },
+
+    // Get registered viz types
+    getVizTypes() { return Object.keys(vizRegistry); },
+
+    // Get plugins
+    getPlugins() { return plugins.map(p => p.name); }
+  };
+
+  // ── Built-in Viz: comparison-table ──
+  engine.registerViz('comparison-table', {
+    render(scene, config) {
+      const d = config.data;
+      if (!d || !d.columns || !d.rows) return '';
+      let html = `<div class="data-viz comparison-table-viz reveal" data-viz="comparison-table">`;
+      if (config.title) html += `<h4 class="viz-title">${config.title}</h4>`;
+      if (config.description) html += `<p class="viz-desc">${config.description}</p>`;
+      html += `<div class="table-scroll"><table class="comp-table">`;
+      html += `<thead><tr>${d.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
+      html += `<tbody>`;
+      d.rows.forEach(row => {
+        html += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+      });
+      html += `</tbody></table></div>`;
+      if (d.note) html += `<p class="viz-note">${d.note}</p>`;
+      html += `</div>`;
+      return html;
+    }
+  });
+
+  return engine;
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// Immersive Book Engine — Core Rendering & Interaction System
+// ═══════════════════════════════════════════════════════════════
+
+(function() {
+  'use strict';
+
+  // ── DOM References ──
+  const app = document.getElementById('app');
+  const sceneNav = document.getElementById('sceneNav');
+
+  // ── Palette System ──
+  // Unified superset: 13 color variables
+  const PALETTE_KEYS = [
+    ['bg',          '--bg'],
+    ['bgSecondary', '--bg-secondary'],
+    ['fg',          '--fg'],
+    ['fgSecondary', '--fg-secondary'],
+    ['accent',      '--accent'],
+    ['accentDim',   '--accent-dim'],
+    ['accentMid',   '--accent-mid'],
+    ['accentGlow',  '--accent-glow'],
+    ['border',      '--border'],
+    ['glassBg',     '--glass-bg'],
+    ['glassBorder', '--glass-border'],
+    ['cardBg',      '--card-bg'],
+    ['mutedFg',     '--muted-fg']
+  ];
+
+  function applyPalette(name) {
+    const p = PALETTES[name];
+    if (!p) return;
+    const s = document.documentElement.style;
+    PALETTE_KEYS.forEach(([key, prop]) => {
+      // Fallback: cardBg → glassBg, mutedFg → fgSecondary, etc.
+      const val = p[key]
+        || (key === 'cardBg' ? p.glassBg : null)
+        || (key === 'mutedFg' ? p.fgSecondary : null)
+        || (key === 'bgSecondary' ? p.bg : null)
+        || (key === 'glassBorder' ? p.border : null);
+      if (val) s.setProperty(prop, val);
+    });
+    document.body.style.backgroundColor = p.bg;
+    document.body.style.color = p.fg;
+  }
+
+  // ── Render Engine ──
+  function renderApp() {
+    const { meta, scenes } = CONTENT_DATA;
+    const parts = meta.parts || [];
+    const knowledgeMaps = CONTENT_DATA.knowledgeMaps || [];
+    const mindMaps = CONTENT_DATA.mindMaps || [];
+    const aiReflection = CONTENT_DATA.aiReflection || null;
+    let html = '';
+
+    // Hero
+    html += `
+      <section class="hero" id="hero">
+        <div class="hero-overline">${meta.author || meta.authorEn || ''} · ${meta.titleEn || meta.bookSub || ''}</div>
+        <h1 class="hero-title" id="heroTitle">${meta.title || meta.book || ''}</h1>
+        <p class="hero-subtitle">${meta.subtitle || meta.partTitle || ''}</p>
+        <div class="hero-part">${meta.badge || (meta.part ? meta.part + (meta.partSub ? ' · ' + meta.partSub : '') : '')}</div>
+        <div class="hero-scroll-hint">
+          <span>向下滚动</span>
+          <div class="scroll-arrow">↓</div>
+          <div class="scroll-line"></div>
+        </div>
+      </section>`;
+
+    // Hero extra content (e.g., timeline explorer for sapiens)
+    if (typeof CONTENT_DATA.renderHeroExtra === 'function') {
+      html += CONTENT_DATA.renderHeroExtra();
+    }
+
+    // Determine dark scenes from data or palette analysis
+    const darkScenes = CONTENT_DATA.darkScenes || [];
+
+    // Render scenes
+    scenes.forEach((scene, idx) => {
+      const isDark = darkScenes.includes(scene.palette);
+
+      // Part divider BEFORE scene (declarative)
+      const partBefore = parts.find(p => p.beforeScene === scene.id);
+      if (partBefore && partBefore.number > 1) {
+        // Knowledge map for the previous part
+        const kmBefore = knowledgeMaps.find(km => km.afterPart === partBefore.number - 1);
+        if (kmBefore) {
+          html += BookEngine.renderKnowledgeMap(kmBefore);
+        }
+        // Mind map for the previous part
+        const mmBefore = mindMaps.find(mm => mm.afterPart === partBefore.number - 1);
+        if (mmBefore) {
+          html += BookEngine.renderMindMap(mmBefore);
+        }
+        // Part intro
+        const prevScene = idx > 0 ? scenes[idx - 1] : null;
+        const introPalette = scene.palette;
+        html += `
+          <section class="hero" id="part${partBefore.number}-intro" data-palette="${introPalette}" style="min-height:80vh;">
+            <div class="hero-overline reveal" style="animation:none;">第${numberToChinese(partBefore.number)}部分</div>
+            <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">${partBefore.title}</h1>
+            <p class="hero-subtitle reveal reveal-delay-2" style="animation:none;">${partBefore.titleEn || ''}</p>
+          </section>`;
+      }
+
+      // Scene section
+      html += `<section class="scene${isDark ? ' dark-scene' : ''}" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner" style="position:relative;z-index:1;">`;
+
+      // Dark mode particles
+      if (isDark && !scene.starField) {
+        html += `<div class="dark-particles">${Array.from({length:20}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, d = 8+Math.random()*16, delay = Math.random()*10;
+          return `<div class="particle" style="left:${x}%;top:${y}%;animation-duration:${d}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+      // Star field
+      if (scene.starField) {
+        html += `<div class="star-field">${Array.from({length:50}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, size = 1+Math.random()*2, delay = Math.random()*6, dur = 3+Math.random()*4;
+          return `<div class="star" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+
+      // Scene header
+      html += `
+        <div class="reveal scene-number">${scene.number || ('场景 ' + String(idx+1).padStart(2,'0'))}</div>
+        <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
+        <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle || ''}</div>`;
+
+      // Hero Quote
+      if (scene.heroQuote) {
+        html += `
+        <div class="hero-quote-wrap reveal-wipe">
+          <span class="quote-deco quote-deco-open">「</span>
+          <span class="quote-deco quote-deco-close">」</span>
+          <blockquote class="hero-quote"><span class="hero-quote-highlight">${scene.heroQuote}</span></blockquote>
+        </div>`;
+      }
+
+      // Narrative (with keyTerm highlighting)
+      if (scene.narrative?.length) {
+        const kt = CONTENT_DATA.meta.keyTerms || [];
+        html += `<div class="narrative">`;
+        scene.narrative.forEach((p, pi) => {
+          let text = p;
+          if (kt.length) {
+            kt.forEach(k => {
+              const escaped = k.term.replace(/[.*+?^${}()|[\]\\]/g, '\\<!-- ENGINE_JS -->');
+              text = text.replace(new RegExp(`(?:<[^>]*>.*?<\\/[^>]*>)|(?:${escaped})`, 'g'), match => {
+                if (match.startsWith('<')) return match; // inside HTML tag, skip
+                return `<span class="key-term" title="${k.definition}">${match}</span>`;
+              });
+            });
+          }
+          const cls = pi === 0 ? ' drop-cap-p' : '';
+          html += `<p class="reveal${cls}">${text}</p>`;
+        });
+        html += `</div>`;
+      }
+
+      // Extended Reading (collapsible background panel)
+      if (scene.extendedReading?.length) {
+        html += `
+          <details class="extended-reading reveal">
+            <summary class="extended-reading-toggle">📖 展开深度背景</summary>
+            <div class="extended-reading-content">
+              ${scene.extendedReading.map(p => `<p>${p}</p>`).join('')}
+            </div>
+          </details>`;
+      }
+
+      // Data Viz — dispatch to registry
+      if (scene.dataViz) {
+        const vizType = typeof scene.dataViz === 'string' ? scene.dataViz : scene.dataViz.type;
+        const vizConfig = typeof scene.dataViz === 'string' ? { type: vizType } : scene.dataViz;
+        html += BookEngine.renderViz(vizType, scene, vizConfig);
+      }
+
+      // Extra renderers for this scene (book-specific injections)
+      if (scene.extraRender) {
+        scene.extraRender.forEach(fn => {
+          if (typeof fn === 'function') html += fn(scene);
+          else if (typeof fn === 'string') html += fn;
+        });
+      }
+
+      // Comparison
+      if (scene.comparison) {
+        html += BookEngine.renderComparison(scene.comparison);
+      }
+
+      // Interactive module — dispatch to registry
+      if (scene.interactive) {
+        const intType = scene.interactive.type;
+        html += BookEngine.renderViz(intType, scene, scene.interactive);
+      }
+
+      // Deep Dives
+      if (scene.deepDives?.length) {
+        html += `<div class="dd-trigger-section reveal"><div class="dd-trigger-label">深度解析 · Deep Dive</div><div class="dd-trigger-grid">`;
+        scene.deepDives.forEach((dd, i) => {
+          html += `
+            <div class="dd-trigger reveal reveal-delay-${Math.min(i+1, 4)}" data-dd-idx="${idx}-${i}">
+              <span class="dd-trigger-icon">${dd.icon}</span>
+              <div class="dd-trigger-content">
+                <div class="dd-trigger-title">${dd.title}</div>
+                <div class="dd-trigger-hint">点击展开完整论证链</div>
+              </div>
+              <span class="dd-trigger-arrow">→</span>
+            </div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // Key Takeaway
+      if (scene.keyTakeaway) {
+        html += `<div class="reveal" style="margin-top:3rem;padding:1.5rem;background:var(--accent-glow);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:0.85rem;line-height:1.8;color:var(--fg-secondary);">
+          <strong style="color:var(--accent);font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;">核心收获</strong><br>${scene.keyTakeaway}</div>`;
+      }
+
+      html += `</div></section>`; // end scene-inner + scene
+    });
+
+    // Final knowledge map (after last part)
+    const lastPart = parts.length > 0 ? Math.max(...parts.map(p => p.number)) : 0;
+    knowledgeMaps.filter(km => km.afterPart >= lastPart || km.afterPart === 'final').forEach(km => {
+      html += BookEngine.renderKnowledgeMap(km);
+    });
+
+    // Final mind maps (after last part)
+    mindMaps.filter(mm => mm.afterPart >= lastPart || mm.afterPart === 'final').forEach(mm => {
+      html += BookEngine.renderMindMap(mm);
+    });
+
+    // AI Reflection / Epilogue
+    if (aiReflection) {
+      const epiloguePalette = aiReflection.palette || (scenes.length > 0 ? scenes[scenes.length - 1].palette : 'hero');
+      html += `
+        <section class="scene epilogue-section" id="epilogue" data-palette="${epiloguePalette}" style="min-height:auto; padding: clamp(4rem,10vw,8rem) 0;">
+          <div class="scene-inner">
+            <div class="reveal scene-number" style="opacity:0.4;">${aiReflection.label || '写在最后'}</div>
+            <h2 class="reveal scene-title reveal-delay-1" style="font-size:clamp(1.8rem,5vw,3rem);">${aiReflection.title}</h2>
+            <div class="reveal scene-subtitle reveal-delay-2">${aiReflection.subtitle || ''}</div>
+            ${aiReflection.heroQuote ? `
+            <div class="hero-quote-wrap reveal-wipe">
+              <blockquote class="hero-quote" style="font-size:clamp(1rem,2.5vw,1.4rem);">${aiReflection.heroQuote}</blockquote>
+            </div>` : ''}
+            <div class="narrative">
+              ${(aiReflection.paragraphs || []).map(p => `<p class="reveal">${p}</p>`).join('')}
+            </div>
+          </div>
+        </section>`;
+    }
+
+    // Glossary floating button (only if keyTerms exist)
+    if (CONTENT_DATA.meta.keyTerms?.length) {
+      html += `<button class="glossary-fab" id="glossaryFab" title="术语表">📖 术语表</button>`;
+    }
+
+    // Footer
+    html += `
+      <footer class="footer" data-palette="hero">
+        <div class="reveal footer-title">${CONTENT_DATA.footer?.title || '全书 · 终'}</div>
+        <p class="reveal footer-text reveal-delay-1">${CONTENT_DATA.footer?.text || ''}</p>
+        ${CONTENT_DATA.footer?.note ? `<div class="reveal footer-next reveal-delay-2" style="opacity:0.4;margin-top:3rem;font-size:0.7rem;">${CONTENT_DATA.footer.note}</div>` : ''}
+        <a href="../index.html" class="footer-bookshelf reveal reveal-delay-3"><span class="arrow">←</span> 返回书架</a>
+      </footer>`;
+
+    app.innerHTML = html;
+
+    // Build nav dots
+    let navHtml = '';
+    scenes.forEach(s => {
+      navHtml += `<a href="#${s.id}" data-scene="${s.id}" data-label="${s.title}"></a>`;
+    });
+    sceneNav.innerHTML = navHtml;
+
+    // Trigger hook
+    BookEngine.triggerHook('onRender');
+
+    // Init systems
+    initScrollSystem();
+    initDeepDiveModal();
+    BookEngine.initComparison();
+    BookEngine.runInits();
+  }
+
+  // ── Scroll System ──
+  function initScrollSystem() {
+    const scenes = document.querySelectorAll('.scene');
+    const navLinks = document.querySelectorAll('.scene-nav a');
+    const progressBar = document.getElementById('progressBar');
+    const nav = document.getElementById('sceneNav');
+
+    // Reveal observer
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => revealObs.observe(el));
+
+    // Data viz observer
+    const vizObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateDataViz(e.target);
+          vizObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('[data-viz]').forEach(el => vizObs.observe(el));
+
+    // Big number counter observer
+    const countObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const target = parseInt(e.target.dataset.countTo);
+          const suffix = e.target.dataset.suffix || '';
+          BookEngine.animateCounter(e.target, 0, target, 2000, suffix);
+          countObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count-to]').forEach(el => countObs.observe(el));
+
+    // Comparison observer
+    const compObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateCompBars();
+          compObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.comparison-section').forEach(el => compObs.observe(el));
+
+    // Custom observers (registered by books)
+    if (BookEngine._customObservers) {
+      BookEngine._customObservers.forEach(obs => obs());
+    }
+
+    // Scroll handler — palette + progress + nav
+    let currentPalette = 'hero';
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+        nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
+
+        // Hero parallax
+        const heroTitle = document.getElementById('heroTitle');
+        if (heroTitle && scrollTop < window.innerHeight) {
+          heroTitle.style.transform = `translateY(${scrollTop * 0.15}px)`;
+        }
+
+        // Determine active palette
+        const viewMid = scrollTop + window.innerHeight * 0.45;
+        let newPalette = 'hero';
+        document.querySelectorAll('[data-palette]').forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            newPalette = s.dataset.palette;
+          }
+        });
+        // Nav active dot
+        scenes.forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            navLinks.forEach(l => l.classList.toggle('active', l.dataset.scene === s.id));
+          }
+        });
+        // Footer reset
+        const footer = document.querySelector('.footer');
+        if (footer && viewMid >= footer.offsetTop) newPalette = 'hero';
+
+        if (newPalette !== currentPalette) {
+          currentPalette = newPalette;
+          applyPalette(newPalette);
+        }
+
+        // Plugin scroll hook
+        BookEngine.triggerHook('onScroll', { scrollTop, viewMid, currentPalette });
+
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // ── Deep Dive Modal ──
+  function initDeepDiveModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const backdrop = document.getElementById('modalBackdrop');
+    const closeBtn = document.getElementById('modalClose');
+    const body = document.getElementById('modalBody');
+
+    function openModal(sceneIdx, ddIdx) {
+      const dd = CONTENT_DATA.scenes[sceneIdx].deepDives[ddIdx];
+      if (!dd) return;
+
+      const hasQ = !!dd.triggerQuestion;
+      const s = (n) => `modal-stagger modal-stagger-${n}`;
+      const chainOffset = hasQ ? 1 : 0;
+
+      body.innerHTML = `
+        <div class="modal-icon ${s(1)}">${dd.icon}</div>
+        <h3 class="modal-title ${s(2)}">${dd.title}</h3>
+        ${hasQ ? `
+        <div class="trigger-question ${s(3)}">
+          <div class="trigger-question-label">主动回忆 · Active Recall</div>
+          <p class="trigger-question-text">${dd.triggerQuestion}</p>
+          <button class="recall-reveal-btn" id="recallReveal">💡 揭晓作者逻辑</button>
+        </div>` : ''}
+        <div class="logic-chain-modal${hasQ ? ' chain-masked' : ''}">
+          <div class="chain-step-modal ${s(3 + chainOffset)}">
+            <div class="chain-label-modal">前 提</div>
+            <div class="chain-text-modal">${dd.chain.premise}</div>
+          </div>
+          <div class="chain-step-modal ${s(4 + chainOffset)}">
+            <div class="chain-label-modal">证 据</div>
+            <div class="chain-text-modal">${dd.chain.evidence}</div>
+          </div>
+          <div class="chain-step-modal ${s(5 + chainOffset)}">
+            <div class="chain-label-modal">结 论</div>
+            <div class="chain-text-modal">${dd.chain.conclusion}</div>
+          </div>
+        </div>`;
+      body.offsetHeight; // force reflow
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      if (hasQ) {
+        const revealBtn = document.getElementById('recallReveal');
+        if (revealBtn) {
+          revealBtn.addEventListener('click', () => {
+            body.querySelector('.logic-chain-modal').classList.remove('chain-masked');
+            revealBtn.style.display = 'none';
+          });
+        }
+      }
+      BookEngine.triggerHook('onModalOpen', { sceneIdx, ddIdx, dd });
+    }
+
+    function openGlossary() {
+      const keyTerms = CONTENT_DATA.meta.keyTerms;
+      if (!keyTerms?.length) return;
+      body.innerHTML = `
+        <div class="glossary-header modal-stagger modal-stagger-1">
+          <div class="glossary-label">术语表 · Glossary</div>
+          <h3 class="modal-title">${CONTENT_DATA.meta.title} · 关键术语</h3>
+          <p style="font-size:0.8rem;color:var(--fg-secondary);margin-top:0.5rem;line-height:1.6;">以下术语按作者在书中的<strong>特定定义</strong>整理，可能与日常含义不同。</p>
+        </div>
+        <div class="glossary-list">
+          ${keyTerms.map((kt, i) => `
+            <div class="glossary-item modal-stagger modal-stagger-${Math.min(i + 2, 5)}">
+              <div class="glossary-term">${kt.term}</div>
+              <div class="glossary-definition">${kt.definition}</div>
+            </div>
+          `).join('')}
+        </div>`;
+      body.offsetHeight;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      BookEngine.triggerHook('onModalClose');
+    }
+
+    document.addEventListener('click', e => {
+      const trigger = e.target.closest('[data-dd-idx]');
+      if (trigger) {
+        const [sIdx, dIdx] = trigger.dataset.ddIdx.split('-').map(Number);
+        openModal(sIdx, dIdx);
+        trigger.classList.add('clicked');
+      }
+      if (e.target.closest('#glossaryFab')) {
+        openGlossary();
+      }
+    });
+    backdrop.addEventListener('click', closeModal);
+    closeBtn.addEventListener('click', closeModal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  }
+
+  // ── Keyboard Navigation ──
+  function initKeyboardNav() {
+    const kbHint = document.getElementById('kbHint');
+    let hintDismissed = false;
+
+    function dismissHint() {
+      if (!hintDismissed) {
+        hintDismissed = true;
+        kbHint.classList.add('hidden');
+        window.removeEventListener('wheel', dismissHint);
+        window.removeEventListener('touchstart', dismissHint);
+      }
+    }
+    window.addEventListener('wheel', dismissHint, { passive: true, once: true });
+    window.addEventListener('touchstart', dismissHint, { passive: true, once: true });
+
+    function getAnchors() {
+      const anchors = [document.getElementById('hero')];
+      CONTENT_DATA.scenes.forEach(s => {
+        const el = document.getElementById(s.id);
+        if (el) anchors.push(el);
+      });
+      return anchors;
+    }
+
+    function currentIdx(anchors) {
+      const scrollMid = window.scrollY + window.innerHeight * 0.4;
+      let idx = 0;
+      for (let i = anchors.length - 1; i >= 0; i--) {
+        if (scrollMid >= anchors[i].offsetTop) { idx = i; break; }
+      }
+      return idx;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('modalOverlay').classList.contains('open')) return;
+      const anchors = getAnchors();
+      const cur = currentIdx(anchors);
+
+      if (e.key === 'ArrowDown' || (e.key === ' ' && !e.shiftKey)) {
+        e.preventDefault();
+        const next = Math.min(cur + 1, anchors.length - 1);
+        anchors[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      } else if (e.key === 'ArrowUp' || (e.key === ' ' && e.shiftKey)) {
+        e.preventDefault();
+        const prev = Math.max(cur - 1, 0);
+        anchors[prev].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      }
+    });
+  }
+
+  // ── Utility: Number to Chinese ──
+  function numberToChinese(n) {
+    const map = ['零','一','二','三','四','五','六','七','八','九','十'];
+    return n <= 10 ? map[n] : String(n);
+  }
+
+  // ── Register observer for book-specific elements ──
+  BookEngine._customObservers = [];
+  BookEngine.registerObserver = function(setupFn) {
+    BookEngine._customObservers.push(setupFn);
+  };
+
+  // ── Main init (called by template after all scripts load) ──
+  BookEngine.init = function() {
+    // Inject custom CSS if defined
+    if (typeof CUSTOM_CSS !== 'undefined') {
+      BookEngine.injectCSS(CUSTOM_CSS);
+    }
+
+    // Register custom components if defined
+    if (typeof CUSTOM_COMPONENTS !== 'undefined') {
+      Object.entries(CUSTOM_COMPONENTS).forEach(([type, handler]) => {
+        BookEngine.registerViz(type, handler);
+      });
+    }
+
+    // Render
+    renderApp();
+    initKeyboardNav();
+  };
+
+  // Expose applyPalette for external use
+  BookEngine.applyPalette = applyPalette;
+
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// GUNS, GERMS, AND STEEL · DATA
+// 枪炮、病菌与钢铁 · Immersive Book Engine Data
+// ═══════════════════════════════════════════════════════════════
+
+const PALETTES = {
+  hero: {
+    bg: '#F5F0E6', bgSecondary: '#EDE6D6', fg: '#1A1A1A', fgSecondary: '#5C5040',
+    accent: '#8B6B2E', accentDim: 'rgba(139,107,46,0.12)', accentMid: 'rgba(139,107,46,0.35)',
+    accentGlow: 'rgba(139,107,46,0.06)', border: 'rgba(0,0,0,0.06)',
+    glassBg: 'rgba(245,240,230,0.82)', glassBorder: 'rgba(255,255,255,0.3)'
+  },
+  // Part I: From Eden to Cajamarca
+  scene1: {
+    bg: '#F4F0E4', bgSecondary: '#EAE4D4', fg: '#2C2010', fgSecondary: '#6B5A3E',
+    accent: '#A07830', accentDim: 'rgba(160,120,48,0.1)', accentMid: 'rgba(160,120,48,0.3)',
+    accentGlow: 'rgba(160,120,48,0.05)', border: 'rgba(44,32,16,0.06)',
+    glassBg: 'rgba(244,240,228,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene2: {
+    bg: '#EEF2F0', bgSecondary: '#E0EAE6', fg: '#141E1A', fgSecondary: '#4A5E56',
+    accent: '#2E7D6C', accentDim: 'rgba(46,125,108,0.1)', accentMid: 'rgba(46,125,108,0.3)',
+    accentGlow: 'rgba(46,125,108,0.05)', border: 'rgba(20,30,26,0.06)',
+    glassBg: 'rgba(238,242,240,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene3: {
+    bg: '#1A1410', bgSecondary: '#241C14', fg: '#E4DCD0', fgSecondary: '#9A8E78',
+    accent: '#C4853A', accentDim: 'rgba(196,133,58,0.1)', accentMid: 'rgba(196,133,58,0.3)',
+    accentGlow: 'rgba(196,133,58,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(30,24,18,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Part II: The Rise and Spread of Food Production
+  scene4: {
+    bg: '#F0F2E8', bgSecondary: '#E4E8D8', fg: '#1C2014', fgSecondary: '#566042',
+    accent: '#5E7A2E', accentDim: 'rgba(94,122,46,0.1)', accentMid: 'rgba(94,122,46,0.3)',
+    accentGlow: 'rgba(94,122,46,0.05)', border: 'rgba(28,32,20,0.06)',
+    glassBg: 'rgba(240,242,232,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene5: {
+    bg: '#161210', bgSecondary: '#201A14', fg: '#E0D8CC', fgSecondary: '#8A8070',
+    accent: '#B89040', accentDim: 'rgba(184,144,64,0.1)', accentMid: 'rgba(184,144,64,0.3)',
+    accentGlow: 'rgba(184,144,64,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(26,22,18,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene6: {
+    bg: '#F5F0E0', bgSecondary: '#EBE4CE', fg: '#2A2011', fgSecondary: '#7A6C4E',
+    accent: '#8B7335', accentDim: 'rgba(139,115,53,0.1)', accentMid: 'rgba(139,115,53,0.3)',
+    accentGlow: 'rgba(139,115,53,0.05)', border: 'rgba(42,32,17,0.06)',
+    glassBg: 'rgba(245,240,224,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene7: {
+    bg: '#F2EDE4', bgSecondary: '#E6DFD0', fg: '#1E1810', fgSecondary: '#6D5E48',
+    accent: '#8B5E28', accentDim: 'rgba(139,94,40,0.1)', accentMid: 'rgba(139,94,40,0.3)',
+    accentGlow: 'rgba(139,94,40,0.05)', border: 'rgba(30,24,16,0.06)',
+    glassBg: 'rgba(242,237,228,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene8: {
+    bg: '#F0EEF4', bgSecondary: '#E2E0EA', fg: '#18161E', fgSecondary: '#5A566A',
+    accent: '#5A4A8C', accentDim: 'rgba(90,74,140,0.1)', accentMid: 'rgba(90,74,140,0.3)',
+    accentGlow: 'rgba(90,74,140,0.05)', border: 'rgba(24,22,30,0.06)',
+    glassBg: 'rgba(240,238,244,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // Part III: From Food to Guns, Germs, and Steel
+  scene9: {
+    bg: '#141012', bgSecondary: '#1E161A', fg: '#E4DCD6', fgSecondary: '#9A8A82',
+    accent: '#C45A4A', accentDim: 'rgba(196,90,74,0.1)', accentMid: 'rgba(196,90,74,0.3)',
+    accentGlow: 'rgba(196,90,74,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(24,18,22,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene10: {
+    bg: '#F4F2EE', bgSecondary: '#EAE6DE', fg: '#1C1A16', fgSecondary: '#6B6558',
+    accent: '#6B5A2E', accentDim: 'rgba(107,90,46,0.1)', accentMid: 'rgba(107,90,46,0.3)',
+    accentGlow: 'rgba(107,90,46,0.05)', border: 'rgba(28,26,22,0.06)',
+    glassBg: 'rgba(244,242,238,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene11: {
+    bg: '#EEF0F4', bgSecondary: '#E0E4EC', fg: '#141820', fgSecondary: '#4A5468',
+    accent: '#3A6A8C', accentDim: 'rgba(58,106,140,0.1)', accentMid: 'rgba(58,106,140,0.3)',
+    accentGlow: 'rgba(58,106,140,0.05)', border: 'rgba(20,24,32,0.06)',
+    glassBg: 'rgba(238,240,244,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // Part IV: Around the World in Five Chapters
+  scene12: {
+    bg: '#F2F4F0', bgSecondary: '#E4EAE0', fg: '#161C14', fgSecondary: '#4E5A46',
+    accent: '#4A7A50', accentDim: 'rgba(74,122,80,0.1)', accentMid: 'rgba(74,122,80,0.3)',
+    accentGlow: 'rgba(74,122,80,0.05)', border: 'rgba(22,28,20,0.06)',
+    glassBg: 'rgba(242,244,240,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene13: {
+    bg: '#F5F0E8', bgSecondary: '#EBE4D8', fg: '#1E1810', fgSecondary: '#6A5C44',
+    accent: '#8C6B30', accentDim: 'rgba(140,107,48,0.1)', accentMid: 'rgba(140,107,48,0.3)',
+    accentGlow: 'rgba(140,107,48,0.05)', border: 'rgba(30,24,16,0.06)',
+    glassBg: 'rgba(245,240,232,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene14: {
+    bg: '#121416', bgSecondary: '#1A1E22', fg: '#D8D4CC', fgSecondary: '#8A8478',
+    accent: '#B88A3A', accentDim: 'rgba(184,138,58,0.1)', accentMid: 'rgba(184,138,58,0.3)',
+    accentGlow: 'rgba(184,138,58,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(22,24,28,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// CONTENT DATA
+// ═══════════════════════════════════════════════════════════════
+
+const CONTENT_DATA = {
+  meta: {
+    title: '枪炮、病菌与钢铁',
+    titleEn: 'GUNS, GERMS, AND STEEL: The Fates of Human Societies',
+    subtitle: '人类社会的命运',
+    badge: '沉浸式深度导读 · THE FATES OF HUMAN SOCIETIES · COMPLETE',
+    author: '贾雷德·戴蒙德',
+    authorEn: 'Jared Diamond',
+    type: 'history',
+    shelf: {
+      emoji: '🔫',
+      gradient: 'linear-gradient(135deg, #2C1810 0%, #6B4423 50%, #A0784C 100%)',
+      description: '为什么是欧洲人征服了新大陆，而不是反过来？戴蒙德用14个场景拆解环境决定论——从耶利的问题到人类社会命运的终极解答。',
+      stats: ['14 场景', '4 部分', '14 深度解析']
+    },
+    coreThesis: '不同民族之间的权力差异，并非源于种族或智力的差异，而是源于环境差异——尤其是可驯化动植物的分布、大陆轴线方向和地理障碍。这些环境因素决定了哪些民族率先发展出粮食生产，进而发展出文字、技术、政治组织和病菌。',
+    authorProblem: '耶利的问题：为什么财富和权力在全球各民族之间分布如此不均？为什么是欧洲人征服了美洲，而不是反过来？戴蒙德要用环境决定论取代种族主义解释，将历史学提升为"历史科学"。',
+    bookStructure: '全书是一个因果链条的逐层展开：环境差异（终极原因）→ 可驯化物种分布 → 粮食生产时间差 → 人口密度/社会复杂度 → 技术/文字/病菌/政治组织 → 征服与被征服（近因）。前三部分建立理论框架，第四部分用五个大陆的案例验证。',
+    readerQuestions: [
+      '如果美洲也有东西轴线，历史会怎样？美洲文明能否发展出与欧亚大陆匹敌的技术？',
+      '戴蒙德的环境决定论是否过于忽视文化、制度和个人能动性的作用？',
+      '中国拥有和新月沃地相似的农业起步优势，为什么没有率先完成工业革命？',
+      '病菌在殖民史中的角色是否被低估了？如果没有天花，皮萨罗能征服印加帝国吗？',
+      '戴蒙德的框架能解释1500年后的历史吗？工业革命以后，环境还是决定性因素吗？'
+    ],
+    critique: '戴蒙德的框架有三个主要争议。（1）地理决定论过强：批评者（如James Blaut、Daron Acemoglu）指出，制度质量、文化偏好和偶然事件同样重要——中国和中东拥有早期农业优势，但近代衰落恰恰说明地理不是唯一因素。（2）解释尺度问题：环境决定论对万年尺度的大趋势有较强解释力，但对百年尺度的差异（如为什么是英国而非荷兰率先工业化）几乎无效。（3）对能动性的忽视：戴蒙德将文明发展描绘为环境条件的自动展开，低估了人类选择、创新和制度设计的独立作用——安娜·卡列尼娜原则暗示驯化是自动的，但实际过程中人类的主动实验至关重要。尽管如此，该书最大的贡献是彻底摧毁了种族主义解释框架，并将环境因素置于历史分析的中心位置。',
+    keyTerms: [
+      { term: '耶利的问题', definition: '新几内亚人耶利向戴蒙德提出的核心问题："为什么你们白人制造了那么多的货物，而我们黑人却几乎没有？"这个问题驱动了全书的论证——答案不在于种族差异，而在于环境因素。' },
+      { term: '粮食生产', definition: '从狩猎采集向农业和畜牧业的转变。粮食生产是一切复杂社会的基础：它提供了剩余食物，养活了不从事粮食生产的专职人员——士兵、工匠、书吏和国王。' },
+      { term: '大陆轴线', definition: '欧亚大陆的东西轴线 vs 美洲和非洲的南北轴线。东西方向的传播更容易，因为同纬度地区气候相似，作物和牲畜可以快速扩散；南北方向则要跨越不同气候带，传播速度大大减缓。' },
+      { term: '安娜·卡列尼娜原则', definition: '引自托尔斯泰名言"幸福的家庭都是相似的，不幸的家庭各有各的不幸"。成功驯化动物需要同时满足多个条件（饮食、生长速度、繁殖、性情、恐慌倾向、社会结构），缺一不可。' },
+      { term: '终极原因 vs 近因', definition: '近因是事件的直接原因（如枪炮、病菌、钢铁），终极原因是产生近因的深层原因（如地理环境、可驯化物种分布）。戴蒙德的核心方法论就是追问终极原因。' },
+      { term: '病菌', definition: '大多数传染病（天花、麻疹、流感等）起源于家畜的疾病。长期与家畜共处的欧亚民族发展出了免疫力，但美洲、澳洲原住民从未接触过这些病菌，因此在殖民接触中大量死亡。' },
+      { term: '蓝图复制 vs 思想传播', definition: '技术传播的两种模式：蓝图复制是直接模仿现有发明（如字母表的传播）；思想传播是受到启发后独立发明（如切罗基人塞阔雅发明音节文字）。大多数创新是通过传播而非独立发明产生的。' },
+      { term: '盗贼统治', definition: '戴蒙德对早期国家的讽刺性描述。酋邦和国家的统治者本质上是将民众的财富再分配给自己和精英阶层，但他们通过意识形态和宗教为这种"劫掠"提供合法性——这与黑手党收保护费的逻辑惊人地相似。' }
+    ],
+    parts: [
+      { number: 1, title: '从伊甸园到卡哈马卡', titleEn: 'FROM EDEN TO CAJAMARCA', beforeScene: 'scene-1' },
+      { number: 2, title: '粮食生产的出现和传播', titleEn: 'THE RISE AND SPREAD OF FOOD PRODUCTION', beforeScene: 'scene-4' },
+      { number: 3, title: '从粮食到枪炮、病菌与钢铁', titleEn: 'FROM FOOD TO GUNS, GERMS, AND STEEL', beforeScene: 'scene-9' },
+      { number: 4, title: '在五章中环游世界', titleEn: 'AROUND THE WORLD IN FIVE CHAPTERS', beforeScene: 'scene-12' }
+    ]
+  },
+
+  darkScenes: ['scene3', 'scene5', 'scene9', 'scene14'],
+
+  scenes: [
+
+    // ═════════════════════════════════════════════════════════════
+    // PART I · 从伊甸园到卡哈马卡 · FROM EDEN TO CAJAMARCA
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 1: 耶利的问题与人类起跑线
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-1', number: '场景 01', palette: 'scene1',
+      title: '耶利的问题与人类起跑线',
+      subtitle: "YALI'S QUESTION & THE STARTING LINE",
+      heroQuote: '为什么你们白人制造了那么多的货物并将它们运到新几内亚来，而我们黑人却几乎没有属于我们自己的货物呢？',
+      narrative: [
+        '1972年，在新几内亚的海滩上，一位名叫耶利的当地政治家向贾雷德·戴蒙德提出了一个简单却深刻的问题。<b>这个问题看似朴素，实则触及了人类历史最根本的谜题</b>：为什么财富和权力在全球各民族之间的分布如此不均？为什么是欧洲人殖民了非洲和美洲，而不是反过来？',
+        '对这个问题的回答，历史上充斥着种族主义的解释——某些民族天生更聪明、更勤劳、更有创造力。但戴蒙德指出，<b>这些解释不仅在道德上令人反感，在科学上也站不住脚</b>。新几内亚人在丛林中展现出的生存智慧和观察力，丝毫不逊于任何西方科学家在实验室里的表现。',
+        '要理解人类社会的不同命运，我们必须回到起跑线。大约在公元前11000年，末次冰期结束，<b>全世界的人类都还是狩猎采集者</b>。没有任何一个大陆的人类拥有农业、文字、金属工具或中央集权的政府。此后一万三千年间发生的一切差异，必须用这段时间内的因素来解释。',
+        '戴蒙德的核心论点是：<b>不同大陆上的环境差异——尤其是可驯化的野生动植物种类、大陆轴线方向和地理障碍——决定了哪些民族率先发展出粮食生产</b>。而粮食生产是一切后续发展的终极原因：定居、人口增长、社会分层、技术发明、文字系统和军事力量，全部由此衍生。'
+      ],
+      extendedReading: [
+        '戴蒙德在新几内亚生活和研究了三十多年，研究鸟类进化生物学。正是这段经历让他深刻体会到新几内亚人的智慧和能力，并对种族主义解释产生了强烈的反感。他写这本书的动机既是学术的，也是道德的。',
+        '耶利的问题有一个更宏大的版本：在公元前11000年，世界各地的人类处于大致相同的技术水平。但到了公元1500年，欧亚大陆的社会已经发展出了枪炮、远洋航船和钢铁，而澳洲原住民仍在使用石器。这一万三千年的分化是如何发生的？',
+        '戴蒙德明确区分了"终极原因"和"近因"。欧洲征服美洲的近因是枪炮、病菌和钢铁，但终极原因是地理和生态环境。他的方法论借鉴了进化生物学——追问"为什么"而不是仅仅描述"是什么"。'
+      ],
+      deepDives: [
+        {
+          title: '耶利的问题：终极原因的追寻', icon: '🌍',
+          triggerQuestion: '为什么不同大陆上的人类社会走上了截然不同的发展道路？是种族差异还是环境差异？戴蒙德如何区分"终极原因"和"近因"？',
+          chain: {
+            premise: '对全球权力分布不均的解释，大致分为两类：强调人种差异的种族主义理论，和强调环境差异的地理决定论。种族主义理论长期占据主流，但缺乏科学证据。',
+            evidence: '智力测试显示，在同等教育条件下，不同种族的智商差异消失。新几内亚人在复杂环境中展现出的认知能力甚至超过西方人。与此同时，考古学和遗传学证据表明，公元前11000年全球各地人类的生物学差异极小，无法解释此后的社会分化。',
+            conclusion: '种族因素被排除后，剩下的解释只能是环境因素。戴蒙德提出了一个因果链条：地理环境决定了可驯化动植物的分布，后者决定了粮食生产的出现时间，粮食生产又决定了人口密度、社会复杂度、技术水平和军事力量。这就是"终极原因"的逻辑。'
+          }
+        },
+        {
+          title: '走上起跑线：冰期结束时的世界', icon: '🏔',
+          chain: {
+            premise: '要理解人类社会的分化，必须确定一个"起点"——一个所有大陆的人类处于大致相同水平的时刻。末次冰期结束（约公元前11000年）提供了这样的基准线。',
+            evidence: '在这个时间点上，所有大陆的人类都是狩猎采集者，使用石器工具，生活在小型流动群体中。但各大陆的环境条件差异巨大：欧亚大陆拥有最多的可驯化大型哺乳动物（13种中的11种）和最丰富的高产谷物野生祖先（小麦、大麦等），而美洲、非洲和澳洲在这方面远远落后。',
+            conclusion: '起跑线上的"公平"是生物学意义上的——各地人类在智力和体能上没有显著差异。但起跑线上的"不公"是地理学意义上的——各大陆的自然资源禀赋天差地别。这种"先天不公"将在此后一万三千年中被逐步放大，最终形成我们今天看到的全球格局。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 2: 历史的自然实验
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-2', number: '场景 02', palette: 'scene2',
+      title: '历史的自然实验',
+      subtitle: 'A NATURAL EXPERIMENT OF HISTORY',
+      heroQuote: '波利尼西亚的扩张为我们提供了一个天然的控制实验——同一批人在不同环境中走向了截然不同的命运。',
+      narrative: [
+        '历史学家通常无法像自然科学家那样进行控制实验。<b>但波利尼西亚群岛的殖民过程恰好提供了一个绝佳的"自然实验"</b>。大约在公元前1200年至公元1000年间，同一群南岛语系的人从东南亚出发，最终扩散到太平洋上数千个岛屿。',
+        '这些殖民者拥有相同的文化传统、相同的技术水平和相同的基因库。然而，<b>他们到达的岛屿环境却千差万别</b>——有些是温暖湿润的热带大岛，有些是寒冷偏远的小岛，有些珊瑚礁环绕，有些火山地形崎岖。几个世纪后，这些岛屿上发展出了从简单的狩猎采集部落到复杂的帝国在内的各种社会形态。',
+        '最极端的对比出现在新西兰的查塔姆群岛和主岛之间。<b>查塔姆群岛太小太冷，无法发展农业</b>，居民莫里奥里人退化为狩猎采集者，人口仅约两千人，没有军事组织。而新西兰主岛的毛利人发展出了农业、酋邦和精密的军事技术。1835年，毛利人入侵查塔姆群岛，在几天内屠杀和奴役了莫里奥里人。',
+        '这个案例完美地说明了戴蒙德的核心论点：<b>环境差异如何将同一人群推向截然不同的发展轨迹</b>。莫里奥里人并非因为种族劣等而被征服，而是因为他们所处的环境不允许发展复杂社会。波利尼西亚就是一个微型的全球史缩影。'
+      ],
+      deepDives: [
+        {
+          title: '莫里奥里人的灭顶之灾：同一人群的两种命运', icon: '⚔️',
+          triggerQuestion: '毛利人和莫里奥里人有共同的祖先，分离不过几百年。是什么力量让他们变成了征服者和被征服者？',
+          chain: {
+            premise: '如果两个群体共享相同的基因、相同的语言祖先和相同的文化起源，但在几百年后一方征服了另一方，那么种族/文化优越论就被彻底排除了。剩下的唯一解释变量是环境。莫里奥里人和毛利人的案例正是这样一个完美的自然实验。',
+            evidence: '大约在公元1000年左右，一群波利尼西亚殖民者到达新西兰。其中一部分继续向东航行约800公里，抵达了查塔姆群岛。此后两个群体完全失去了联系。新西兰主岛面积约27万平方公里，气候温和，土壤肥沃。毛利人在那里发展出了<b>密集的红薯农业</b>，人口膨胀到约10万人，形成了复杂的酋邦社会，发展出了精密的木雕艺术、堡垒建筑（Pa）和持续性的部落战争——战争又反过来推动了军事技术和社会组织的进步。查塔姆群岛面积仅约800平方公里，气候严寒，<b>太冷了无法种植任何波利尼西亚作物</b>。莫里奥里人不得不回退为狩猎采集者，以海豹、贝类和野生植物为生。人口上限约2000人。小群体内冲突成本极高（每个人都是亲戚），因此他们发展出了一种<b>和平主义传统</b>——禁止战争，以和平仲裁解决争端。1835年，一群毛利人乘坐欧洲船只到达查塔姆群岛。他们屠杀了数百名莫里奥里人，奴役了其余的人。莫里奥里人的和平主义传统在面对武装入侵时毫无用处——他们甚至集体决定不抵抗，希望用和平姿态感化入侵者。结果是单方面的屠杀。',
+            conclusion: '这个案例是全书论证密度最高的"微缩模型"。同一人群、同一起点，仅凭环境差异就产生了：农民vs猎人、军事化vs和平主义、10万人vs2000人、征服者vs被灭绝者。如果你试图用种族或文化优越论解释1500年后欧洲人征服美洲，你首先需要解释为什么同一种族的毛利人征服了莫里奥里人。答案只能是环境。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 3: 卡哈马卡的冲突
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-3', number: '场景 03', palette: 'scene3',
+      title: '卡哈马卡的冲突',
+      subtitle: 'COLLISION AT CAJAMARCA',
+      heroQuote: '1532年11月16日，168名西班牙人在卡哈马卡俘获了拥有八万大军的印加帝国皇帝阿塔瓦尔帕——这一事件浓缩了世界史上最大的权力不对称。',
+      narrative: [
+        '1532年11月16日，弗朗西斯科·皮萨罗带领168名西班牙士兵来到安第斯山脉高处的卡哈马卡城。<b>在城外等待他们的是印加皇帝阿塔瓦尔帕和他的八万大军</b>。从任何常规军事角度来看，这场对峙的结果应该毫无悬念——168人对八万人，西班牙人将被碾碎。',
+        '然而事实恰好相反。皮萨罗设下埋伏，在阿塔瓦尔帕进入卡哈马卡广场后突然发动攻击。<b>西班牙人的钢铁盔甲、骑兵和枪炮制造了巨大的恐慌</b>。印加士兵从未见过马匹，枪声令他们以为这是神的愤怒。在不到两小时的混战中，西班牙人杀死了数千名印加人，而自己几乎没有伤亡。阿塔瓦尔帕被活捉。',
+        '但枪炮、钢铁和马匹只是"近因"。<b>真正的问题是：为什么是皮萨罗跨越大西洋来到美洲，而不是阿塔瓦尔帕渡海去征服欧洲？</b>印加帝国是一个管理数百万人口的庞大国家，拥有精密的道路系统和行政体系。为什么他们没有发展出远洋航海、枪炮和钢铁？',
+        '答案在于一个更深层的因果链条：欧亚大陆拥有更多可驯化的动植物物种，更早发展出粮食生产，因此更早积累了更大的人口密度和更复杂的社会分工。<b>文字、金属冶炼、航海技术和火药，全部是这条因果链条的产物</b>。卡哈马卡的冲突不是偶然事件，而是一万三千年地理命运的必然结局。'
+      ],
+      extendedReading: [
+        '皮萨罗之所以知道印加帝国的存在并敢于冒险进攻，部分原因是他了解科尔特斯十年前征服阿兹特克帝国的成功先例。文字使欧洲人能够积累和传播关于遥远土地的知识，而印加人对西班牙毫无所知——甚至不知道自己被征服的同胞莫希卡人和阿兹特克人的命运。',
+        '阿塔瓦尔帕之所以敢于进入卡哈马卡广场，是因为他完全低估了168人的威胁。他刚刚赢得了一场内战，自信心极度膨胀。他不了解枪炮、钢铁和马匹的存在——这些技术从未通过任何渠道传入美洲。信息的不对称和技术的不对称同样致命。',
+        '在卡哈马卡之后，真正决定印加帝国命运的是病菌而非枪炮。天花在皮萨罗到达之前就已经通过贸易网络传入印加帝国，杀死了前任皇帝瓦伊纳·卡帕克，引发了阿塔瓦尔帕和瓦斯卡尔之间的内战。当皮萨罗到达时，帝国已经被疾病和内战削弱。'
+      ],
+      deepDives: [
+        {
+          title: '168 vs 80000：技术不对称的极端案例', icon: '⚔',
+          triggerQuestion: '168名西班牙人如何能够击败拥有八万大军的印加帝国？仅仅是枪炮和钢铁吗？还是存在更深层的结构性原因？',
+          chain: {
+            premise: '卡哈马卡之战的结果看似不可能，但它并非奇迹。西班牙人拥有一系列系统性优势：钢铁武器和盔甲、马匹、枪炮，以及从文字中获得的关于敌人的情报。印加方面对这些技术完全陌生。',
+            evidence: '西班牙人的钢铁剑可以砍断印加人的木制和铜制武器，钢铁盔甲可以抵挡印加人的投石和棍棒。马匹在美洲从未出现过，其冲击力和速度使印加步兵无法组织有效防御。枪炮虽然当时精度很低，但其噪音和烟雾造成了巨大的心理恐慌。更关键的是，皮萨罗通过文字记录了解了科尔特斯征服阿兹特克的策略，并照搬了"擒贼先擒王"的战术。',
+            conclusion: '卡哈马卡不是个人英雄主义的故事，而是两个社会在技术和信息维度上巨大鸿沟的体现。这些鸿沟的终极原因可以追溯到两大陆不同的环境条件：欧亚大陆更早发展出粮食生产，由此催生了更复杂的社会分工，最终产生了钢铁冶炼、马匹驯化、火药发明和文字系统。'
+          }
+        },
+        {
+          title: '近因与终极原因的因果链', icon: '🔗',
+          chain: {
+            premise: '解释卡哈马卡事件有两种层次：近因（直接导致西班牙人胜利的因素）和终极原因（为什么西班牙人而非印加人拥有这些近因）。仅停留在近因层面无法回答"为什么是这个方向而非相反"的问题。',
+            evidence: '近因链条很清晰：枪炮、钢铁、马匹、疾病、航海技术、文字。但每个近因都可以继续追问。为什么欧洲有枪炮？因为有火药和金属冶炼。为什么有金属冶炼？因为有定居社会和专职工匠。为什么有专职工匠？因为有粮食剩余。为什么有粮食剩余？因为有农业。为什么有农业？因为有可驯化的动植物。',
+            conclusion: '这条因果链条最终指向环境。欧亚大陆拥有世界上最多的可驯化大型哺乳动物和高产谷物的野生祖先，这使它成为粮食生产最早出现的地方，也因此最早启动了通向复杂社会的多米诺骨牌效应。卡哈马卡是这条因果链条一万三千年后的终点。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART II · 粮食生产的出现和传播 · THE RISE AND SPREAD OF FOOD PRODUCTION
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 4: 农民的力量
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-4', number: '场景 04', palette: 'scene4',
+      title: '农民的力量',
+      subtitle: 'FARMER POWER',
+      heroQuote: '粮食生产是枪炮、病菌与钢铁的终极原因。掌握农业的民族获得了一切后续优势的根基。',
+      narrative: [
+        '为什么粮食生产如此重要？答案直指人类社会发展的核心机制：<b>只有农业才能产生足够的粮食剩余，来供养不从事食物生产的人</b>。狩猎采集部落中，每个成年人都必须参与觅食。但在农业社会中，一个农民可以生产出超过自身需求的食物，从而"释放"其他人去做别的事情。',
+        '这些被"释放"出来的人成为了专职的工匠、士兵、祭司、官僚和国王。<b>金属冶炼需要数年的专业训练，文字系统需要专职书吏的维护，军队需要专职士兵的训练</b>——这些在狩猎采集社会中都不可能实现。农业提供的粮食剩余是所有社会分工的物质基础。',
+        '此外，农业意味着定居。<b>定居生活使人口密度急剧上升</b>——一平方公里的农田可以养活的人口是同等面积狩猎采集区的十到一百倍。高人口密度不仅提供了更多的士兵，还催生了流行病（更多人聚集意味着更多病原体传播），最终使农业民族获得了对传染病的免疫力。',
+        '当农民和猎人相遇时，结果几乎总是一边倒的。<b>农民拥有更多的人口、更好的武器、更致命的病菌和更复杂的组织</b>。他们不需要"更优秀"——他们只需要拥有粮食生产所带来的系统性优势。这就是"农民的力量"，也是理解此后全部人类历史的关键。'
+      ],
+      deepDives: [
+        {
+          title: '粮食剩余：社会分工的物质基础', icon: '🌾',
+          triggerQuestion: '为什么拥有农业的民族几乎总是征服狩猎采集者？粮食剩余如何成为社会分工、技术发明和军事力量的终极基础？',
+          chain: {
+            premise: '复杂社会需要专职人员——工匠、士兵、官僚、发明家。但专职化的前提是食物供给，没有人能一边打铁一边种地。因此，社会分工的程度直接取决于粮食生产的效率。',
+            evidence: '考古学显示，最早的金属冶炼、文字系统和大型建筑都出现在粮食生产最发达的地区——新月沃地、中国黄河流域和中美洲。这些地区的农业生产率足以维持非生产人口占总人口的10%至30%。相比之下，澳洲原住民从未发展出农业，因此也从未产生过专职工匠或军事组织。',
+            conclusion: '粮食生产不仅是一种经济活动，更是人类社会复杂化的"开关"。一旦这个开关被打开，技术、文字、政治组织和军事力量就会在几千年内沿着可预测的路径发展。没有打开这个开关的社会，不是因为他们的人民不够聪明，而是因为他们的环境缺乏打开开关所需要的原材料。'
+          }
+        },
+        {
+          title: '定居、人口与流行病的反馈循环', icon: '🏘',
+          chain: {
+            premise: '农业不仅增加了食物产量，还从根本上改变了人类的生活方式。定居生活、人口密度增加和与家畜的密切接触，共同创造了一个全新的流行病学环境。',
+            evidence: '狩猎采集者的小群体（通常少于50人）无法维持流行性传染病——病原体会在感染完所有人后消失。但农业定居社区的人口密度足以让天花、麻疹等疾病持续传播。更关键的是，与家畜的密切接触导致了跨物种传播：天花来自牛痘，流感来自猪和鸟类，麻疹来自牛瘟。',
+            conclusion: '这些疾病在欧亚大陆流行了数千年后，幸存者的后代获得了遗传免疫力。但从未接触过这些疾病的美洲和澳洲原住民毫无抵抗力。当欧洲人到来时，病菌先于军队到达，往往在正式征服之前就已经杀死了90%以上的原住民人口。农业创造的病菌成为了殖民扩张最致命的武器。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 5: 粮食生产的地理学
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-5', number: '场景 05', palette: 'scene5',
+      title: '粮食生产的地理学',
+      subtitle: "HISTORY'S HAVES AND HAVE-NOTS",
+      heroQuote: '世界上的粮食生产中心不是随机分布的——它们精确地对应着可驯化野生物种最密集的地区。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '粮食生产的独立起源地：时间与物种',
+        description: '农业不是一次性发明，而是在全球至少5个地区独立出现。但起始时间差异巨大——最早与最晚相差6000年。',
+        data: {
+          columns: ['起源地', '时间', '关键作物', '关键家畜', '领先优势'],
+          rows: [
+            ['新月沃地', '~BC 8500', '小麦、大麦、豌豆、亚麻', '绵羊、山羊、牛、猪', '最早 + 物种最丰富'],
+            ['中国', '~BC 7500', '水稻（南）、粟（北）', '猪、蚕', '1000年差距'],
+            ['中美洲', '~BC 3500', '玉米、豆类、南瓜', '无大型家畜', '5000年差距 + 无畜力'],
+            ['安第斯/亚马逊', '~BC 3500', '马铃薯、木薯', '美洲驼', '5000年差距'],
+            ['东部北美', '~BC 2500', '向日葵、藜麦', '无', '6000年差距 + 无家畜'],
+            ['撒哈拉以南非洲', '~BC 3000?', '高粱、珍珠粟', '无本土（后引入）', '5500年差距']
+          ],
+          note: '新月沃地的"先发优势"不仅是时间上的——它同时拥有最多的大粒种子谷物和最多的可驯化大型哺乳动物。其他起源地在物种上的劣势比时间差距更致命。'
+        }
+      },
+      narrative: [
+        '粮食生产在全球的出现并非同步的。<b>最早的独立起源地包括新月沃地（约公元前8500年）、中国（约公元前7500年）、中美洲（约公元前3500年）和东部北美（约公元前2500年）</b>。还有几个可能的独立起源地包括非洲的萨赫勒地带、南美的安第斯地区和东南亚。',
+        '为什么有些地区早早发展出农业，而有些地区直到近代仍是狩猎采集社会？<b>关键不在于当地人的智慧或进取心，而在于当地可驯化野生物种的数量和质量</b>。新月沃地拥有大量大粒种子的野生谷物（小麦、大麦、豌豆等），以及多种可驯化的大型哺乳动物（绵羊、山羊、牛、猪），这为农业的独立发明提供了最优越的原材料。',
+        '相比之下，很多地区根本缺乏驯化的候选物种。<b>澳洲没有任何可驯化的大型哺乳动物和高产谷物</b>。撒哈拉以南非洲的候选物种较少且驯化难度大。美洲虽然独立发展出了玉米农业，但玉米从野生祖先（类蜀黍）到高产作物的驯化过程极为漫长，远比小麦的驯化复杂。',
+        '戴蒙德指出了一个常被忽视的事实：<b>是否"选择"种田，很大程度上不是一个真正的"选择"</b>。在可驯化物种丰富的地区，狩猎采集者会逐渐、不自觉地滑入农业生活方式。在缺乏候选物种的地区，即使最聪明的人也不可能"发明"农业——你无法驯化不存在的物种。'
+      ],
+      deepDives: [
+        {
+          title: '新月沃地为什么"先富"：命运的地理抽签', icon: '🎰',
+          triggerQuestion: '全世界有数十万种野生植物，为什么只有几十种被驯化成作物？是人类"选择"了农业，还是农业"选择"了人类？',
+          chain: {
+            premise: '农业的发明通常被描述为人类智慧的伟大飞跃——某些聪明的先民"发现"了种植的奥秘。但戴蒙德认为这种叙事倒果为因：不是某些人更聪明所以发明了农业，而是某些地区恰好拥有可驯化的野生物种，农业在那里的出现几乎是自动的。',
+            evidence: '全世界大约有20万种开花植物，但只有几千种可食用，其中只有几百种被人类有意栽培，而成为全球主要作物的仅有<b>十几种</b>。这些"赢家"的分布高度不均：新月沃地拥有全球56种最大粒野生谷物中的<b>32种</b>——包括小麦和大麦的野生祖先。这些谷物的特点是种子大、自花授粉（易于选育纯系）、一年生（投入产出快）、且野生产量已经很高。相比之下，美洲最重要的谷物玉米的野生祖先——类蜀黍（teosinte）——穗轴仅2-3厘米，每穗约6-12粒硬壳种子，与现代玉米相差如此巨大，以至于植物学家花了几十年才确认两者的关系。从类蜀黍到玉米的驯化花了至少<b>数千年的无意识选择</b>，而小麦从野生到驯化只需要相对简单的几步变异（脱粒性丧失、种子增大）。新月沃地的农民不是更聪明——他们面对的是一场生物彩票，恰好抽到了最好的牌。',
+            conclusion: '这个分析从根本上改变了"为什么有些社会先进"这个问题的框架。答案不在于人，而在于植物。新月沃地的先发优势不是智力优势，而是<b>生物资源禀赋优势</b>——恰好拥有最多、最容易驯化的野生祖先种。这种优势无法通过任何个人或集体的努力来弥补：你可以更努力地种地，但你无法驯化一种不存在的物种。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 6: 驯化植物的逻辑
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-6', number: '场景 06', palette: 'scene6',
+      title: '驯化植物的逻辑',
+      subtitle: 'HOW TO MAKE AN ALMOND',
+      heroQuote: '我们以为是人类驯化了小麦，但从另一个角度看，是小麦利用人类将自己从中东的一种野草变成了地球上最成功的植物。',
+      narrative: [
+        '为什么全世界的主要粮食作物——小麦、水稻、玉米、大麦、高粱——只有区区几十种？<b>答案是：绝大多数野生植物根本不适合驯化</b>。一种植物要成为成功的作物，需要满足多个苛刻条件：种子足够大、生长速度足够快、容易收获、能够自花授粉或人工控制授粉、以及最关键的——存在有利于驯化的基因突变。',
+        '杏仁的故事是一个完美的例子。<b>野生杏仁含有苦杏仁苷，是致命的氰化物来源</b>。一颗野生杏仁就可以杀死一个孩子。但偶尔会出现基因突变，产生不含苦杏仁苷的甜杏仁。在野外，这种突变对杏仁树是不利的——苦味保护种子不被动物吃掉。但人类发现了这些甜杏仁，专门采集和种植它们，无意中完成了驯化。',
+        '全球作物分布的不均等是惊人的。<b>新月沃地的祖先作物包括小麦、大麦、豌豆和亚麻等，都是产量高、易驯化的物种</b>。而美洲最终驯化出的主要谷物是玉米，但它的野生祖先类蜀黍与现代玉米相差甚远——穗子微小，每穗只有几十粒种子，驯化过程耗费了数千年。',
+        '戴蒙德总结道：<b>问题不在于美洲印第安人不够聪明，而在于美洲缺乏容易驯化的候选植物</b>。美洲农民面对的是一手"烂牌"，而新月沃地的农民手里全是"好牌"。这种起始条件的差异，在此后数千年中被不断放大。'
+      ],
+      deepDives: [
+        {
+          title: '杏仁与橡子：驯化的基因逻辑', icon: '🧬',
+          triggerQuestion: '野生杏仁含有致命毒素，为什么它被成功驯化了？橡子没有毒，产量也很高，为什么从未成为主要作物？',
+          chain: {
+            premise: '植物驯化不是人类主动"设计"的过程，而是无意识的选择压力与植物基因特性的互动。某些物种的基因结构恰好允许快速驯化，而另一些——即使看起来是很好的食物来源——在基因层面就"拒绝"被驯化。',
+            evidence: '杏仁的案例极为精彩。野生杏仁含有<b>苦杏仁苷（amygdalin）</b>，水解后产生氢氰酸——少量就可致命。但苦味由单个基因控制。偶尔出现的隐性突变会产生甜杏仁。在野外，甜杏仁树是不利的——种子因为不苦而被动物吃掉。但古代采集者会优先采集甜杏仁（不需要他们理解遗传学），种植它们的种子，无意中选择了隐性突变。几代之后，<b>人工种群就从致命毒物变成了美味食物</b>。关键在于：这种转变只需要一个基因的改变。对比橡子：橡子营养丰富、产量极高、分布广泛，理论上是完美的驯化候选。但橡子的苦味（单宁酸）由多个基因控制，不存在单一突变就能消除苦味的可能。而且橡树是多年生乔木，从种子到结果需要<b>10年以上</b>——对于通过试错进行无意识选择的古代农民来说，反馈循环太慢了。小麦从播种到收获只需一年，10年可以完成10代选择。橡树在同样时间内连一代选择都完不成。',
+            conclusion: '驯化成功与否取决于三个基因层面的条件：<b>（1）关键性状是否由少数基因控制</b>（杏仁的苦味是单基因，橡子是多基因）；<b>（2）世代时间是否足够短</b>（一年生草本vs多年生乔木）；<b>（3）繁殖方式是否允许人类控制</b>（自花授粉比异花授粉更容易选育纯系）。新月沃地的小麦、大麦和豌豆恰好在三个条件上都命中——这不是智慧的结果，而是生物学的巧合。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 7: 安娜·卡列尼娜原则：动物驯化
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-7', number: '场景 07', palette: 'scene7',
+      title: '安娜·卡列尼娜原则',
+      subtitle: 'ZEBRAS, UNHAPPY MARRIAGES, AND ANNA KARENINA',
+      heroQuote: '可驯化的动物都是相似的；不可驯化的动物各有各的不可驯化之处。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '安娜·卡列尼娜原则：为什么这些动物无法驯化',
+        description: '成功驯化需要同时通过6道门槛。以下动物各只差一步——但一步就够了。',
+        data: {
+          columns: ['动物', '饮食', '生长速度', '圈养繁殖', '性情', '恐慌倾向', '社会结构', '失败原因'],
+          rows: [
+            ['斑马 🦓', '✅', '✅', '✅', '❌', '✅', '❌', '咬人不松口，无等级服从'],
+            ['非洲水牛 🐃', '✅', '✅', '✅', '❌', '✅', '✅', '暴躁不可预测，非洲最危险动物'],
+            ['灰熊 🐻', '❌', '❌', '⚠️', '❌', '✅', '❌', '杂食低效+攻击性强+独居'],
+            ['猎豹 🐆', '❌', '✅', '❌', '✅', '⚠️', '❌', '肉食+拒绝圈养繁殖+独居'],
+            ['鹿 🦌', '✅', '✅', '⚠️', '⚠️', '❌', '⚠️', '围栏中惊吓致死'],
+            ['大猩猩 🦍', '✅', '❌', '⚠️', '⚠️', '✅', '✅', '15年才成熟，饲养成本极高'],
+            ['马 🐴（成功）', '✅', '✅', '✅', '✅', '✅', '✅', '全部通过 → 成功驯化']
+          ],
+          note: '14种成功驯化的大型哺乳动物中，13种来自欧亚大陆。这不是因为其他大陆的人不努力——而是因为候选动物在六道门槛中至少有一道过不去。'
+        }
+      },
+      narrative: [
+        '托尔斯泰在《安娜·卡列尼娜》开头写道："幸福的家庭都是相似的，不幸的家庭各有各的不幸。"<b>戴蒙德将这一原则应用于动物驯化</b>：成功驯化需要同时满足多个条件，缺少任何一个都会导致失败。世界上数千种大型野生哺乳动物中，只有区区14种被成功驯化。',
+        '为什么斑马从未被驯化，尽管它与马如此相似？<b>斑马拥有极其恶劣的脾性——它们会咬住人不松口，而且无法被套索</b>。非洲殖民者曾反复尝试驯化斑马，全部失败。为什么非洲水牛没有被驯化？因为它们性格暴躁且不可预测，是非洲最危险的大型动物之一。',
+        '成功驯化需要同时满足至少六个条件：<b>饮食效率（草食比肉食更经济）、生长速度（大猩猩需要15年才成熟）、圈养繁殖能力（猎豹拒绝在圈养中交配）、温顺性情（灰熊无法驯服）、不易恐慌（鹿在围栏中会惊吓致死）、以及社会等级结构（独居动物不服从人类权威）</b>。',
+        '14种被成功驯化的大型哺乳动物中，<b>13种的野生祖先分布在欧亚大陆</b>。南美只有一种（美洲驼/羊驼），而北美、澳洲、撒哈拉以南非洲一种也没有。这不是因为这些地区的人不想驯化动物——而是因为他们的候选物种在六个条件中至少有一个不达标。'
+      ],
+      deepDives: [
+        {
+          title: '为什么斑马不是马：驯化的六道门槛', icon: '🦓',
+          triggerQuestion: '非洲人与斑马共存了数万年，为什么从未驯化斑马？驯化成功需要同时满足哪些条件，缺一不可？',
+          chain: {
+            premise: '表面上看，斑马和马非常相似——都是大型草食性奇蹄目动物。非洲人与斑马共存了数万年，为什么没有驯化斑马作为坐骑和役畜？',
+            evidence: '斑马的性格特征使它无法通过驯化的"筛选"。斑马会咬住人并不松口（美国动物园中斑马咬伤员工的事件多于老虎）；它们在被套索时会低头躲避，使捕获极为困难；它们缺乏马的等级社会结构，不会"服从"领导者。相比之下，马拥有清晰的等级结构，人类可以取代"头马"的位置获得整群马的服从。',
+            conclusion: '斑马案例完美诠释了安娜·卡列尼娜原则：驯化成功需要同时满足所有条件，而失败只需一个条件不达标。非洲人不是不够聪明或不够努力——他们面对的是一种从生物学上拒绝被驯化的动物。这再次证明，人类社会的差异源于环境，而非种族。'
+          }
+        },
+        {
+          title: '大型哺乳动物的全球分布不平等', icon: '🐂',
+          chain: {
+            premise: '如果动物驯化对文明发展至关重要（提供肉食、奶制品、畜力、运输和军事力量），那么各大陆可驯化候选物种的数量差异就是决定性的。',
+            evidence: '全球14种大型驯化哺乳动物（超过45公斤）中，欧亚大陆拥有13种的野生祖先（马、牛、绵羊、山羊、猪、狗、猫、骆驼、驴等），南美仅有1种（美洲驼）。北美、澳洲、撒哈拉以南非洲各为零。值得注意的是，北美在更新世结束时曾有马和骆驼，但在约一万三千年前灭绝——可能正是由于早期人类的过度捕猎。',
+            conclusion: '这种分布不均等是地质历史和进化生物学的产物，与人类活动无关（除了更新世灭绝事件外）。没有牛、马、猪的美洲和澳洲注定无法发展出依赖畜力的农业体系、骑兵战术和畜牧经济。这一"先天缺陷"的后果在数千年后的殖民接触中充分显现。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 8: 大陆轴线假说
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-8', number: '场景 08', palette: 'scene8',
+      title: '大陆轴线假说',
+      subtitle: 'SPACIOUS SKIES AND TILTED AXES',
+      heroQuote: '欧亚大陆的东西轴线是人类历史最重要的地理事实之一。它使作物、牲畜和思想能够在相同纬度上快速传播。',
+      narrative: [
+        '拿一张世界地图，观察各大陆的形状。<b>欧亚大陆是横向延伸的——东西方向的跨度远大于南北方向</b>。美洲和非洲则恰好相反，它们是纵向延伸的。这个简单的几何事实，对人类历史产生了深远的影响。',
+        '为什么轴线方向如此重要？因为<b>同一纬度上的地区共享相似的日照时间、季节变化和气候条件</b>。在新月沃地驯化的小麦，可以毫无障碍地传播到欧洲、北非和南亚——这些地区都在相似的纬度上。作物传播只需适应微小的气候差异。',
+        '相比之下，<b>美洲的南北轴线意味着作物传播必须穿越截然不同的气候带</b>。中美洲驯化的玉米花了数千年才传到北美东部和南美。安第斯山脉驯化的马铃薯无法越过赤道地区的热带低地传到中美洲。在中美洲和南美之间的巴拿马地峡，气候和地形构成了一道几乎不可逾越的障碍。',
+        '同样的逻辑适用于家畜、技术和思想的传播。<b>在欧亚大陆，轮子、字母表和冶金术在几千年内从一端传到了另一端</b>。而在美洲，中美洲的文字系统从未传播到南美，安第斯的美洲驼从未到达中美洲。大陆轴线的方向决定了传播的速度，传播的速度又决定了各地区积累技术和制度创新的速率。'
+      ],
+      deepDives: [
+        {
+          title: '东西轴线 vs 南北轴线：传播速度的决定性差异', icon: '🧭',
+          triggerQuestion: '为什么欧亚大陆的创新传播速度是美洲的十倍以上？大陆的几何形状如何决定了文明扩散的速率？',
+          chain: {
+            premise: '创新的价值不仅取决于它在何处被发明，更取决于它能以多快的速度传播到其他地区。传播速度越快，受益者越多，后续创新的机会也越大。大陆轴线方向直接影响了传播速度。',
+            evidence: '新月沃地的粮食生产组合（小麦、大麦、牛、绵羊等）在大约三千年内从安纳托利亚传播到了大西洋沿岸和印度河流域——横跨一万多公里。但中美洲的玉米花了几千年才越过几百公里到达北美西南部，而且在传播过程中需要大量的品种适应。新月沃地的作物传播速度是中美洲的十倍以上。',
+            conclusion: '欧亚大陆的东西轴线创造了一条高速传播走廊，使得任何地方的发明都能迅速惠及整个大陆。美洲和非洲的南北轴线则像减速带一样，使创新的传播困难而缓慢。结果是：欧亚大陆积累创新的速度远超其他大陆，这种累积优势随时间呈指数增长。'
+          }
+        },
+        {
+          title: '新月沃地作物的扩散地图', icon: '🌐',
+          chain: {
+            premise: '如果大陆轴线理论成立，我们应该能在考古记录中看到，作物沿东西方向的传播速度显著快于南北方向。',
+            evidence: '考古证据完美地支持了这一预测。小麦和大麦从新月沃地出发：向西传到希腊（约公元前6500年）、再到西欧（约公元前5000年）；向东传到巴基斯坦（约公元前5000年）、再到中国西北（约公元前3000年）。这些传播路径基本沿同一纬度带展开。相比之下，向南传入埃塞俄比亚的时间晚得多，而且需要适应热带高海拔环境的新品种。非洲赤道以南地区直到殖民时代才获得这些作物。',
+            conclusion: '作物传播的考古记录是大陆轴线理论最直接的证据。同纬度传播快速顺畅，跨纬度传播缓慢曲折——这一模式在全球范围内反复出现。大陆的几何形状是一个无法改变的常量，它在一万三千年的尺度上塑造了人类文明的地理格局。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART III · 从粮食到枪炮、病菌与钢铁 · FROM FOOD TO GUNS, GERMS, AND STEEL
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 9: 牲畜的致命礼物：病菌
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-9', number: '场景 09', palette: 'scene9',
+      title: '牲畜的致命礼物',
+      subtitle: 'LETHAL GIFT OF LIVESTOCK',
+      heroQuote: '在欧洲人对美洲的征服中，病菌杀死的印第安人远远多于枪炮和刀剑。这些病菌的终极来源是欧亚大陆的家畜。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '牲畜的致命礼物：人类传染病的动物起源',
+        description: '大多数流行性传染病都来自家畜的跨物种传播——与动物共处数千年的代价。',
+        data: {
+          columns: ['人类疾病', '动物来源', '源头家畜', '维持传播所需人口', '美洲原住民免疫力'],
+          rows: [
+            ['天花', '牛痘', '牛 🐄', '~20万', '❌ 零免疫 → 致死率30-90%'],
+            ['麻疹', '牛瘟', '牛 🐄', '~50万', '❌ 零免疫'],
+            ['流感', '猪/禽流感', '猪🐷 鸟🐔', '~10万', '❌ 零免疫'],
+            ['百日咳', '猪/狗病原', '猪🐷 狗🐕', '~20万', '❌ 零免疫'],
+            ['结核', '牛结核', '牛 🐄', '不需大群体', '⚠️ 极低'],
+            ['疟疾', '禽疟原虫', '鸟类', '不适用（蚊媒）', '❌（美洲株不同）']
+          ],
+          note: '美洲原住民只驯化了美洲驼和豚鼠——这些动物没有产生过能传给人类的流行性疾病。1492-1600年间，欧亚病菌杀死了约95%的美洲原住民。'
+        }
+      },
+      narrative: [
+        '当欧洲人到达美洲时，他们带来了比任何武器都更致命的东西——<b>天花、麻疹、流感、伤寒、鼠疫、疟疾和黄热病</b>。这些疾病在此后的一两个世纪中杀死了美洲原住民人口的约95%。整个文明在病菌面前崩溃，远在欧洲军队到达之前。',
+        '为什么是欧洲的病菌杀死了美洲人，而不是反过来？<b>答案在于家畜</b>。大多数人类流行性传染病都起源于动物疾病的跨物种传播：天花与牛痘同源，流感来自猪和鸟类，麻疹来自牛瘟，百日咳来自猪或狗。与大量家畜密切共处数千年的欧亚民族，逐渐获得了对这些疾病的免疫力。',
+        '但美洲原住民只驯化了极少数家畜——主要是美洲驼和豚鼠，<b>而这些动物没有产生过能够传给人类的流行性疾病</b>。结果是：美洲人的免疫系统从未接触过天花类的病毒。当这些病毒突然出现时，整个人群就像被丢进了生物武器实验室。',
+        '戴蒙德强调，<b>这种不对称不是任何一方的"过错"或"优势"——它纯粹是地理和生态史的产物</b>。欧亚大陆恰好拥有更多可驯化的大型哺乳动物，因此其居民与家畜共处的时间更长，病菌的跨物种传播更频繁，幸存者的免疫力更强。病菌是殖民主义最强大的"武器"，但这个"武器"不是被设计出来的，而是被环境历史无意中铸造的。'
+      ],
+      deepDives: [
+        {
+          title: '病菌的进化：从动物到人类的致命跨越', icon: '🦠',
+          triggerQuestion: '为什么大多数致命传染病都起源于家畜？病原体是如何从动物"跳"到人类身上的？这个过程需要什么条件？',
+          chain: {
+            premise: '流行性传染病需要大量密集人口来维持传播链。在小群体中（如狩猎采集部落），病原体在感染所有人后会因找不到新宿主而消失。因此，流行病是农业社会的"专利"——只有定居和高人口密度才能维持持续的传播。',
+            evidence: '麻疹需要至少50万人的连续人口才能维持传播。天花的阈值更低但也需要数万人。这些条件在农业社会形成之前不存在。家畜提供了病原体跨越物种界限的"桥梁"：农民每天接触牛、猪、鸡的粪便、血液和呼吸，为病毒和细菌的变异和适应提供了无数机会。大约在几千年的时间里，牛瘟变异为天花，猪流感变异为人类流感。',
+            conclusion: '传染病不是上帝的惩罚或人类的罪过——它是农业生活方式的副产品。驯化动物的民族付出了惨重代价（中世纪欧洲黑死病杀死了三分之一人口），但幸存者的后代获得了遗传免疫力。这种免疫力在数千年后成为了殖民扩张中最具毁灭性的"武器"——一种无人设计、无人预谋的生物武器。'
+          }
+        },
+        {
+          title: '95%的毁灭：美洲的人口崩溃', icon: '💀',
+          chain: {
+            premise: '欧洲人对美洲的征服通常被描绘为军事征服，但军事行动只是压死骆驼的最后一根稻草。真正摧毁美洲文明的是在军队到达之前就已经蔓延的传染病。',
+            evidence: '1520年，天花从一名感染的西班牙士兵传入阿兹特克帝国，在科尔特斯最终攻陷特诺奇蒂特兰之前就已经杀死了大量阿兹特克人，包括皇帝库伊特拉瓦克。在北美，欧洲人到达之前，疾病已经通过贸易网络从海岸向内陆传播。据估计，1492年至1600年间，美洲原住民人口从约四千万降至约四百万——减少了约95%。',
+            conclusion: '如果没有这些流行病，欧洲人对美洲的征服将极为困难，甚至不可能。皮萨罗面对的印加帝国已经被天花削弱并分裂。科尔特斯进攻阿兹特克时也得益于天花的先行破坏。病菌而非枪炮是征服的主要工具——而这些病菌的存在，归根结底是因为欧亚大陆拥有更多的可驯化家畜。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 10: 文字的发明与传播
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-10', number: '场景 10', palette: 'scene10',
+      title: '文字的发明与传播',
+      subtitle: 'BLUEPRINTS AND BORROWED LETTERS',
+      heroQuote: '文字的独立发明极为罕见——人类历史上可能仅有三四次。绝大多数文字系统都是从少数几个源头借用或改造而来。',
+      narrative: [
+        '文字是人类最重要的发明之一，但它的独立发明却极为罕见。<b>可以确认的独立发明可能只有三次：苏美尔楔形文字（约公元前3400年）、中美洲文字（约公元前600年）和中国文字（可能，约公元前1300年）</b>。其他所有文字系统要么直接借用了这些原型，要么受到了它们的启发。',
+        '戴蒙德区分了文字传播的两种模式。<b>"蓝图复制"是直接模仿现有系统</b>——比如罗马字母来自希腊字母，希腊字母来自腓尼基字母，腓尼基字母可能受到埃及象形文字的影响。这是一条清晰的传承链。',
+        '<b>"思想传播"则更为微妙——人们知道文字的概念存在，但独立创造了自己的系统</b>。最著名的例子是切罗基人塞阔雅：他看到欧洲人使用书写，意识到了文字的可能性，然后独立发明了一套切罗基音节文字。他借用的不是具体的符号，而是"语言可以被书写"这个抽象概念。',
+        '文字的发明和传播直接依赖于粮食生产和社会复杂度。<b>书写系统需要专职书吏来维护和教学，而专职书吏需要粮食剩余来供养</b>。最早的文字（苏美尔楔形文字）出现在世界上最早的粮食生产中心，这不是巧合。澳洲、撒哈拉以南非洲和太平洋岛屿在殖民时代之前从未独立发展出文字——因为它们要么缺乏农业，要么农业发展太晚。'
+      ],
+      deepDives: [
+        {
+          title: '塞阔雅的天才：蓝图复制与思想传播', icon: '✍️',
+          triggerQuestion: '一个不识字的切罗基人独立发明了一套完整的书写系统。但他真的是"独立"发明的吗？如果他从未见过书写的概念，他还能做到吗？',
+          chain: {
+            premise: '戴蒙德区分了技术传播的两种模式，这个区分对理解创新的本质至关重要。"蓝图复制"是直接模仿——看到别人的字母表然后借用或改造。"思想传播"更微妙——你不是复制具体的发明，而是接收了"这种东西是可能的"这个抽象概念，然后独立创造了自己的版本。',
+            evidence: '塞阔雅（Sequoyah，约1770-1843）的案例是"思想传播"最戏剧性的例证。他是一个不懂英语的切罗基银匠。他观察到欧洲人在纸上做标记，然后能够从这些标记中提取信息——他称之为"会说话的树叶"。他<b>不认识任何一个英文字母的含义</b>，但他理解了文字的概念：语言可以被编码为视觉符号。从1809年开始，他花了12年时间独立创造了一套86个符号的切罗基音节文字——每个符号代表一个音节。这套系统如此精巧，以至于<b>一个聪明的切罗基人可以在几天内学会读写</b>（相比之下，学会英文字母体系需要数年）。到1825年，切罗基族的识字率已经超过了周围的欧裔殖民者。但关键问题是：如果塞阔雅从未见过书写的概念——如果他生活在一个完全没有文字的世界——他还能发明文字吗？答案几乎肯定是否定的。人类历史上文字的独立发明只有3次左右（苏美尔、中美洲、可能中国），说明这是一个极不寻常的认知飞跃。塞阔雅的天才在于他看到了概念并能独立实现——但他仍然需要那个概念的种子。',
+            conclusion: '塞阔雅案例揭示了创新的一个深层结构：<b>大多数"发明"其实是对已有概念的重新实现，而非真正的从零创造</b>。这意味着技术传播——概念从一个社会到另一个社会的流动——比独立发明重要得多。回到大陆轴线理论：欧亚大陆的东西轴线不仅加速了作物和家畜的传播，也加速了概念和创意的传播。一个好主意一旦在欧亚大陆的某个角落出现，就能相对快速地传遍整个大陆。而美洲和非洲的南北轴线以及地理屏障则阻断了这种概念流动——中美洲的文字系统从未传播到南美或北美。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 11: 技术与政治组织
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-11', number: '场景 11', palette: 'scene11',
+      title: '技术与政治组织',
+      subtitle: "NECESSITY'S MOTHER & FROM EGALITARIANISM TO KLEPTOCRACY",
+      heroQuote: '发明是需要之母，而非需要是发明之母。大多数发明被创造出来之后才去寻找用途。',
+      narrative: [
+        '我们习惯性地认为"需要是发明之母"——人类先有需求，然后才创造满足需求的技术。<b>但戴蒙德指出，历史上的真实情况恰好相反</b>。大多数重要发明都是先被创造出来，然后才找到用途。爱迪生发明留声机时想象它会用于记录遗嘱，没有预见到音乐产业。瓦特改进蒸汽机时想的是矿井排水，没有预见到铁路革命。',
+        '技术的发展不是孤立的天才行为，而是一个累积的社会过程。<b>每一项发明都建立在此前无数发明的基础之上</b>。印刷术需要纸张、墨水和冶金术的先行存在。社会越复杂、人口越多、与外界交流越频繁，产生创新的概率就越高。这解释了为什么大型的、互联的欧亚大陆比小型的、孤立的澳洲或美洲更容易产生技术创新。',
+        '与技术并行发展的是政治组织。戴蒙德将人类社会分为四种类型：<b>族群（数十人）、部落（数百人）、酋邦（数千人至数万人）和国家（数万人以上）</b>。每种类型对应着不同的人口规模和社会复杂度。',
+        '国家和酋邦的出现带来了一个讽刺性的问题：<b>为什么普通民众要容忍精英阶层的剥削？</b>戴蒙德称之为"盗贼统治"——统治者从民众手中收取财富，只返还一小部分（以公共工程、军事保护和宗教仪式的形式）。这与黑手党收保护费的逻辑惊人地相似。但国家之所以能存在，是因为它在对外战争中比族群和部落更有效率。'
+      ],
+      deepDives: [
+        {
+          title: '盗贼统治：国王和黑手党的逻辑', icon: '👑',
+          triggerQuestion: '一个酋长从所有人手中收取贡品，自己留下一部分，其余重新分配。这和一个黑手党教父收保护费有什么区别？为什么人们接受前者而反对后者？',
+          chain: {
+            premise: '戴蒙德将社会组织分为四个层次：族群（几十人，人人相识）→部落（几百人，按氏族组织）→酋邦（几千到几万人，有等级）→国家（几万以上，有专职官僚）。从族群到国家的转变不是一个线性进步的故事——它是一个<b>剥削制度化</b>的过程。',
+            evidence: '在族群中，没有剥削——每个人自给自足，领导权靠个人魅力。在部落中，"大人物"（bigman）通过慷慨赢得追随者——他必须不断赠送才能维持地位。但酋邦引入了一个根本性变化：<b>首领有权强制收取贡品</b>。夏威夷的酋长从农民那里征收大量食物，一部分用于养活随从和工匠，一部分用于举办盛大的宗教仪式和宴会——但相当一部分进了酋长和贵族的肚子。这和黑手党收保护费的结构完全相同。那么人们为什么接受？戴蒙德给出了四种机制：<b>（1）武力垄断</b>——酋长掌握了唯一的武装力量；<b>（2）意识形态</b>——宗教将酋长的地位合法化为神的旨意；<b>（3）再分配</b>——酋长将一部分贡品以公共工程和紧急救济的形式返还，创造了"他在保护我们"的印象；<b>（4）外部威胁</b>——面对其他酋邦的竞争，一个统一的领导确实比无政府状态更能保护群体存活。最后一个因素是最关键的：<b>有组织的暴政在与无组织的自由竞争时几乎总是获胜</b>。那些拒绝被统治的平等主义族群，最终被有酋长的酋邦征服或吸收了。',
+            conclusion: '戴蒙德对国家起源的分析有一种冷酷的诚实：<b>国家不是"社会契约"的产物（洛克和卢梭的幻想），而是暴力和意识形态共同作用的产物</b>。人们不是"同意"被统治的，而是在被征服后学会了把统治描述为"同意"。但这个分析的推论是不舒服的：如果所有国家的起源都带有暴力的原罪，那么"合法性"本身就是一个事后建构的概念。现代民主制度的独特贡献不在于消除了这种原罪，而在于创造了一种和平更换统治者的机制——这已经是人类政治史上最大的进步了。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART IV · 在五章中环游世界 · AROUND THE WORLD IN FIVE CHAPTERS
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 12: 澳大利亚与中国
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-12', number: '场景 12', palette: 'scene12',
+      title: '澳大利亚与中国',
+      subtitle: "YALI'S PEOPLE & HOW CHINA BECAME CHINESE",
+      heroQuote: '澳大利亚和新几内亚展示了环境限制的极端案例，而中国则展示了地理统一如何造就文化同质化。',
+      narrative: [
+        '澳大利亚是戴蒙德环境论的最极端案例。<b>这是全世界最干旱、土壤最贫瘠、气候最不可预测的大陆</b>。它没有任何可驯化的大型哺乳动物，几乎没有可驯化的高产植物。澳洲原住民在这片土地上生活了至少四万年，发展出了精密的生态知识和社会体系，但从未发展出农业、金属工具或文字。',
+        '新几内亚的情况略有不同。<b>高地居民独立发展出了农业</b>（主要是根茎类作物如芋头和山药），但由于岛上没有可驯化的谷物和大型哺乳动物，他们的农业无法支撑高密度人口。加之极端破碎的山地地形将人口分隔成数千个小群体，语言和文化碎片化达到了世界之最——全球约一千种语言分布在这个岛上。',
+        '中国提供了一个截然不同的案例。<b>中国的地理特征——广阔的平原、几条大河贯穿东西——促进了统一而非碎片化</b>。公元前221年秦朝统一中国后，政治统一带来了语言、文字和文化的标准化。黄河和长江流域独立驯化的作物和技术迅速在整个地区传播。',
+        '但中国的统一也有代价。<b>当某一王朝做出错误决策时，整个社会都会受到影响</b>。1433年明朝突然终止了郑和的远洋航海——一纸政令就扼杀了中国的海上扩张。如果当时中国像欧洲一样分裂成数十个竞争性国家，任何一个国家的禁令都不会阻止其他国家继续探索。地理统一是一把双刃剑。'
+      ],
+      deepDives: [
+        {
+          title: '中国的悖论：统一是祝福还是诅咒', icon: '🐉',
+          triggerQuestion: '中国拥有和新月沃地一样早的农业、比欧洲更早的火药和印刷术。为什么率先完成工业革命的不是中国而是欧洲？',
+          chain: {
+            premise: '中国是戴蒙德理论中最具挑战性的案例。按照地理决定论，中国拥有一切优势条件——早期农业（约BC7500年）、巨大的连通人口（东西轴线上的平原）、丰富的可驯化物种。到宋朝（约公元1000年），中国在几乎所有技术指标上都领先全世界。但此后的轨迹却是停滞和相对衰落。这似乎直接反驳了"地理决定一切"的论点。',
+            evidence: '戴蒙德用一个精彩的反转来解决这个悖论：<b>中国的地理优势在早期加速了统一，但统一本身在后期成了创新的障碍</b>。中国的地理特征——两条巨大的东西向河流（黄河、长江）、广阔的平原、较少的内部山脉障碍——使得政治统一相对容易。秦朝在BC221年就完成了统一，此后除了分裂时期，中国大部分时间处于单一政权统治之下。这种统一的好处是：标准化的文字、度量衡和法律加速了技术和文化的传播。但代价是致命的：<b>一个错误的中央决策可以在瞬间扼杀整个文明的探索方向</b>。1433年明朝禁止远洋航海就是最著名的案例——郑和的宝船舰队比哥伦布早了60年到达非洲海岸，但一纸政令就终结了一切。如果当时有另一个"中国"继续航海呢？这正是欧洲的情况。欧洲的地理——阿尔卑斯山、比利牛斯山、英吉利海峡——使政治统一极为困难。结果是数十个互相竞争的国家。当西班牙国王最初拒绝资助哥伦布时，哥伦布转向了葡萄牙，然后是热那亚，最后西班牙改变了主意。<b>欧洲的碎片化确保了任何一个国家的愚蠢决策都不会终结整个大陆的探索</b>。',
+            conclusion: '中国悖论是戴蒙德理论中最精妙的部分。他没有放弃地理决定论——相反，他用地理来解释统一，再用统一来解释停滞。<b>地理不是通过一条直线路径决定命运的，而是通过复杂的因果网络</b>——同一个地理特征（易于统一的平原）在不同历史阶段可以产生相反的效果（早期加速发展，后期阻碍创新）。这也是对环境决定论的一个重要修正：地理不是决定结果的单一变量，而是决定约束条件的框架——在这个框架内，制度选择和偶然事件仍然有巨大的影响空间。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 13: 两个半球的碰撞
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-13', number: '场景 13', palette: 'scene13',
+      title: '两个半球的碰撞',
+      subtitle: 'SPEEDBOAT TO POLYNESIA & HEMISPHERES COLLIDING',
+      heroQuote: '南岛语族的扩张是人类历史上最壮观的海上殖民运动——他们用独木舟征服了太平洋三分之一的地球表面。',
+      narrative: [
+        '南岛语族的扩张是人类预史中最引人注目的故事之一。<b>从大约公元前3500年开始，一群来自中国南方的农民开始向南扩张</b>，经过台湾、菲律宾、印度尼西亚，最终到达马达加斯加和复活节岛——跨越了地球三分之一的经度范围。这一切都依靠独木舟和星象导航完成。',
+        '他们的成功有一个清晰的模式：<b>拥有农业和航海技术的南岛语族系统地替代了他们遇到的狩猎采集者</b>。在台湾，他们取代了原住民。在菲律宾和印度尼西亚，他们同化或边缘化了当地的尼格利陀人和巴布亚人。唯一的例外是新几内亚——那里的高地居民已经独立发展出了农业，因此能够抵抗南岛语族的渗透。',
+        '将视角拉回到欧洲与美洲的碰撞，模式是一样的。<b>1492年之后，旧大陆与新大陆的接触引发了单向的征服</b>。欧洲人拥有枪炮、钢铁、马匹、远洋航船和致命的传染病；美洲人拥有金银和玉米，但缺乏能够反向杀死欧洲人的疾病（唯一可能的例外是梅毒）。',
+        '戴蒙德在这些案例中反复强调同一论点：<b>当两个社会碰撞时，胜负不取决于任何一方的种族或文化特质，而取决于双方各自所处环境在此前数千年中赋予的累积优势</b>。南岛语族征服太平洋和欧洲人征服美洲，本质上遵循同一逻辑——农业民族对非农业民族的系统性优势。'
+      ],
+      deepDives: [
+        {
+          title: '南岛语族：农民如何征服大洋', icon: '⛵',
+          triggerQuestion: '为什么来自中国南方的稻作农民能用独木舟征服太平洋三分之一的地球表面？农业优势如何转化为海上殖民能力？',
+          chain: {
+            premise: '太平洋岛屿在人类历史的大部分时间里都无人居住。南岛语族的扩张是人类殖民史上规模最大、距离最远的一次——而它始于中国南方的稻作农民。',
+            evidence: '语言学、考古学和遗传学的证据高度一致：南岛语系的1200多种语言全部可以追溯到台湾。最早的陶器（拉匹塔陶器）和农业工具从台湾向南传播的时间线清晰可查。南岛语族带来了驯化的猪、鸡和狗，以及芋头、山药和面包果等作物。他们系统地替代了此前居住在东南亚和太平洋岛屿上的狩猎采集者。',
+            conclusion: '南岛语族的扩张再次证明了农业优势的普遍性。拥有粮食生产的人群不仅拥有更多的人口，还发展出了更好的航海技术和社会组织。他们的成功不是因为某种文化优越性，而是因为他们恰好生活在一个最早发展出稻作农业的地区——中国南方。这是地理优势通过粮食生产传递到军事和人口优势的又一范例。'
+          }
+        },
+        {
+          title: '欧洲 vs 美洲：一场不对称的碰撞', icon: '🌎',
+          chain: {
+            premise: '1492年哥伦布到达美洲，开启了人类历史上规模最大的两个半球的碰撞。这场碰撞的结果是单方面的征服——但为什么？如果时间拨回到公元前11000年，两个半球的人类处于相同水平。',
+            evidence: '到1492年，双方的差距是系统性的。欧洲拥有钢铁武器和盔甲（美洲仍在使用铜、石和木材）、马匹和骑兵（美洲从未有过骑乘动物）、远洋航船（美洲没有跨大洋航行能力）、火药武器（美洲没有火药）、以及致命的传染病（美洲缺乏家畜来源的流行病）。欧洲还拥有字母文字系统，使信息可以跨越时空传播，而美洲仅中美洲发展出了有限的文字。',
+            conclusion: '这些差距的每一项都可以追溯到更早的原因：欧亚大陆拥有更多的可驯化物种、东西方向的大陆轴线加速了创新传播、更大的连通人口产生了更多的发明。两个半球的碰撞不是公平竞争——它是一万三千年环境累积优势的不对称对决。戴蒙德的论证在这里达到了最完整的形式。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 14: 非洲与人类史的未来
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-14', number: '场景 14', palette: 'scene14',
+      title: '非洲与人类史的未来',
+      subtitle: 'HOW AFRICA BECAME BLACK & THE FUTURE OF HUMAN HISTORY AS A SCIENCE',
+      heroQuote: '人类历史的宏大模式不是种族特质的产物，而是环境差异的产物。理解这一点，是建设更公正世界的第一步。',
+      narrative: [
+        '非洲的故事是全书论证的最后一块拼图。<b>为什么撒哈拉以南非洲在技术和政治发展上落后于欧亚大陆？</b>种族主义者的回答是智力差异，但戴蒙德用与全书一致的环境论框架给出了完全不同的解释。',
+        '非洲的地理条件在多个维度上限制了发展。<b>撒哈拉沙漠构成了一道巨大的障碍</b>，阻断了地中海文明（包括文字、金属冶炼和农业技术）向南传播的通道。非洲的南北轴线意味着作物传播必须穿越不同气候带。热带非洲缺乏可驯化的大型哺乳动物（采采蝇导致的锥虫病使牛无法在热带低地生存），而萨赫勒地区驯化的高粱和珍珠粟产量远低于新月沃地的小麦。',
+        '但非洲内部也有一个重要的扩张故事——班图人的迁徙。<b>大约在公元前3000年至公元500年间，掌握了铁器和农业的班图语族从西非向南扩张</b>，系统地替代或同化了撒哈拉以南非洲的科伊桑狩猎采集者和俾格米人。这与南岛语族的扩张和欧洲人的殖民遵循同样的逻辑——农业民族对狩猎采集者的优势。',
+        '在全书的尾声中，戴蒙德呼吁将人类史发展为一门科学。<b>我们需要理解终极原因而非满足于近因的描述</b>。为什么某些社会发展出了钢铁而另一些没有？为什么某些社会发明了文字而另一些没有？这些问题的答案不在于种族差异，而在于环境、地理和生态差异。理解这一点不仅是学术需要，更是道德需要——它是反驳种族主义、建设更公正全球秩序的知识基础。'
+      ],
+      deepDives: [
+        {
+          title: '批判性评价：环境决定论的边界', icon: '🔍',
+          triggerQuestion: '中国和中东都拥有最早的农业，但近代率先崛起的却是西欧。如果地理决定一切，怎么解释这种"逆转"？',
+          chain: {
+            premise: '戴蒙德的环境决定论在宏观尺度上极具说服力——它解释了为什么是欧亚大陆而非美洲或澳洲率先发展出复杂文明。但当我们缩小时间尺度和地理范围时，这个框架的局限就显现了。',
+            evidence: '<b>局限一：无法解释欧亚大陆内部的差异。</b>中东（新月沃地）拥有最早的农业、文字和城市，但到中世纪已经衰落。中国在宋朝（公元1000年左右）是全球最先进的文明，但此后停滞。近代崛起的是西欧——一个在农业起步时间上远晚于中东的地区。Daron Acemoglu和James Robinson在《国家为什么会失败》中论证：制度差异（包容性 vs 榨取性制度）比地理因素更能解释近500年的经济分化。<b>局限二：解释尺度的断裂。</b>环境决定论对万年尺度的大趋势有强解释力（为什么欧亚大陆领先其他大陆），但对百年尺度的差异（为什么英国而非荷兰率先工业化、为什么日本明治维新成功而清朝洋务运动失败）几乎无效。这些差异需要制度分析、文化分析和偶然事件分析。<b>局限三：对人类能动性的低估。</b>戴蒙德将文明发展描绘为环境条件的自动展开——有了合适的物种，农业"自然"出现；有了农业，复杂社会"自然"发展。但历史中充满了反例：澳洲原住民知道农业但主动放弃了（托雷斯海峡岛民有农业但大陆原住民选择了狩猎采集）。人类不是环境的被动接受者。',
+            conclusion: '<b>戴蒙德的真正贡献不在于给出了完整的答案，而在于提出了正确的问题</b>——并彻底摧毁了种族主义的回答。他证明了：在公元前11000年，没有任何种族具有生物学上的"优势"。此后的一切分化都必须用环境因素来解释——至少在大陆间的宏观对比上如此。但完整的历史解释需要多层次的框架：环境因素解释大陆间差异（戴蒙德的贡献），制度因素解释国家间差异（Acemoglu的补充），文化和偶然因素解释更微观的历史转折。这三个层次不是互相替代的，而是互相嵌套的。'
+          }
+        }
+      ]
+    }
+
+  ],
+  knowledgeMaps: [
+    {
+      afterPart: 1, palette: 'scene3',
+      title: '耶利的问题', center: '终极原因<br>vs近因',
+      branches: [
+        { title: '地理决定论', leaves: ['环境塑造文明轨迹', '种族解释被彻底否定', '大陆间差异的根源'] },
+        { title: '自然实验方法', leaves: ['波利尼西亚群岛对照', '同源社会不同结果', '控制变量的历史学'] },
+        { title: '卡哈马卡冲突', leaves: ['168人vs80000人', '枪炮/钢铁/马匹的碾压', '近因的集中展示'] },
+        { title: '近因链条', leaves: ['枪炮与钢铁', '病菌的大规模杀伤', '文字与政治组织'] },
+        { title: '终极原因', leaves: ['粮食生产的起源', '可驯化物种的分布', '大陆轴线方向'] },
+      ]
+    },
+    {
+      afterPart: 2, palette: 'scene5',
+      title: '粮食生产的地理学', center: '农业革命<br>的逻辑',
+      branches: [
+        { title: '粮食驯化', leaves: ['至少7个独立起源', '新月沃地的先发优势', '驯化候选物种不均分布'] },
+        { title: '安娜卡列尼娜原则', leaves: ['驯化需满足全部条件', '14种大型哺乳动物', '多数野生物种不可驯化'] },
+        { title: '大陆轴线假说', leaves: ['东西轴线利于传播', '南北轴线阻碍传播', '气候带决定物种迁移'] },
+        { title: '物种传播', leaves: ['欧亚大陆东西贯通', '美洲南北阻断', '非洲撒哈拉屏障'] },
+        { title: '剩余→专业化→国家', leaves: ['粮食剩余养活精英', '专业化催生技术', '人口密度推动组织'] },
+      ]
+    },
+    {
+      afterPart: 4, palette: 'scene14',
+      title: '文明分化的因果链', center: '为什么是<br>欧亚大陆',
+      branches: [
+        { title: '牲畜的致命礼物', leaves: ['天花/麻疹/流感', '动物传人的进化', '95%原住民死于病菌'] },
+        { title: '文字发明与传播', leaves: ['独立发明仅两三次', '思想传播vs蓝图复制', '文字是精英垄断工具'] },
+        { title: '技术与政治组织', leaves: ['需求之母vs英雄发明', '技术采纳的社会条件', '从部落到国家的阶梯'] },
+        { title: '澳大利亚vs中国', leaves: ['最干旱大陆的宿命', '中国统一的双刃剑', '政治碎片化的欧洲优势'] },
+        { title: '非洲的悖论', leaves: ['最古老的人类家园', '撒哈拉阻断南北交流', '班图人扩张的逻辑'] },
+      ]
+    }
+  ],
+  mindMaps: [
+    {
+      afterPart: 4, palette: 'scene14',
+      title: '《枪炮、病菌与钢铁》全书思维导图',
+      subtitle: 'GUNS, GERMS AND STEEL — COMPLETE MIND MAP',
+      root: '地理与环境，而非种族，决定了文明的命运',
+      branches: [
+        {
+          text: '从伊甸园到卡哈马卡',
+          children: [
+            { text: '耶利的问题', children: ['为什么是白人拥有货物', '不同大陆发展速度差异', '终极因vs近因'] },
+            { text: '卡哈马卡的碰撞', children: ['168人俘获皇帝', '钢铁/枪炮/马匹的优势', '文字与信息的不对称'] },
+            { text: '人类扩张史', children: ['走出非洲的路径', '大跃进与行为现代性', '最早的大灭绝'] },
+          ]
+        },
+        {
+          text: '粮食生产的出现和传播',
+          children: [
+            { text: '农业起源的地理抽签', children: ['肥沃新月地带的先发优势', '可驯化物种分布不均', '独立起源仅少数几处'] },
+            { text: '驯化的逻辑', children: ['野生祖先的特征筛选', '杏仁的苦味基因突变', '无意识选择到有意识育种'] },
+            { text: '传播的轴线理论', children: ['东西轴线利于传播', '南北轴线气候阻断', '欧亚大陆的结构性优势'] },
+            { text: '大型哺乳动物的驯化', children: ['仅14种被成功驯化', '安娜·卡列尼娜原则', '非洲/美洲缺乏候选物种'] },
+          ]
+        },
+        {
+          text: '从粮食到枪炮/病菌/钢铁',
+          children: [
+            { text: '病菌的演化', children: ['动物传人的致命礼物', '密集人口是病菌温床', '天花消灭95%原住民'] },
+            { text: '文字与技术', children: ['独立发明仅两三次', '技术采纳取决于社会条件', '需求之母vs英雄发明家'] },
+            { text: '政治组织的阶梯', children: ['从族群到国家', '粮食盈余支撑专业化', '宗教与意识形态的整合功能'] },
+          ]
+        },
+        {
+          text: '在五章中环游世界',
+          children: [
+            { text: '澳大利亚与新几内亚', children: ['最干旱大陆的宿命', '高地农业的独立发明', '隔绝阻断技术传入'] },
+            { text: '中国的统一悖论', children: ['早期领先全球', '统一决策的双刃剑', '郑和舰队的终结'] },
+            { text: '非洲的地理困局', children: ['撒哈拉阻断南北交流', '班图人扩张的逻辑', '欧洲殖民的环境基础'] },
+          ]
+        }
+      ]
+    }
+  ]
+};
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// GUNS, GERMS, AND STEEL · CUSTOM COMPONENTS
+// 枪炮、病菌与钢铁 · Custom visualizations and styles
+// ═══════════════════════════════════════════════════════════════
+
+// No custom components yet — all rendering handled by engine defaults
+
+</script>
+<script>
+BookEngine.init();
+</script>
+</body>
+</html>

@@ -1,0 +1,3181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>反脆弱 · 沉浸式深度导读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   IMMERSIVE BOOK ENGINE — Shared Stylesheet
+   Layered architecture for multi-book rendering engine.
+   Each book injects its own styles into @layer book-custom.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base, layout, components, interactive, animation, book-custom, utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE LAYER
+   Root variables, reset, body defaults, texture overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+
+  /* ── Root CSS Variables (unified superset) ── */
+  :root {
+    /* Palette */
+    --bg: #F5F0E8;
+    --bg-secondary: #EDE7DA;
+    --fg: #1A1A1A;
+    --fg-secondary: #5C5546;
+    --accent: #B8860B;
+    --accent-dim: rgba(184, 134, 11, 0.12);
+    --accent-mid: rgba(184, 134, 11, 0.35);
+    --accent-glow: rgba(184, 134, 11, 0.06);
+    --border: rgba(0,0,0,0.06);
+    --glass-bg: rgba(245, 240, 232, 0.72);
+    --glass-border: rgba(255,255,255,0.3);
+    --card-bg: rgba(255,255,255,0.7);
+    --muted-fg: #7A7062;
+
+    /* Typography */
+    --serif: 'Noto Serif SC', 'Songti SC', Georgia, serif;
+    --sans: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Easing */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background-color: var(--bg);
+    color: var(--fg);
+    overflow-x: hidden;
+    line-height: 1.9;
+    transition: background-color 1.4s var(--ease-smooth),
+                color 1.4s var(--ease-smooth);
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Noise/Grain Texture Overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT LAYER
+   Progress bar, scene navigation, hero, scenes, footer
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer layout {
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 9999;
+    width: 0%;
+    transition: width 0.15s linear;
+  }
+  /* Enhanced: gradient shimmer */
+  .progress-bar {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent)) !important;
+    background-size: 200% 100%;
+    animation: progressShimmer 3s ease infinite;
+    height: 3px !important;
+  }
+
+  /* ── Scene Nav (right-side dots) ── */
+  .scene-nav {
+    position: fixed;
+    right: 2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.8s var(--ease-smooth);
+  }
+  .scene-nav.visible { opacity: 1; }
+  .scene-nav a {
+    display: block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--fg);
+    opacity: 0.15;
+    transition: all 0.5s var(--ease-out);
+    position: relative;
+    text-decoration: none;
+  }
+  .scene-nav a.active {
+    background: var(--accent);
+    opacity: 1;
+    transform: scale(1.6);
+    box-shadow: 0 0 12px var(--accent-mid);
+  }
+  .scene-nav a::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%) translateX(4px);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: all 0.3s var(--ease-out);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+  }
+  .scene-nav a:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+  /* Enhanced: glass tooltip */
+  .scene-nav a::after {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  /* ── Hero Section ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+  }
+  .hero-overline {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 3rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 0.3s forwards;
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(3.5rem, 12vw, 8rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(40px);
+    animation: fadeUp 1.4s var(--ease-out) 0.6s forwards;
+    will-change: transform;
+  }
+  .hero-subtitle {
+    font-family: var(--serif);
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 300;
+    color: var(--fg-secondary);
+    max-width: 500px;
+    letter-spacing: 0.1em;
+    margin-bottom: 4rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 1.2s var(--ease-out) 1s forwards;
+  }
+  .hero-part {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    border: 1px solid var(--accent-mid);
+    padding: 0.6rem 2rem;
+    border-radius: 100px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s var(--ease-out) 1.3s forwards;
+  }
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    animation: fadeUp 1s var(--ease-out) 2s forwards;
+  }
+  .hero-scroll-hint span {
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    color: var(--fg-secondary);
+    text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px;
+    height: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .scroll-line::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--accent));
+    animation: scrollDrop 2s ease-in-out infinite;
+  }
+  .hero-scroll-hint .scroll-arrow {
+    font-size: 1.2rem;
+    color: var(--accent);
+    animation: bounceArrow 2s var(--ease-out) infinite;
+    opacity: 0.6;
+  }
+
+  /* ── Scene Sections ── */
+  .scene {
+    min-height: 100vh;
+    padding: 12rem 2rem 8rem;
+    position: relative;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 100vh;
+  }
+  .scene-inner {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .scene-number {
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+  }
+  .scene-title {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .scene-subtitle {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    margin-bottom: 6rem;
+    text-transform: uppercase;
+  }
+
+  /* ── Gradient Mesh Backgrounds for Scenes ── */
+  .scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background:
+      radial-gradient(ellipse at 20% 20%, var(--accent-glow) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, var(--accent-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 100%);
+    z-index: -1;
+  }
+
+  /* ── Hero Quote (cinematic, massive) ── */
+  .hero-quote-wrap {
+    margin: 2rem 0 6rem;
+    padding: 4rem 0;
+    position: relative;
+  }
+  .hero-quote-wrap::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote-wrap::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-mid), transparent);
+  }
+  .hero-quote {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2.6rem);
+    line-height: 1.7;
+    font-weight: 300;
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--accent);
+    z-index: 1;
+  }
+  /* Enhanced: quote decoration marks */
+  .hero-quote-wrap .quote-deco {
+    position: absolute;
+    font-family: var(--serif);
+    font-size: clamp(6rem, 15vw, 12rem);
+    font-weight: 900;
+    color: var(--accent);
+    opacity: 0.06;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-quote-wrap .quote-deco-open {
+    top: -0.5em;
+    left: -0.3em;
+  }
+  .hero-quote-wrap .quote-deco-close {
+    bottom: -0.8em;
+    right: -0.1em;
+  }
+  /* Animated underline highlight on hero quote */
+  .hero-quote-highlight {
+    background: linear-gradient(120deg, var(--accent-dim) 0%, var(--accent-mid) 100%);
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+    background-position: 0 100%;
+    transition: background-size 1.8s var(--ease-out);
+    padding: 0.1em 0;
+  }
+  .reveal-wipe.revealed .hero-quote-highlight {
+    background-size: 100% 100%;
+  }
+
+  /* ── Narrative Paragraphs ── */
+  .narrative { margin-bottom: 2rem; }
+  .narrative p {
+    font-size: 1.05rem;
+    line-height: 2.1;
+    margin-bottom: 2.5rem;
+    color: var(--fg);
+    opacity: 0.82;
+  }
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  /* Enhanced: bold marker highlight */
+  .narrative p strong, .narrative p b {
+    color: var(--accent);
+    font-weight: 600;
+    background: linear-gradient(120deg, var(--accent-dim) 0%, transparent 100%);
+    padding: 0.05em 0.2em;
+    border-radius: 3px;
+  }
+  /* Enhanced: drop cap */
+  .narrative p.drop-cap-p::first-letter {
+    font-family: var(--serif);
+    font-size: 3.5em;
+    font-weight: 900;
+    float: left;
+    line-height: 0.8;
+    margin-right: 0.08em;
+    margin-top: 0.1em;
+    color: var(--accent);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 10rem 2rem 6rem;
+  }
+  .footer-title {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+  }
+  .footer-text {
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    max-width: 460px;
+    margin: 0 auto;
+    line-height: 2;
+    opacity: 0.7;
+  }
+  .footer-next {
+    margin-top: 3rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .footer-bookshelf {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+    padding: 0.75rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--fg-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: all 0.4s var(--ease-out);
+    background: var(--accent-glow);
+  }
+  .footer-bookshelf:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .footer-bookshelf .arrow {
+    transition: transform 0.3s var(--ease-out);
+  }
+  .footer-bookshelf:hover .arrow {
+    transform: translateX(-4px);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENTS LAYER
+   Data viz, big numbers, deep-dive triggers, modals, comparisons,
+   knowledge maps, stat pills, keyboard hint
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Data Viz Container ── */
+  .data-viz {
+    margin: 4rem 0;
+    padding: 3rem 0;
+    position: relative;
+  }
+  .data-viz-title {
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .svg-container {
+    width: 100%;
+    overflow: visible;
+  }
+  .svg-container svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  /* SVG path draw animation */
+  .draw-path {
+    stroke-dasharray: var(--path-length, 1000);
+    stroke-dashoffset: var(--path-length, 1000);
+    transition: stroke-dashoffset 2.5s var(--ease-out);
+  }
+  .draw-path.drawn {
+    stroke-dashoffset: 0;
+  }
+  /* Enhanced: corner accents */
+  .data-viz::before,
+  .data-viz::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: var(--accent-mid);
+    border-style: solid;
+  }
+  .data-viz::before {
+    top: 0;
+    left: 0;
+    border-width: 2px 0 0 2px;
+  }
+  .data-viz::after {
+    bottom: 0;
+    right: 0;
+    border-width: 0 2px 2px 0;
+  }
+
+  /* ── Comparison Table ── */
+  .comparison-table-viz .viz-title {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .comparison-table-viz .viz-desc {
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--fg-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .comparison-table-viz .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+  .comp-table th {
+    text-align: left;
+    padding: 0.65rem 0.8rem;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent-mid);
+    white-space: nowrap;
+  }
+  .comp-table td {
+    padding: 0.6rem 0.8rem;
+    color: var(--fg);
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-table tbody tr:hover {
+    background: var(--accent-dim);
+  }
+  .comparison-table-viz .viz-note {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--fg-secondary);
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid var(--accent-mid);
+    background: var(--accent-glow);
+    line-height: 1.6;
+  }
+
+  /* ── Big Number Counter ── */
+  .big-number {
+    font-family: var(--serif);
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-shadow: 0 0 40px var(--accent-dim), 0 0 80px var(--accent-glow);
+  }
+  .big-number-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--fg-secondary);
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+  .number-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin: 3rem 0;
+    text-align: center;
+  }
+
+  /* ── Deep Dive Triggers ── */
+  .dd-trigger-section {
+    margin-top: 5rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+  }
+  .dd-trigger-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+  .dd-trigger-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .dd-trigger-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .dd-trigger {
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    /* Enhanced: 3D tilt */
+    perspective: 800px;
+    transform-style: preserve-3d;
+    transition: all 0.4s var(--ease-out), transform 0.3s var(--ease-out);
+  }
+  .dd-trigger::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-dim), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .dd-trigger:hover {
+    border-color: var(--accent-mid);
+    transform: translateY(-4px) rotateX(2deg) rotateY(-2deg);
+    box-shadow: 0 12px 40px var(--accent-dim), 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .dd-trigger:hover::before { opacity: 1; }
+  .dd-trigger-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-content {
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger-title {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+  }
+  .dd-trigger-hint {
+    font-size: 0.6rem;
+    color: var(--fg-secondary);
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+  }
+  .dd-trigger-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--accent);
+    transition: transform 0.3s var(--ease-out);
+    position: relative;
+    z-index: 1;
+  }
+  .dd-trigger:hover .dd-trigger-arrow {
+    transform: translateX(4px);
+  }
+  /* Breathing pulse before first click */
+  .dd-trigger:not(.clicked) {
+    animation: ddPulse 3s ease-in-out infinite;
+  }
+  .dd-trigger.clicked {
+    animation: none;
+  }
+
+  /* ── Modal Overlay ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-smooth);
+  }
+  .modal-overlay.open {
+    pointer-events: all;
+    opacity: 1;
+  }
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  }
+  .modal-drawer {
+    position: relative;
+    width: min(580px, 92vw);
+    height: 100vh;
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border-left: 1px solid var(--glass-border);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.6s var(--ease-out);
+    box-shadow: -20px 0 80px rgba(0,0,0,0.1);
+  }
+  .modal-overlay.open .modal-drawer {
+    transform: translateX(0);
+  }
+  .modal-close {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    padding: 1.5rem 2rem 0;
+  }
+  .modal-close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--fg-secondary);
+    transition: all 0.3s;
+  }
+  .modal-close-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .modal-body {
+    padding: 2rem 2.5rem 4rem;
+  }
+  @media (max-width: 640px) {
+    .modal-body { padding: 1.5rem 1.5rem 3rem; }
+  }
+  .modal-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .modal-title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Logic Chain in Modal ── */
+  .logic-chain-modal {
+    position: relative;
+  }
+  .chain-step-modal {
+    position: relative;
+    padding-left: 2rem;
+    padding-bottom: 2.5rem;
+    border-left: 1.5px solid var(--accent-mid);
+  }
+  .chain-step-modal:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+  }
+  .chain-step-modal::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 0.2rem;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--glass-bg), 0 0 0 5px var(--accent-mid);
+  }
+  .chain-label-modal {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    display: inline-block;
+    padding: 0.2rem 0.75rem;
+    background: var(--accent-dim);
+    border-radius: 3px;
+  }
+  .chain-text-modal {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--fg);
+    opacity: 0.88;
+  }
+
+  /* ── Modal Stagger Animation ── */
+  .modal-stagger {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+  }
+  .modal-overlay.open .modal-stagger {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .modal-stagger-1 { transition-delay: 0.15s; }
+  .modal-stagger-2 { transition-delay: 0.35s; }
+  .modal-stagger-3 { transition-delay: 0.55s; }
+  .modal-stagger-4 { transition-delay: 0.75s; }
+  .modal-stagger-5 { transition-delay: 0.95s; }
+  .modal-stagger-6 { transition-delay: 1.15s; }
+
+  /* ── Active Recall Mask (triggerQuestion) ── */
+  .trigger-question {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-dim);
+    border-radius: 12px;
+  }
+  .trigger-question-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .trigger-question-text {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--fg);
+    margin-bottom: 1.2rem;
+  }
+  .recall-reveal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.8rem;
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+  }
+  .recall-reveal-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 20px var(--accent-dim);
+  }
+  .logic-chain-modal {
+    transition: filter 0.6s var(--ease-out);
+  }
+  .logic-chain-modal.chain-masked {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ── Extended Reading (Collapsible Panel) ── */
+  .extended-reading {
+    margin: 1.5rem 0 3rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .extended-reading-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.3s;
+  }
+  .extended-reading-toggle::-webkit-details-marker { display: none; }
+  .extended-reading-toggle::after {
+    content: '›';
+    margin-left: auto;
+    font-size: 1.1rem;
+    transition: transform 0.3s var(--ease-out);
+  }
+  .extended-reading[open] .extended-reading-toggle::after {
+    transform: rotate(90deg);
+  }
+  .extended-reading-toggle:hover {
+    background: var(--accent-dim);
+  }
+  .extended-reading-content {
+    padding: 0 1.5rem 1.5rem;
+  }
+  .extended-reading-content p {
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--muted-fg);
+    margin-bottom: 1.2rem;
+    opacity: 0.85;
+  }
+  .extended-reading-content p:last-child { margin-bottom: 0; }
+
+  /* ── Key Term Inline Highlight ── */
+  .key-term {
+    color: var(--accent);
+    border-bottom: 1px dashed var(--accent-mid);
+    cursor: help;
+    transition: border-color 0.3s;
+  }
+  .key-term:hover {
+    border-bottom-style: solid;
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Glossary Floating Button ── */
+  .glossary-fab {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 450;
+    padding: 0.65rem 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--fg-secondary);
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .glossary-fab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-dim);
+  }
+
+  /* ── Glossary Drawer Content ── */
+  .glossary-header { margin-bottom: 2rem; }
+  .glossary-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .glossary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .glossary-item {
+    padding: 1.2rem;
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.3s;
+  }
+  .glossary-item:hover { border-color: var(--accent-mid); }
+  .glossary-term {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .glossary-definition {
+    font-size: 0.88rem;
+    line-height: 1.9;
+    color: var(--fg-secondary);
+  }
+
+  /* ── Comparison Module ── */
+  .comparison-section {
+    margin: 5rem 0;
+    padding: 3rem 0;
+  }
+  .comparison-toggle {
+    display: inline-flex;
+    gap: 0;
+    margin-bottom: 3rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+    background: var(--accent-glow);
+  }
+  .toggle-btn {
+    padding: 0.65rem 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border: none;
+    background: transparent;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 0.4s var(--ease-out);
+    min-height: 44px;
+    white-space: nowrap;
+  }
+  .toggle-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 100px;
+    box-shadow: 0 4px 15px var(--accent-mid);
+  }
+  .comparison-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .comp-row-label {
+    font-family: var(--serif);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+  .comp-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+  .comp-bar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .comp-bar-tag {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    width: 2.5rem;
+    text-align: right;
+    color: var(--fg-secondary);
+    opacity: 0.5;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .comp-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .comp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.2s var(--ease-out);
+    width: 0%;
+  }
+  /* Enhanced: animated gradient fills */
+  .comp-bar-fill.amber {
+    background: linear-gradient(90deg, var(--accent), var(--accent-mid), var(--accent));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+  }
+  .comp-bar-fill.grey {
+    background: linear-gradient(90deg, var(--fg-secondary), rgba(128,128,128,0.4), var(--fg-secondary));
+    background-size: 200% 100%;
+    animation: barGradient 3s ease infinite;
+    opacity: 0.5;
+  }
+  .comp-bar-value {
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 2rem;
+    color: var(--fg-secondary);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .comp-text {
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--fg-secondary);
+    margin-top: 0.4rem;
+    opacity: 0.7;
+  }
+
+  /* ── Knowledge Map ── */
+  .knowledge-map {
+    margin: 4rem 0;
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+  .km-title {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--accent);
+  }
+  .km-center {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .km-connector {
+    width: 2px;
+    height: 2rem;
+    background: linear-gradient(to bottom, var(--accent-mid), transparent);
+    margin: 0 auto;
+  }
+  .km-branches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .km-branch {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: left;
+  }
+  .km-branch-title {
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .km-branch-title::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .km-leaves {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .km-leaf {
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: var(--fg-secondary);
+    padding-left: 1rem;
+    position: relative;
+  }
+  .km-leaf::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 6px;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+
+  /* ── Mind Map (Multi-level Tree) ── */
+  .mind-map {
+    margin: 4rem 0;
+    padding: 3rem 1.5rem;
+  }
+  .mm-title {
+    text-align: center;
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+  .mm-subtitle {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--fg-secondary);
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .mm-root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto 0.5rem;
+    padding: 0.7rem 1.8rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 2rem;
+    box-shadow: 0 4px 20px var(--accent-mid);
+  }
+  .mm-trunk {
+    width: 2px;
+    height: 1.5rem;
+    background: var(--accent-mid);
+    margin: 0 auto;
+  }
+  .mm-level1-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .mm-l1 {
+    background: var(--accent-glow);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    position: relative;
+  }
+  .mm-l1-title {
+    font-family: var(--serif);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.7rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .mm-l2 {
+    margin-left: 0.6rem;
+    padding-left: 0.9rem;
+    border-left: 1px solid var(--accent-mid);
+    margin-bottom: 0.5rem;
+  }
+  .mm-l2:last-child { margin-bottom: 0; }
+  .mm-l2-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.25rem;
+    position: relative;
+    padding-left: 0.7rem;
+  }
+  .mm-l2-title::before {
+    content: '';
+    position: absolute;
+    left: -0.95rem;
+    top: 0.5em;
+    width: 0.6rem;
+    height: 1px;
+    background: var(--accent-mid);
+  }
+  .mm-l3-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-left: 0.7rem;
+    padding-left: 0.7rem;
+    border-left: 1px dashed var(--border);
+  }
+  .mm-l3 {
+    font-size: 0.7rem;
+    line-height: 1.55;
+    color: var(--fg-secondary);
+    position: relative;
+    padding-left: 0.6rem;
+  }
+  .mm-l3::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 0.55em;
+    width: 0.5rem;
+    height: 1px;
+    background: var(--border);
+  }
+  @media (max-width: 600px) {
+    .mm-level1-wrap { grid-template-columns: 1fr; }
+    .mm-root { font-size: 0.9rem; padding: 0.6rem 1.4rem; }
+  }
+
+  /* ── Stat Pill Badges ── */
+  .stat-pill {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85em;
+    padding: 0.1em 0.5em;
+    border-radius: 100px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Keyboard Nav Hint ── */
+  .kb-hint {
+    position: fixed;
+    bottom: 2rem;
+    right: 2.5rem;
+    z-index: 400;
+    font-family: var(--sans);
+    font-size: 0.55rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: var(--fg-secondary);
+    opacity: 0.4;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: opacity 0.8s var(--ease-smooth);
+    pointer-events: none;
+  }
+  .kb-hint.hidden { opacity: 0; }
+  .kb-hint kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--accent-glow);
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    line-height: 1;
+  }
+
+  /* ── Dark Scene Accents ── */
+  .scene.dark-scene .scene-title {
+    text-shadow: 0 0 60px var(--accent-dim);
+  }
+  .scene.dark-scene .big-number {
+    text-shadow: 0 0 40px var(--accent-mid), 0 0 80px var(--accent-dim);
+  }
+
+  /* ── Dark Particles (shared floating particle system) ── */
+  .dark-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .dark-particles .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    animation: particleFloat 12s ease-in-out infinite;
+    animation-play-state: paused;
+    will-change: transform, opacity;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTIVE LAYER
+   Empty placeholder — book-specific interactive styles injected at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer interactive {
+  /* Book-specific interactive widgets go here via custom.css */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATION LAYER
+   Reveal system, keyframes, reduced-motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer animation {
+
+  /* ── Reveal System ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.15s; }
+  .reveal-delay-2 { transition-delay: 0.3s; }
+  .reveal-delay-3 { transition-delay: 0.45s; }
+  .reveal-delay-4 { transition-delay: 0.6s; }
+
+  .reveal-wipe {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.6s var(--ease-out);
+  }
+  .reveal-wipe.revealed {
+    clip-path: inset(0 0% 0 0);
+  }
+
+  /* ── Keyframes ── */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollDrop {
+    0% { top: -100%; }
+    100% { top: 100%; }
+  }
+  @keyframes progressShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes bounceArrow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+  @keyframes ddPulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+  @keyframes barGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes particleFloat {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    50% { transform: translateY(-80px) translateX(30px); opacity: 0.2; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(-160px) translateX(-20px); opacity: 0; }
+  }
+
+  /* ── Reduced Motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal { opacity: 1; transform: none; }
+    .draw-path { stroke-dashoffset: 0 !important; }
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOOK-CUSTOM LAYER
+   Empty — each book injects its own styles at runtime
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer book-custom {
+  /* Populated by book-specific custom.css / custom.js */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITIES LAYER
+   Empty placeholder for utility classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Utility classes can be added here */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS (shared only — no book-specific selectors)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .scene { padding: 7rem 1.5rem 5rem; }
+  .scene-nav { display: none; }
+  .hero-quote { font-size: 1.2rem; }
+  .number-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .glossary-fab {
+    bottom: 1rem;
+    left: 1rem;
+    font-size: 0.6rem;
+    padding: 0.5rem 1rem;
+  }
+  .trigger-question { padding: 1rem; }
+  .trigger-question-text { font-size: 0.95rem; }
+  .extended-reading-toggle { padding: 0.8rem 1.2rem; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="scene-nav" id="sceneNav"></nav>
+<div id="app"></div>
+
+<div class="kb-hint" id="kbHint">
+  <kbd>Space</kbd> / <kbd>↓</kbd> 下一场景 &nbsp; <kbd>↑</kbd> 上一场景
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-drawer" id="modalDrawer">
+    <div class="modal-close">
+      <button class="modal-close-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// BookEngine — Component Registry, Plugin System & Shared Components
+// ═══════════════════════════════════════════════════════════════
+
+window.BookEngine = (function() {
+  // ── Registry ──
+  const vizRegistry = {};
+  const initQueue = [];
+  const plugins = [];
+  const hooks = {};
+
+  // ── Public API ──
+  const engine = {
+    // Register a visualization/component renderer
+    // Usage: BookEngine.registerViz('dunbar', { render: fn, init: fn })
+    registerViz(type, handler) {
+      vizRegistry[type] = handler;
+    },
+
+    // Register an init function to run after DOM render
+    registerInit(fn) {
+      initQueue.push(fn);
+    },
+
+    // Register a plugin with lifecycle hooks
+    // Plugin: { name, onInit, onRender, onScroll, onModalOpen, onModalClose, onDestroy }
+    registerPlugin(plugin) {
+      plugins.push(plugin);
+      // Register individual hooks
+      ['onInit','onRender','onScroll','onModalOpen','onModalClose','onDestroy'].forEach(hook => {
+        if (plugin[hook]) {
+          engine.registerHook(hook, plugin[hook]);
+        }
+      });
+    },
+
+    // Register a lifecycle hook
+    registerHook(hookName, fn) {
+      if (!hooks[hookName]) hooks[hookName] = [];
+      hooks[hookName].push(fn);
+    },
+
+    // Trigger all handlers for a hook
+    triggerHook(hookName, ...args) {
+      if (hooks[hookName]) {
+        hooks[hookName].forEach(fn => {
+          try { fn(...args); } catch(e) { console.warn(`[BookEngine] Hook ${hookName} error:`, e); }
+        });
+      }
+    },
+
+    // Render a visualization by type
+    renderViz(type, scene, config) {
+      const handler = vizRegistry[type];
+      if (!handler) {
+        console.warn(`[BookEngine] Unknown viz type: ${type}`);
+        return '';
+      }
+      return typeof handler.render === 'function' ? handler.render(scene, config) : '';
+    },
+
+    // Initialize a visualization by type (called after DOM render)
+    initViz(type) {
+      const handler = vizRegistry[type];
+      if (handler && typeof handler.init === 'function') {
+        handler.init();
+      }
+    },
+
+    // Run all init functions and plugin onInit hooks
+    runInits() {
+      initQueue.forEach(fn => {
+        try { fn(); } catch(e) { console.warn('[BookEngine] Init error:', e); }
+      });
+      engine.triggerHook('onInit');
+    },
+
+    // Inject custom CSS into the document (for book-specific styles)
+    injectCSS(cssString) {
+      if (!cssString) return;
+      const style = document.createElement('style');
+      style.textContent = cssString;
+      document.head.appendChild(style);
+    },
+
+    // ── Shared Component Renderers ──
+
+    // Render comparison toggle module
+    renderComparison(comp) {
+      // Accept both comp.rows and comp.dimensions
+      const rows = comp.rows || comp.dimensions;
+      if (!comp || !rows) return '';
+      const labels = comp.labels || ['采集', '农耕'];
+      const modes = comp.modes || ['foraging', 'farming'];
+      const triggerLabel = comp.triggerLabel || '生活质量对比 · Quality of Life';
+      // Support 2 or 3 buttons (original sapiens has 3: foraging, farming, compare)
+      const showCompare = comp.showCompare !== false;
+      let html = `
+        <div class="comparison-section reveal">
+          <div class="dd-trigger-label">${triggerLabel}</div>
+          <div class="comparison-toggle">
+            <button class="toggle-btn active" data-mode="${modes[0]}">${comp.btnLabels?.[0] || labels[0] + '生活'}</button>
+            <button class="toggle-btn" data-mode="${modes[1]}">${comp.btnLabels?.[1] || labels[1] + '生活'}</button>
+            ${showCompare ? `<button class="toggle-btn" data-mode="compare">对比</button>` : ''}
+          </div>
+          <div class="comparison-rows">`;
+      rows.forEach((row, i) => {
+        html += `
+            <div class="comp-row reveal reveal-delay-${Math.min(i+1,4)}" data-comp-row>
+              <div class="comp-row-label">${row.label}</div>
+              <div class="comp-bars">
+                <div class="comp-bar-wrapper" data-bar="${modes[0]}">
+                  <span class="comp-bar-tag">${labels[0]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill amber" data-score="${row[modes[0]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[0]].score}/10</span>
+                </div>
+                <div class="comp-bar-wrapper" data-bar="${modes[1]}" style="display:none;">
+                  <span class="comp-bar-tag">${labels[1]}</span>
+                  <div class="comp-bar-track"><div class="comp-bar-fill grey" data-score="${row[modes[1]].score}"></div></div>
+                  <span class="comp-bar-value">${row[modes[1]].score}/10</span>
+                </div>
+              </div>
+              <div class="comp-text" data-text-${modes[0]}>${row[modes[0]].text}</div>
+              <div class="comp-text" data-text-${modes[1]} style="display:none;">${row[modes[1]].text}</div>
+            </div>`;
+      });
+      html += `</div></div>`;
+      return html;
+    },
+
+    // Render knowledge map
+    renderKnowledgeMap(map) {
+      if (!map) return '';
+      const centerText = map.center || map.centerNode || '';
+      const centerStyle = map.centerStyle ? ` style="${map.centerStyle}"` : '';
+      const branchesStyle = map.branchesStyle ? ` style="${map.branchesStyle}"` : '';
+      let html = `
+        <section class="knowledge-map" data-palette="${map.palette || 'hero'}">
+          <div class="km-title reveal">${map.title}</div>
+          <div class="km-center reveal reveal-delay-1"${centerStyle}>${centerText}</div>
+          <div class="km-connector reveal reveal-delay-1"></div>
+          <div class="km-branches"${branchesStyle}>`;
+      map.branches.forEach((branch, i) => {
+        const delay = i < 2 ? 2 : 3;
+        const items = branch.leaves || branch.items || [];
+        html += `
+            <div class="km-branch reveal reveal-delay-${delay}">
+              <div class="km-branch-title">${branch.title}</div>
+              <div class="km-leaves">
+                ${items.map(item => `<div class="km-leaf">${item}</div>`).join('')}
+              </div>
+            </div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // Render mind map (multi-level tree)
+    renderMindMap(map) {
+      if (!map || !map.branches) return '';
+      const renderL3 = (items) => {
+        if (!items || items.length === 0) return '';
+        return `<div class="mm-l3-list">${items.map(t => `<div class="mm-l3">${t}</div>`).join('')}</div>`;
+      };
+      const renderL2 = (children) => {
+        if (!children || children.length === 0) return '';
+        return children.map(c => {
+          if (typeof c === 'string') {
+            return `<div class="mm-l2"><div class="mm-l2-title">${c}</div></div>`;
+          }
+          return `<div class="mm-l2"><div class="mm-l2-title">${c.text}</div>${renderL3(c.children)}</div>`;
+        }).join('');
+      };
+      let html = `<section class="mind-map" data-palette="${map.palette || 'hero'}">`;
+      html += `<div class="mm-title reveal">${map.title}</div>`;
+      if (map.subtitle) html += `<div class="mm-subtitle reveal">${map.subtitle}</div>`;
+      html += `<div class="mm-root reveal reveal-delay-1">${map.root}</div>`;
+      html += `<div class="mm-trunk reveal reveal-delay-1"></div>`;
+      html += `<div class="mm-level1-wrap">`;
+      map.branches.forEach((b, i) => {
+        const delay = i < 2 ? 2 : 3;
+        html += `<div class="mm-l1 reveal reveal-delay-${delay}">`;
+        html += `<div class="mm-l1-title">${b.text}</div>`;
+        html += renderL2(b.children);
+        html += `</div>`;
+      });
+      html += `</div></section>`;
+      return html;
+    },
+
+    // ── Shared Initializers ──
+
+    // Initialize comparison toggle behavior
+    initComparison() {
+      document.querySelectorAll('.comparison-toggle').forEach(toggle => {
+        toggle.addEventListener('click', e => {
+          const btn = e.target.closest('.toggle-btn');
+          if (!btn) return;
+          toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const section = toggle.closest('.comparison-section');
+          engine.updateCompBars(btn.dataset.mode, section);
+        });
+      });
+    },
+
+    updateCompBars(mode, section) {
+      const modes = [];
+      section.querySelectorAll('.toggle-btn').forEach(b => {
+        if (b.dataset.mode !== 'compare') modes.push(b.dataset.mode);
+      });
+      const isCompare = mode === 'compare';
+      section.querySelectorAll('[data-comp-row]').forEach(row => {
+        modes.forEach(m => {
+          const bar = row.querySelector(`[data-bar="${m}"]`);
+          const text = row.querySelector(`[data-text-${m}]`);
+          if (bar) bar.style.display = (isCompare || m === mode) ? 'flex' : 'none';
+          if (text) text.style.display = (isCompare || m === mode) ? 'block' : 'none';
+        });
+      });
+      engine.animateCompBars(section);
+    },
+
+    animateCompBars(section) {
+      (section || document).querySelectorAll('.comp-bar-fill').forEach(bar => {
+        if (bar.closest('.comp-bar-wrapper').style.display === 'none') return;
+        bar.style.width = '0%';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.style.width = (parseInt(bar.dataset.score) / 10 * 100) + '%';
+        }));
+      });
+    },
+
+    // Animate counter (shared utility)
+    animateCounter(el, from, to, duration, suffix) {
+      const start = performance.now();
+      function formatVal(val) {
+        if (suffix === '万' || suffix === '%') return val;
+        if (val >= 1000000) return (val / 1000000).toFixed(0) + 'M';
+        if (val >= 10000 && !suffix) return Math.round(val / 1000) + 'K';
+        return val;
+      }
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = Math.round(from + (to - from) * eased);
+        el.textContent = formatVal(val) + (p >= 1 && suffix ? suffix : (p < 1 && suffix === '+' ? '' : ''));
+        if (p >= 1) el.textContent = formatVal(to) + (suffix || '');
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    },
+
+    // Animate SVG data viz bars
+    animateDataViz(container) {
+      const bars = container.querySelectorAll('.draw-bar');
+      bars.forEach((bar, i) => {
+        const targetW = parseFloat(bar.dataset.targetW);
+        setTimeout(() => {
+          bar.style.transition = 'width 1.5s var(--ease-out)';
+          bar.style.width = targetW + 'px';
+        }, i * 300);
+      });
+      const labels = container.querySelectorAll('.bar-label');
+      labels.forEach((lbl, i) => {
+        setTimeout(() => {
+          lbl.style.transition = 'opacity 0.6s';
+          lbl.style.opacity = '1';
+        }, 800 + i * 300);
+      });
+    },
+
+    // Get registered viz types
+    getVizTypes() { return Object.keys(vizRegistry); },
+
+    // Get plugins
+    getPlugins() { return plugins.map(p => p.name); }
+  };
+
+  // ── Built-in Viz: comparison-table ──
+  engine.registerViz('comparison-table', {
+    render(scene, config) {
+      const d = config.data;
+      if (!d || !d.columns || !d.rows) return '';
+      let html = `<div class="data-viz comparison-table-viz reveal" data-viz="comparison-table">`;
+      if (config.title) html += `<h4 class="viz-title">${config.title}</h4>`;
+      if (config.description) html += `<p class="viz-desc">${config.description}</p>`;
+      html += `<div class="table-scroll"><table class="comp-table">`;
+      html += `<thead><tr>${d.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
+      html += `<tbody>`;
+      d.rows.forEach(row => {
+        html += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+      });
+      html += `</tbody></table></div>`;
+      if (d.note) html += `<p class="viz-note">${d.note}</p>`;
+      html += `</div>`;
+      return html;
+    }
+  });
+
+  return engine;
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// Immersive Book Engine — Core Rendering & Interaction System
+// ═══════════════════════════════════════════════════════════════
+
+(function() {
+  'use strict';
+
+  // ── DOM References ──
+  const app = document.getElementById('app');
+  const sceneNav = document.getElementById('sceneNav');
+
+  // ── Palette System ──
+  // Unified superset: 13 color variables
+  const PALETTE_KEYS = [
+    ['bg',          '--bg'],
+    ['bgSecondary', '--bg-secondary'],
+    ['fg',          '--fg'],
+    ['fgSecondary', '--fg-secondary'],
+    ['accent',      '--accent'],
+    ['accentDim',   '--accent-dim'],
+    ['accentMid',   '--accent-mid'],
+    ['accentGlow',  '--accent-glow'],
+    ['border',      '--border'],
+    ['glassBg',     '--glass-bg'],
+    ['glassBorder', '--glass-border'],
+    ['cardBg',      '--card-bg'],
+    ['mutedFg',     '--muted-fg']
+  ];
+
+  function applyPalette(name) {
+    const p = PALETTES[name];
+    if (!p) return;
+    const s = document.documentElement.style;
+    PALETTE_KEYS.forEach(([key, prop]) => {
+      // Fallback: cardBg → glassBg, mutedFg → fgSecondary, etc.
+      const val = p[key]
+        || (key === 'cardBg' ? p.glassBg : null)
+        || (key === 'mutedFg' ? p.fgSecondary : null)
+        || (key === 'bgSecondary' ? p.bg : null)
+        || (key === 'glassBorder' ? p.border : null);
+      if (val) s.setProperty(prop, val);
+    });
+    document.body.style.backgroundColor = p.bg;
+    document.body.style.color = p.fg;
+  }
+
+  // ── Render Engine ──
+  function renderApp() {
+    const { meta, scenes } = CONTENT_DATA;
+    const parts = meta.parts || [];
+    const knowledgeMaps = CONTENT_DATA.knowledgeMaps || [];
+    const mindMaps = CONTENT_DATA.mindMaps || [];
+    const aiReflection = CONTENT_DATA.aiReflection || null;
+    let html = '';
+
+    // Hero
+    html += `
+      <section class="hero" id="hero">
+        <div class="hero-overline">${meta.author || meta.authorEn || ''} · ${meta.titleEn || meta.bookSub || ''}</div>
+        <h1 class="hero-title" id="heroTitle">${meta.title || meta.book || ''}</h1>
+        <p class="hero-subtitle">${meta.subtitle || meta.partTitle || ''}</p>
+        <div class="hero-part">${meta.badge || (meta.part ? meta.part + (meta.partSub ? ' · ' + meta.partSub : '') : '')}</div>
+        <div class="hero-scroll-hint">
+          <span>向下滚动</span>
+          <div class="scroll-arrow">↓</div>
+          <div class="scroll-line"></div>
+        </div>
+      </section>`;
+
+    // Hero extra content (e.g., timeline explorer for sapiens)
+    if (typeof CONTENT_DATA.renderHeroExtra === 'function') {
+      html += CONTENT_DATA.renderHeroExtra();
+    }
+
+    // Determine dark scenes from data or palette analysis
+    const darkScenes = CONTENT_DATA.darkScenes || [];
+
+    // Render scenes
+    scenes.forEach((scene, idx) => {
+      const isDark = darkScenes.includes(scene.palette);
+
+      // Part divider BEFORE scene (declarative)
+      const partBefore = parts.find(p => p.beforeScene === scene.id);
+      if (partBefore && partBefore.number > 1) {
+        // Knowledge map for the previous part
+        const kmBefore = knowledgeMaps.find(km => km.afterPart === partBefore.number - 1);
+        if (kmBefore) {
+          html += BookEngine.renderKnowledgeMap(kmBefore);
+        }
+        // Mind map for the previous part
+        const mmBefore = mindMaps.find(mm => mm.afterPart === partBefore.number - 1);
+        if (mmBefore) {
+          html += BookEngine.renderMindMap(mmBefore);
+        }
+        // Part intro
+        const prevScene = idx > 0 ? scenes[idx - 1] : null;
+        const introPalette = scene.palette;
+        html += `
+          <section class="hero" id="part${partBefore.number}-intro" data-palette="${introPalette}" style="min-height:80vh;">
+            <div class="hero-overline reveal" style="animation:none;">第${numberToChinese(partBefore.number)}部分</div>
+            <h1 class="hero-title reveal reveal-delay-1" style="animation:none; font-size:clamp(2.5rem,9vw,5.5rem);">${partBefore.title}</h1>
+            <p class="hero-subtitle reveal reveal-delay-2" style="animation:none;">${partBefore.titleEn || ''}</p>
+          </section>`;
+      }
+
+      // Scene section
+      html += `<section class="scene${isDark ? ' dark-scene' : ''}" id="${scene.id}" data-palette="${scene.palette}"><div class="scene-inner" style="position:relative;z-index:1;">`;
+
+      // Dark mode particles
+      if (isDark && !scene.starField) {
+        html += `<div class="dark-particles">${Array.from({length:20}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, d = 8+Math.random()*16, delay = Math.random()*10;
+          return `<div class="particle" style="left:${x}%;top:${y}%;animation-duration:${d}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+      // Star field
+      if (scene.starField) {
+        html += `<div class="star-field">${Array.from({length:50}, (_,i) => {
+          const x = Math.random()*100, y = Math.random()*100, size = 1+Math.random()*2, delay = Math.random()*6, dur = 3+Math.random()*4;
+          return `<div class="star" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;"></div>`;
+        }).join('')}</div>`;
+      }
+
+      // Scene header
+      html += `
+        <div class="reveal scene-number">${scene.number || ('场景 ' + String(idx+1).padStart(2,'0'))}</div>
+        <h2 class="reveal scene-title reveal-delay-1">${scene.title}</h2>
+        <div class="reveal scene-subtitle reveal-delay-2">${scene.subtitle || ''}</div>`;
+
+      // Hero Quote
+      if (scene.heroQuote) {
+        html += `
+        <div class="hero-quote-wrap reveal-wipe">
+          <span class="quote-deco quote-deco-open">「</span>
+          <span class="quote-deco quote-deco-close">」</span>
+          <blockquote class="hero-quote"><span class="hero-quote-highlight">${scene.heroQuote}</span></blockquote>
+        </div>`;
+      }
+
+      // Narrative (with keyTerm highlighting)
+      if (scene.narrative?.length) {
+        const kt = CONTENT_DATA.meta.keyTerms || [];
+        html += `<div class="narrative">`;
+        scene.narrative.forEach((p, pi) => {
+          let text = p;
+          if (kt.length) {
+            kt.forEach(k => {
+              const escaped = k.term.replace(/[.*+?^${}()|[\]\\]/g, '\\<!-- ENGINE_JS -->');
+              text = text.replace(new RegExp(`(?:<[^>]*>.*?<\\/[^>]*>)|(?:${escaped})`, 'g'), match => {
+                if (match.startsWith('<')) return match; // inside HTML tag, skip
+                return `<span class="key-term" title="${k.definition}">${match}</span>`;
+              });
+            });
+          }
+          const cls = pi === 0 ? ' drop-cap-p' : '';
+          html += `<p class="reveal${cls}">${text}</p>`;
+        });
+        html += `</div>`;
+      }
+
+      // Extended Reading (collapsible background panel)
+      if (scene.extendedReading?.length) {
+        html += `
+          <details class="extended-reading reveal">
+            <summary class="extended-reading-toggle">📖 展开深度背景</summary>
+            <div class="extended-reading-content">
+              ${scene.extendedReading.map(p => `<p>${p}</p>`).join('')}
+            </div>
+          </details>`;
+      }
+
+      // Data Viz — dispatch to registry
+      if (scene.dataViz) {
+        const vizType = typeof scene.dataViz === 'string' ? scene.dataViz : scene.dataViz.type;
+        const vizConfig = typeof scene.dataViz === 'string' ? { type: vizType } : scene.dataViz;
+        html += BookEngine.renderViz(vizType, scene, vizConfig);
+      }
+
+      // Extra renderers for this scene (book-specific injections)
+      if (scene.extraRender) {
+        scene.extraRender.forEach(fn => {
+          if (typeof fn === 'function') html += fn(scene);
+          else if (typeof fn === 'string') html += fn;
+        });
+      }
+
+      // Comparison
+      if (scene.comparison) {
+        html += BookEngine.renderComparison(scene.comparison);
+      }
+
+      // Interactive module — dispatch to registry
+      if (scene.interactive) {
+        const intType = scene.interactive.type;
+        html += BookEngine.renderViz(intType, scene, scene.interactive);
+      }
+
+      // Deep Dives
+      if (scene.deepDives?.length) {
+        html += `<div class="dd-trigger-section reveal"><div class="dd-trigger-label">深度解析 · Deep Dive</div><div class="dd-trigger-grid">`;
+        scene.deepDives.forEach((dd, i) => {
+          html += `
+            <div class="dd-trigger reveal reveal-delay-${Math.min(i+1, 4)}" data-dd-idx="${idx}-${i}">
+              <span class="dd-trigger-icon">${dd.icon}</span>
+              <div class="dd-trigger-content">
+                <div class="dd-trigger-title">${dd.title}</div>
+                <div class="dd-trigger-hint">点击展开完整论证链</div>
+              </div>
+              <span class="dd-trigger-arrow">→</span>
+            </div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // Key Takeaway
+      if (scene.keyTakeaway) {
+        html += `<div class="reveal" style="margin-top:3rem;padding:1.5rem;background:var(--accent-glow);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;font-size:0.85rem;line-height:1.8;color:var(--fg-secondary);">
+          <strong style="color:var(--accent);font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;">核心收获</strong><br>${scene.keyTakeaway}</div>`;
+      }
+
+      html += `</div></section>`; // end scene-inner + scene
+    });
+
+    // Final knowledge map (after last part)
+    const lastPart = parts.length > 0 ? Math.max(...parts.map(p => p.number)) : 0;
+    knowledgeMaps.filter(km => km.afterPart >= lastPart || km.afterPart === 'final').forEach(km => {
+      html += BookEngine.renderKnowledgeMap(km);
+    });
+
+    // Final mind maps (after last part)
+    mindMaps.filter(mm => mm.afterPart >= lastPart || mm.afterPart === 'final').forEach(mm => {
+      html += BookEngine.renderMindMap(mm);
+    });
+
+    // AI Reflection / Epilogue
+    if (aiReflection) {
+      const epiloguePalette = aiReflection.palette || (scenes.length > 0 ? scenes[scenes.length - 1].palette : 'hero');
+      html += `
+        <section class="scene epilogue-section" id="epilogue" data-palette="${epiloguePalette}" style="min-height:auto; padding: clamp(4rem,10vw,8rem) 0;">
+          <div class="scene-inner">
+            <div class="reveal scene-number" style="opacity:0.4;">${aiReflection.label || '写在最后'}</div>
+            <h2 class="reveal scene-title reveal-delay-1" style="font-size:clamp(1.8rem,5vw,3rem);">${aiReflection.title}</h2>
+            <div class="reveal scene-subtitle reveal-delay-2">${aiReflection.subtitle || ''}</div>
+            ${aiReflection.heroQuote ? `
+            <div class="hero-quote-wrap reveal-wipe">
+              <blockquote class="hero-quote" style="font-size:clamp(1rem,2.5vw,1.4rem);">${aiReflection.heroQuote}</blockquote>
+            </div>` : ''}
+            <div class="narrative">
+              ${(aiReflection.paragraphs || []).map(p => `<p class="reveal">${p}</p>`).join('')}
+            </div>
+          </div>
+        </section>`;
+    }
+
+    // Glossary floating button (only if keyTerms exist)
+    if (CONTENT_DATA.meta.keyTerms?.length) {
+      html += `<button class="glossary-fab" id="glossaryFab" title="术语表">📖 术语表</button>`;
+    }
+
+    // Footer
+    html += `
+      <footer class="footer" data-palette="hero">
+        <div class="reveal footer-title">${CONTENT_DATA.footer?.title || '全书 · 终'}</div>
+        <p class="reveal footer-text reveal-delay-1">${CONTENT_DATA.footer?.text || ''}</p>
+        ${CONTENT_DATA.footer?.note ? `<div class="reveal footer-next reveal-delay-2" style="opacity:0.4;margin-top:3rem;font-size:0.7rem;">${CONTENT_DATA.footer.note}</div>` : ''}
+        <a href="../index.html" class="footer-bookshelf reveal reveal-delay-3"><span class="arrow">←</span> 返回书架</a>
+      </footer>`;
+
+    app.innerHTML = html;
+
+    // Build nav dots
+    let navHtml = '';
+    scenes.forEach(s => {
+      navHtml += `<a href="#${s.id}" data-scene="${s.id}" data-label="${s.title}"></a>`;
+    });
+    sceneNav.innerHTML = navHtml;
+
+    // Trigger hook
+    BookEngine.triggerHook('onRender');
+
+    // Init systems
+    initScrollSystem();
+    initDeepDiveModal();
+    BookEngine.initComparison();
+    BookEngine.runInits();
+  }
+
+  // ── Scroll System ──
+  function initScrollSystem() {
+    const scenes = document.querySelectorAll('.scene');
+    const navLinks = document.querySelectorAll('.scene-nav a');
+    const progressBar = document.getElementById('progressBar');
+    const nav = document.getElementById('sceneNav');
+
+    // Reveal observer
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal, .reveal-wipe').forEach(el => revealObs.observe(el));
+
+    // Data viz observer
+    const vizObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateDataViz(e.target);
+          vizObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('[data-viz]').forEach(el => vizObs.observe(el));
+
+    // Big number counter observer
+    const countObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const target = parseInt(e.target.dataset.countTo);
+          const suffix = e.target.dataset.suffix || '';
+          BookEngine.animateCounter(e.target, 0, target, 2000, suffix);
+          countObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count-to]').forEach(el => countObs.observe(el));
+
+    // Comparison observer
+    const compObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          BookEngine.animateCompBars();
+          compObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.comparison-section').forEach(el => compObs.observe(el));
+
+    // Custom observers (registered by books)
+    if (BookEngine._customObservers) {
+      BookEngine._customObservers.forEach(obs => obs());
+    }
+
+    // Scroll handler — palette + progress + nav
+    let currentPalette = 'hero';
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+        nav.classList.toggle('visible', scrollTop > window.innerHeight * 0.5);
+
+        // Hero parallax
+        const heroTitle = document.getElementById('heroTitle');
+        if (heroTitle && scrollTop < window.innerHeight) {
+          heroTitle.style.transform = `translateY(${scrollTop * 0.15}px)`;
+        }
+
+        // Determine active palette
+        const viewMid = scrollTop + window.innerHeight * 0.45;
+        let newPalette = 'hero';
+        document.querySelectorAll('[data-palette]').forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            newPalette = s.dataset.palette;
+          }
+        });
+        // Nav active dot
+        scenes.forEach(s => {
+          if (viewMid >= s.offsetTop && viewMid <= s.offsetTop + s.offsetHeight) {
+            navLinks.forEach(l => l.classList.toggle('active', l.dataset.scene === s.id));
+          }
+        });
+        // Footer reset
+        const footer = document.querySelector('.footer');
+        if (footer && viewMid >= footer.offsetTop) newPalette = 'hero';
+
+        if (newPalette !== currentPalette) {
+          currentPalette = newPalette;
+          applyPalette(newPalette);
+        }
+
+        // Plugin scroll hook
+        BookEngine.triggerHook('onScroll', { scrollTop, viewMid, currentPalette });
+
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // ── Deep Dive Modal ──
+  function initDeepDiveModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const backdrop = document.getElementById('modalBackdrop');
+    const closeBtn = document.getElementById('modalClose');
+    const body = document.getElementById('modalBody');
+
+    function openModal(sceneIdx, ddIdx) {
+      const dd = CONTENT_DATA.scenes[sceneIdx].deepDives[ddIdx];
+      if (!dd) return;
+
+      const hasQ = !!dd.triggerQuestion;
+      const s = (n) => `modal-stagger modal-stagger-${n}`;
+      const chainOffset = hasQ ? 1 : 0;
+
+      body.innerHTML = `
+        <div class="modal-icon ${s(1)}">${dd.icon}</div>
+        <h3 class="modal-title ${s(2)}">${dd.title}</h3>
+        ${hasQ ? `
+        <div class="trigger-question ${s(3)}">
+          <div class="trigger-question-label">主动回忆 · Active Recall</div>
+          <p class="trigger-question-text">${dd.triggerQuestion}</p>
+          <button class="recall-reveal-btn" id="recallReveal">💡 揭晓作者逻辑</button>
+        </div>` : ''}
+        <div class="logic-chain-modal${hasQ ? ' chain-masked' : ''}">
+          <div class="chain-step-modal ${s(3 + chainOffset)}">
+            <div class="chain-label-modal">前 提</div>
+            <div class="chain-text-modal">${dd.chain.premise}</div>
+          </div>
+          <div class="chain-step-modal ${s(4 + chainOffset)}">
+            <div class="chain-label-modal">证 据</div>
+            <div class="chain-text-modal">${dd.chain.evidence}</div>
+          </div>
+          <div class="chain-step-modal ${s(5 + chainOffset)}">
+            <div class="chain-label-modal">结 论</div>
+            <div class="chain-text-modal">${dd.chain.conclusion}</div>
+          </div>
+        </div>`;
+      body.offsetHeight; // force reflow
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      if (hasQ) {
+        const revealBtn = document.getElementById('recallReveal');
+        if (revealBtn) {
+          revealBtn.addEventListener('click', () => {
+            body.querySelector('.logic-chain-modal').classList.remove('chain-masked');
+            revealBtn.style.display = 'none';
+          });
+        }
+      }
+      BookEngine.triggerHook('onModalOpen', { sceneIdx, ddIdx, dd });
+    }
+
+    function openGlossary() {
+      const keyTerms = CONTENT_DATA.meta.keyTerms;
+      if (!keyTerms?.length) return;
+      body.innerHTML = `
+        <div class="glossary-header modal-stagger modal-stagger-1">
+          <div class="glossary-label">术语表 · Glossary</div>
+          <h3 class="modal-title">${CONTENT_DATA.meta.title} · 关键术语</h3>
+          <p style="font-size:0.8rem;color:var(--fg-secondary);margin-top:0.5rem;line-height:1.6;">以下术语按作者在书中的<strong>特定定义</strong>整理，可能与日常含义不同。</p>
+        </div>
+        <div class="glossary-list">
+          ${keyTerms.map((kt, i) => `
+            <div class="glossary-item modal-stagger modal-stagger-${Math.min(i + 2, 5)}">
+              <div class="glossary-term">${kt.term}</div>
+              <div class="glossary-definition">${kt.definition}</div>
+            </div>
+          `).join('')}
+        </div>`;
+      body.offsetHeight;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      BookEngine.triggerHook('onModalClose');
+    }
+
+    document.addEventListener('click', e => {
+      const trigger = e.target.closest('[data-dd-idx]');
+      if (trigger) {
+        const [sIdx, dIdx] = trigger.dataset.ddIdx.split('-').map(Number);
+        openModal(sIdx, dIdx);
+        trigger.classList.add('clicked');
+      }
+      if (e.target.closest('#glossaryFab')) {
+        openGlossary();
+      }
+    });
+    backdrop.addEventListener('click', closeModal);
+    closeBtn.addEventListener('click', closeModal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  }
+
+  // ── Keyboard Navigation ──
+  function initKeyboardNav() {
+    const kbHint = document.getElementById('kbHint');
+    let hintDismissed = false;
+
+    function dismissHint() {
+      if (!hintDismissed) {
+        hintDismissed = true;
+        kbHint.classList.add('hidden');
+        window.removeEventListener('wheel', dismissHint);
+        window.removeEventListener('touchstart', dismissHint);
+      }
+    }
+    window.addEventListener('wheel', dismissHint, { passive: true, once: true });
+    window.addEventListener('touchstart', dismissHint, { passive: true, once: true });
+
+    function getAnchors() {
+      const anchors = [document.getElementById('hero')];
+      CONTENT_DATA.scenes.forEach(s => {
+        const el = document.getElementById(s.id);
+        if (el) anchors.push(el);
+      });
+      return anchors;
+    }
+
+    function currentIdx(anchors) {
+      const scrollMid = window.scrollY + window.innerHeight * 0.4;
+      let idx = 0;
+      for (let i = anchors.length - 1; i >= 0; i--) {
+        if (scrollMid >= anchors[i].offsetTop) { idx = i; break; }
+      }
+      return idx;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('modalOverlay').classList.contains('open')) return;
+      const anchors = getAnchors();
+      const cur = currentIdx(anchors);
+
+      if (e.key === 'ArrowDown' || (e.key === ' ' && !e.shiftKey)) {
+        e.preventDefault();
+        const next = Math.min(cur + 1, anchors.length - 1);
+        anchors[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      } else if (e.key === 'ArrowUp' || (e.key === ' ' && e.shiftKey)) {
+        e.preventDefault();
+        const prev = Math.max(cur - 1, 0);
+        anchors[prev].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        dismissHint();
+      }
+    });
+  }
+
+  // ── Utility: Number to Chinese ──
+  function numberToChinese(n) {
+    const map = ['零','一','二','三','四','五','六','七','八','九','十'];
+    return n <= 10 ? map[n] : String(n);
+  }
+
+  // ── Register observer for book-specific elements ──
+  BookEngine._customObservers = [];
+  BookEngine.registerObserver = function(setupFn) {
+    BookEngine._customObservers.push(setupFn);
+  };
+
+  // ── Main init (called by template after all scripts load) ──
+  BookEngine.init = function() {
+    // Inject custom CSS if defined
+    if (typeof CUSTOM_CSS !== 'undefined') {
+      BookEngine.injectCSS(CUSTOM_CSS);
+    }
+
+    // Register custom components if defined
+    if (typeof CUSTOM_COMPONENTS !== 'undefined') {
+      Object.entries(CUSTOM_COMPONENTS).forEach(([type, handler]) => {
+        BookEngine.registerViz(type, handler);
+      });
+    }
+
+    // Render
+    renderApp();
+    initKeyboardNav();
+  };
+
+  // Expose applyPalette for external use
+  BookEngine.applyPalette = applyPalette;
+
+})();
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// ANTIFRAGILE · DATA
+// 反脆弱 · Immersive Book Engine Data
+// ═══════════════════════════════════════════════════════════════
+
+const PALETTES = {
+  hero: {
+    bg: '#0E0808', bgSecondary: '#1A0E0E', fg: '#F0E4DC', fgSecondary: '#A0887A',
+    accent: '#C43A2A', accentDim: 'rgba(196,58,42,0.12)', accentMid: 'rgba(196,58,42,0.35)',
+    accentGlow: 'rgba(196,58,42,0.06)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(14,8,8,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Book I–II: The Triad & Modernity
+  scene1: {
+    bg: '#100808', bgSecondary: '#1C0E0E', fg: '#EEE0D6', fgSecondary: '#9A8070',
+    accent: '#D44830', accentDim: 'rgba(212,72,48,0.1)', accentMid: 'rgba(212,72,48,0.3)',
+    accentGlow: 'rgba(212,72,48,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(16,8,8,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene2: {
+    bg: '#F4F0EA', bgSecondary: '#EAE4DA', fg: '#1C1810', fgSecondary: '#6A5E4A',
+    accent: '#8A6A2E', accentDim: 'rgba(138,106,46,0.1)', accentMid: 'rgba(138,106,46,0.3)',
+    accentGlow: 'rgba(138,106,46,0.05)', border: 'rgba(28,24,16,0.06)',
+    glassBg: 'rgba(244,240,234,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene3: {
+    bg: '#F2EEE8', bgSecondary: '#E6E0D6', fg: '#1A1612', fgSecondary: '#685C4C',
+    accent: '#B85A30', accentDim: 'rgba(184,90,48,0.1)', accentMid: 'rgba(184,90,48,0.3)',
+    accentGlow: 'rgba(184,90,48,0.05)', border: 'rgba(26,22,18,0.06)',
+    glassBg: 'rgba(242,238,232,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // Book III–IV: Nonlinearity & Optionality
+  scene4: {
+    bg: '#0A0C08', bgSecondary: '#14180E', fg: '#DCE4D0', fgSecondary: '#7A8A66',
+    accent: '#4A8A3A', accentDim: 'rgba(74,138,58,0.1)', accentMid: 'rgba(74,138,58,0.3)',
+    accentGlow: 'rgba(74,138,58,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(10,12,8,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene5: {
+    bg: '#F0F2F0', bgSecondary: '#E2E8E2', fg: '#12181A', fgSecondary: '#4A5A5E',
+    accent: '#2E6A7A', accentDim: 'rgba(46,106,122,0.1)', accentMid: 'rgba(46,106,122,0.3)',
+    accentGlow: 'rgba(46,106,122,0.05)', border: 'rgba(18,24,26,0.06)',
+    glassBg: 'rgba(240,242,240,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene6: {
+    bg: '#120A0E', bgSecondary: '#1E1218', fg: '#E8DDE2', fgSecondary: '#907A86',
+    accent: '#A04A6A', accentDim: 'rgba(160,74,106,0.1)', accentMid: 'rgba(160,74,106,0.3)',
+    accentGlow: 'rgba(160,74,106,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(18,10,14,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  // Book V–VI: Via Negativa & Lindy
+  scene7: {
+    bg: '#F5F0E6', bgSecondary: '#EBE4D4', fg: '#201A10', fgSecondary: '#7A6A4E',
+    accent: '#9A7A28', accentDim: 'rgba(154,122,40,0.1)', accentMid: 'rgba(154,122,40,0.3)',
+    accentGlow: 'rgba(154,122,40,0.05)', border: 'rgba(32,26,16,0.06)',
+    glassBg: 'rgba(245,240,230,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene8: {
+    bg: '#0C0A10', bgSecondary: '#161220', fg: '#D8D4E4', fgSecondary: '#7A76A0',
+    accent: '#6A5AAE', accentDim: 'rgba(106,90,174,0.1)', accentMid: 'rgba(106,90,174,0.3)',
+    accentGlow: 'rgba(106,90,174,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(12,10,16,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene9: {
+    bg: '#F4EEE6', bgSecondary: '#E8E0D4', fg: '#1E1810', fgSecondary: '#6E6048',
+    accent: '#8C5A2A', accentDim: 'rgba(140,90,42,0.1)', accentMid: 'rgba(140,90,42,0.3)',
+    accentGlow: 'rgba(140,90,42,0.05)', border: 'rgba(30,24,16,0.06)',
+    glassBg: 'rgba(244,238,230,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  // Book VII: Ethics & Skin in the Game
+  scene10: {
+    bg: '#0E0A08', bgSecondary: '#1A120E', fg: '#E8DED4', fgSecondary: '#9A8A78',
+    accent: '#C86A30', accentDim: 'rgba(200,106,48,0.1)', accentMid: 'rgba(200,106,48,0.3)',
+    accentGlow: 'rgba(200,106,48,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(14,10,8,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  },
+  scene11: {
+    bg: '#F0EEF2', bgSecondary: '#E2DEE8', fg: '#161420', fgSecondary: '#56506A',
+    accent: '#5A4A90', accentDim: 'rgba(90,74,144,0.1)', accentMid: 'rgba(90,74,144,0.3)',
+    accentGlow: 'rgba(90,74,144,0.05)', border: 'rgba(22,20,32,0.06)',
+    glassBg: 'rgba(240,238,242,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene12: {
+    bg: '#F2F0E8', bgSecondary: '#E6E2D8', fg: '#1A1810', fgSecondary: '#646050',
+    accent: '#7A7030', accentDim: 'rgba(122,112,48,0.1)', accentMid: 'rgba(122,112,48,0.3)',
+    accentGlow: 'rgba(122,112,48,0.05)', border: 'rgba(26,24,16,0.06)',
+    glassBg: 'rgba(242,240,232,0.82)', glassBorder: 'rgba(255,255,255,0.25)'
+  },
+  scene13: {
+    bg: '#0A0608', bgSecondary: '#160C10', fg: '#F0E4E0', fgSecondary: '#A08A84',
+    accent: '#D04040', accentDim: 'rgba(208,64,64,0.1)', accentMid: 'rgba(208,64,64,0.3)',
+    accentGlow: 'rgba(208,64,64,0.05)', border: 'rgba(255,255,255,0.06)',
+    glassBg: 'rgba(10,6,8,0.85)', glassBorder: 'rgba(255,255,255,0.08)'
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// CONTENT DATA
+// ═══════════════════════════════════════════════════════════════
+
+const CONTENT_DATA = {
+  meta: {
+    title: '反脆弱',
+    titleEn: 'ANTIFRAGILE: Things That Gain from Disorder',
+    subtitle: '从不确定性中获益',
+    badge: '沉浸式深度导读 · THINGS THAT GAIN FROM DISORDER · COMPLETE',
+    author: '纳西姆·尼古拉斯·塔勒布',
+    authorEn: 'Nassim Nicholas Taleb',
+    type: 'philosophy',
+    shelf: {
+      emoji: '🦎',
+      gradient: 'linear-gradient(135deg, #0E0808 0%, #6A1A1A 50%, #C43A2A 100%)',
+      description: '脆弱的反义词不是坚固，而是反脆弱。塔勒布用13个场景论证：在波动性、随机性和不确定性中获益的系统，才是这个世界的真正赢家。',
+      stats: ['13 场景', '5 部分', '14 深度解析']
+    },
+    coreThesis: '脆弱的反面不是坚固或韧性——而是"反脆弱"：一种在压力、冲击、波动、噪声、错误和不确定性中反而获益的属性。现代世界系统性地压制波动性，试图让一切"平稳"，结果反而制造了更大的脆弱性。真正的智慧不是预测未来，而是构建能从不确定性中获益的结构。',
+    authorProblem: '为什么现代社会越来越脆弱？为什么"专家"的干预往往适得其反？为什么我们的教育、医疗、经济和政治体系在追求稳定的过程中制造了更大的灾难？塔勒布试图建立一个跨领域的框架——反脆弱性——来重新理解风险、波动和人类繁荣之间的关系。',
+    bookStructure: '全书分为七卷（Books），组织为五个逻辑部分：第一部分（卷I-II）建立三元分类法和现代性批判；第二部分（卷III-IV）探索非线性和不对称性的数学直觉；第三部分（卷V）讨论减法智慧和医疗过度干预；第四部分（卷VI）论证林迪效应和时间作为检验标准；第五部分（卷VII）回到伦理学——切身利害（skin in the game）作为反脆弱性的道德维度。每一卷都从一个核心隐喻出发，层层展开到政治、经济、医学、哲学各个领域。',
+    readerQuestions: [
+      '反脆弱和韧性（resilience）的区别到底有多大？是否存在塔勒布夸大了这个区分以便推销新概念的可能？',
+      '塔勒布对现代医学的批评是否过于笼统？医疗干预的"医源性伤害"确实存在，但抗生素和疫苗难道不是人类最反脆弱的发明？',
+      '"杠铃策略"在个人投资和职业规划中真的可行吗？90%极端保守+10%极端冒险是否忽视了大多数人需要的中间地带？',
+      '塔勒布对学术界和"苏联-哈佛鸟类学系"的攻击是深刻的洞见还是个人恩怨的发泄？理论知识对实践真的毫无价值吗？',
+      '如果反脆弱性如此重要，为什么进化没有让所有系统都变成反脆弱的？反脆弱性是否有其自身的代价和局限？'
+    ],
+    critique: '塔勒布的反脆弱框架有三个真正的贡献和三个显著的局限。贡献：(1) 三元分类法（脆弱/坚固/反脆弱）确实比传统的二元风险框架更具解释力，尤其在理解2008年金融危机方面；(2) 对"医源性伤害"和过度干预的批评有大量实证支持，揭示了现代制度的结构性盲区；(3) 将实践智慧（phronesis）重新置于认识论的中心，挑战了学院派对理论优先性的假设。局限：(1) 概念界定模糊——"反脆弱"有时指从波动中获益，有时指从崩溃中获益，两者的操作含义完全不同；(2) 对学术研究的攻击过于情绪化，绿色木材谬误的论证被推得太远——理论理解确实不是充分条件，但也绝非毫无价值（疫苗和抗生素恰恰是"学院派"理论的产物）；(3) 全书的论证风格是散文式的而非系统性的，同一个论点在不同章节重复出现却缺乏递进，读者需要自行重构其逻辑结构。',
+    keyTerms: [
+      { term: '反脆弱', definition: '超越坚固和韧性的第三种状态。反脆弱的事物不仅能抵抗冲击，还能从冲击中获益——就像肌肉在负重后变得更强壮，免疫系统在接触病原体后变得更有效。语言中没有现成的词来描述这种属性，这本身就揭示了我们的认知盲区。' },
+      { term: '脆弱', definition: '在压力和波动中受损的属性。脆弱的事物喜欢安静、稳定和可预测。关键洞见：脆弱性可以被测量（通过观察对压力的非线性反应），这比预测黑天鹅事件容易得多。' },
+      { term: '坚固/韧性', definition: '能抵抗冲击但不会从中获益的中间状态。凤凰从灰烬中重生但不会变得更强——它只是恢复原状。这与九头蛇（砍一头长两头）的反脆弱有本质区别。' },
+      { term: '黑天鹅', definition: '高度不可能、不可预测、影响巨大的事件。塔勒布的前作《黑天鹅》论证了我们无法预测黑天鹅；《反脆弱》的进一步论点是：既然无法预测，就应该构建能从黑天鹅中获益的系统。' },
+      { term: '林迪效应', definition: '对于不会自然死亡的事物（技术、思想、书籍），其预期剩余寿命与已存在的时间成正比。一本存活了100年的书预期还能再存活100年。这是反脆弱的时间维度：经受住时间考验的事物比新事物更可能继续存活。' },
+      { term: '切身利害', definition: '英文"skin in the game"。决策者必须承担其决策的后果。没有切身利害的人（如用别人的钱冒险的银行家）会系统性地制造脆弱性。这是反脆弱的伦理维度：风险与回报必须对称。' },
+      { term: '选择权/选择性', definition: '拥有上行空间而无下行风险（或下行风险有限）的不对称结构。选择权是反脆弱的金融隐喻：你可以从波动中获益，因为好的结果你享受，坏的结果你只损失有限的权利金。' },
+      { term: '减法智慧', definition: '拉丁语"via negativa"。通过减少而非增加来改善。最大的智慧往往不是知道该做什么，而是知道该停止做什么——停止吸烟比任何医疗干预都更有效，减少不良决策比追求完美决策更可靠。' },
+      { term: '医源性伤害', definition: '由治疗者造成的伤害。广义上指任何干预造成的净损害。塔勒布论证现代社会充满了"医源性"——政府干预经济、专家干预教育、医生过度治疗——干预者不承担后果，被干预者承受伤害。' },
+      { term: '杠铃策略', definition: '将资源集中在两个极端，避免中间地带。投资中：90%极端安全的国债 + 10%极端投机的期权。职业中：稳定的日常工作 + 大胆的副业冒险。塞内加的做法：做好失去一切的准备，同时积极追求最高回报。' }
+    ],
+    parts: [
+      { number: 1, title: '三元组与现代性', titleEn: 'THE TRIAD & MODERNITY', beforeScene: 'scene-1' },
+      { number: 2, title: '非线性与选择权', titleEn: 'NONLINEARITY & OPTIONALITY', beforeScene: 'scene-4' },
+      { number: 3, title: '减法智慧与林迪', titleEn: 'VIA NEGATIVA & THE LINDY EFFECT', beforeScene: 'scene-7' },
+      { number: 4, title: '切身利害与伦理', titleEn: 'SKIN IN THE GAME & ETHICS', beforeScene: 'scene-10' },
+      { number: 5, title: '反脆弱的生活', titleEn: 'LIVING WITH ANTIFRAGILITY', beforeScene: 'scene-12' }
+    ]
+  },
+
+  darkScenes: ['scene1', 'scene4', 'scene6', 'scene8', 'scene10', 'scene13'],
+
+  scenes: [
+
+    // ═════════════════════════════════════════════════════════════
+    // PART I · 三元组与现代性 · THE TRIAD & MODERNITY
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 1: 达摩克利斯、凤凰与九头蛇
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-1', number: '第一部分 · 场景 01', palette: 'scene1',
+      title: '达摩克利斯、凤凰与九头蛇',
+      subtitle: 'DAMOCLES, THE PHOENIX, AND THE HYDRA',
+      heroQuote: '有些事物能从冲击中获益；当暴露在波动性、随机性、无序和压力之下时，它们反而会茁壮成长。然而，尽管这种现象无处不在，我们却没有一个准确的词来描述脆弱的对立面。让我们称它为"反脆弱"。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '三元组：脆弱 / 坚固 / 反脆弱',
+        description: '塔勒布认为，我们对世界的理解被一个根本性的二分法限制了——脆弱vs坚固。引入第三类"反脆弱"后，几乎所有领域都需要被重新分类。',
+        data: {
+          columns: ['维度', '脆弱（达摩克利斯）', '坚固（凤凰）', '反脆弱（九头蛇）'],
+          rows: [
+            ['对波动的反应', '受损——需要安静和稳定', '不受影响——抵抗冲击', '获益——在混乱中变强'],
+            ['神话隐喻', '达摩克利斯：头顶悬剑，任何微小震动都致命', '凤凰：浴火重生，恢复原状', '九头蛇：砍一头长两头，越打越强'],
+            ['生物学类比', '玻璃杯——任何冲击都导致不可逆损坏', '岩石——经受住风吹雨打但不会改变', '肌肉/骨骼——负重后变得更强壮'],
+            ['系统案例', '高度优化的供应链、过度杠杆的银行', '基础设施冗余、黄金储备', '进化、创业生态系统、瑞士政治体制'],
+            ['错误的角色', '错误是灾难——必须避免一切失败', '错误是噪声——系统可以忽略', '错误是信息——每次失败都使系统更强'],
+            ['时间偏好', '需要可预测的未来', '不关心未来如何变化', '偏好不可预测——波动性是燃料'],
+            ['知识类型', '理论、计划、顶层设计', '规则、制度、冗余', '试错、修补匠智慧、进化']
+          ],
+          note: '三元组的力量在于：你不需要预测黑天鹅（这不可能），只需要判断你的系统处于光谱的哪个位置——然后向反脆弱端移动。这是一个可操作的框架，而非一个预测模型。'
+        }
+      },
+      narrative: [
+        '塔勒布以三个古代意象开篇：<b>达摩克利斯头顶的悬剑——任何微弱的震动都会致命；浴火重生的凤凰——回到原来的状态；勒纳九头蛇——赫拉克勒斯每砍掉它一个头，它就长出两个新头。</b>这三个意象分别代表了脆弱、坚固和反脆弱。',
+        '这个三元分类法看似简单，但它揭示了我们语言中的一个惊人盲区。在英语（以及几乎所有语言）中，存在"脆弱"和"坚固"这两个概念，但<b>没有一个词来描述"从冲击中获益"的属性</b>。"韧性""弹性""抗压"——这些都只是"坚固"的变体，描述的是抵抗冲击但不从中获益的能力。这个词汇的缺失不是偶然的，它反映了我们在认知上对这第三类事物的系统性忽视。',
+        '为什么这个区分如此重要？因为<b>现代世界的核心错误就是把"坚固"当作"脆弱"的对立面</b>。当我们试图让银行体系"更坚固"（增加资本金要求），当我们试图让经济"更稳定"（中央银行干预），我们其实只是在凤凰的水平上思考——抵抗冲击但不从中学习。真正的解决方案是让系统变成九头蛇——每一次危机都让它变得更强。',
+        '人体就是反脆弱的典范。骨骼在承受压力后会增加密度（这就是为什么宇航员在零重力环境中会骨质流失）。免疫系统需要接触病原体才能变强（过度消毒的环境反而导致过敏症激增）。肌肉在被"损伤"后重建得更强壮。<b>生命本身就是一个从混乱中获取秩序的过程，而不是一个需要被保护免受混乱的脆弱存在。</b>',
+        '塔勒布由此得出了全书的核心命题：<b>既然我们无法预测未来（黑天鹅不可预测），那么唯一理性的策略就是让自己变得反脆弱——不是试图预测冲击何时到来，而是确保当冲击到来时，你能从中获益。</b>'
+      ],
+      deepDives: [
+        {
+          title: '三元分类法：超越脆弱与坚固的二分法', icon: '🔱',
+          triggerQuestion: '如果我问你"脆弱"的反义词是什么，你几乎肯定会回答"坚固"或"韧性"。但一个从不破碎的杯子和一个越摔越结实的杯子——它们真的是同一类事物吗？',
+          chain: {
+            premise: '西方思想传统倾向于二分法：强/弱、稳定/不稳定、有序/无序。塔勒布认为这种二分法在面对不确定性时是危险的，因为它让我们把目标设定为"坚固"——而坚固只是中间状态，不是脆弱的真正对立面。',
+            evidence: '考虑三种旅行方式的邮包。一个包裹上写着"易碎品——小心轻放"，这是脆弱的。一个包裹上写着"坚固——随便怎么摔"，这是坚固的。但如果存在第三种包裹，上面写着"请粗暴对待——这个包裹会因为粗暴对待而变得更好"呢？这就是反脆弱。在自然界，进化就是这样一个包裹：物种层面的失败（个体死亡）恰恰是进化适应的燃料。创业生态系统也是如此：硅谷的力量不在于每家公司都成功，而在于频繁的失败为整个系统提供了学习信号。餐饮业高度反脆弱——个别餐厅不断倒闭，但餐饮业整体因此不断进步。',
+            conclusion: '三元组的操作价值在于：你不需要预测未来，只需要评估你当前的位置。如果你是脆弱的（高杠杆、单一收入来源、集中化管理），就向坚固方向移动。如果你已经是坚固的，就向反脆弱方向移动——引入小规模的波动和压力测试，确保系统能从冲击中学习和进化。'
+          }
+        },
+        {
+          title: '火鸡问题：1000天的幸福与第1001天的屠杀', icon: '🦃',
+          chain: {
+            premise: '塔勒布用一个形象的比喻来说明脆弱性的隐蔽性：一只火鸡被饲养了1000天，每天都得到食物，每天的"数据"都在强化"生活是安全的"这一结论。然后在第1001天——感恩节前一天——它被宰杀了。',
+            evidence: '火鸡的问题不在于缺乏数据，而在于数据的结构。1000天的正面数据不仅没有证明安全性，反而在积累脆弱性——火鸡对饲养者的依赖越来越深。2008年金融危机前的银行体系就是一只火鸡：十多年的"稳定增长"数据让所有风险模型都在说"系统很安全"。雷曼兄弟倒闭前一天，其风险模型显示的"风险价值"处于历史低位。同样的逻辑适用于庞氏骗局的参与者：越早加入、越长时间获得回报的人，对系统的信心越强——直到崩溃的那一刻。',
+            conclusion: '火鸡问题揭示了一个认识论的深层困境：在某些非线性系统中，过去的数据不仅不能预测未来，还会系统性地误导我们。塔勒布的解决方案不是"更好的预测"（这不可能），而是"脆弱性检测"——不要问"这个系统过去表现如何"，要问"如果发生极端冲击，这个系统会怎样"。检测脆弱性比预测黑天鹅容易得多，因为脆弱性是系统的内在属性，而黑天鹅是外部事件。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 2: 过度干预与天真的理性主义
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-2', number: '第一部分 · 场景 02', palette: 'scene2',
+      title: '过度干预与天真的理性主义',
+      subtitle: 'NAÏVE INTERVENTIONISM',
+      heroQuote: '人类最大的威胁不是坏人——而是善意的专家，他们以为自己理解了系统的运作方式，然后出手干预。',
+      narrative: [
+        '现代世界有一种深层的"干预偏见"：当出现问题时，我们本能地认为应该"做点什么"。<b>一个医生看到轻微的血压偏高就开药，一个经济学家看到经济波动就建议政府干预，一个家长看到孩子犯了小错就立即纠正。</b>在每一个案例中，干预者都坚信自己在帮忙。但塔勒布论证，在很多情况下，这种干预造成的伤害超过了它试图解决的问题。',
+        '塔勒布使用了一个精确的术语来描述这种现象：<b>"医源性伤害"（iatrogenics）</b>——字面意思是"由治疗者造成的伤害"。在医学史上，这不是边缘现象而是主流。直到19世纪中叶，去看医生实际上比不看医生更危险——放血、水银治疗和其他"疗法"杀死的病人远多于它们治愈的。乔治·华盛顿很可能就是被他的医生放血过多而死的——他的"疗法"抽走了他体内大约一半的血液。',
+        '塔勒布并非反对所有干预。他提出了一个清晰的判据：<b>只有在下行风险远大于上行空间时，干预才是正当的</b>。如果你骨折了，去看医生是正确的，因为不治疗的下行风险（残疾）远大于治疗的风险。但如果你只是轻微感冒，吃抗生素的下行风险（副作用、破坏肠道菌群、培育耐药菌）可能超过它的好处。',
+        '这个原则延伸到了经济政策。2008年金融危机后，各国政府的大规模救助防止了短期崩溃，但也消除了"创造性破坏"——那些本该被淘汰的企业活了下来，<b>整个系统失去了一次从错误中学习的机会</b>。塔勒布的论点是：小规模的经济衰退对经济体系就像小型森林火灾对森林——它清除死木、释放养分、为新生长腾出空间。系统性地压制小衰退的结果是积累脆弱性，最终导致更大的崩溃。'
+      ],
+      deepDives: [
+        {
+          title: '华盛顿之死与250,000条人命：医源性伤害的数学', icon: '🏥',
+          triggerQuestion: '如果有数据显示，在某些情况下去看医生比不看医生更危险，你会怎么理解"干预"的代价？',
+          chain: {
+            premise: '塔勒布对"医源性伤害"的讨论不是泛泛的哲学思辨——他引用了大量统计数据来证明干预造成的伤害比人们想象的要严重得多、系统性得多。',
+            evidence: '1799年12月14日，乔治·华盛顿因喉咙感染发烧。他的三位医生在24小时内对他进行了<b>四次大规模放血</b>，抽走了大约2.5升血——接近他全身血液的一半。次日华盛顿去世。现代医学几乎一致认为放血加速了他的死亡。但华盛顿的案例不是孤例——在整个18-19世纪，放血是标准"疗法"，无数病人因此死亡或病情恶化。塔勒布引用了约翰·霍普金斯大学2016年的研究：<b>美国每年因医疗错误（包括误诊、用药错误、手术失误和院内感染）导致的死亡人数估计在250,000到440,000之间</b>——这使得医疗错误成为美国第三大死因，仅次于心脏病和癌症。这个数字比交通事故死亡人数高出5倍以上。塔勒布的推论更加激进：这还不包括那些"合规但不必要"的干预——不必要的手术、过度处方的药物、过早的癌症筛查导致的过度治疗。美国每年约<b>7000万张抗生素处方是不必要的</b>——它们不仅没有帮助病人，还培育了耐药菌，为未来的超级细菌危机埋下种子。',
+            conclusion: '医源性伤害的要点不是"不要看医生"——塔勒布的判据很清晰：<b>只有在不干预的风险远大于干预的风险时才应干预</b>。骨折要治，心脏病要救——因为不治疗的代价是确定性的灾难。但轻微的血压偏高、轻度的胆固醇升高、温和的背痛——干预这些"问题"的副作用可能超过它们的好处。核心洞见是：<b>干预的代价不是零——我们只是习惯性地忽略了它</b>。这个原则从医学扩展到了经济政策、教育、城市规划：每一次干预都有成本，但干预者从不承担这些成本——账单寄给了被干预的系统。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 3: 胖子托尼与博士约翰
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-3', number: '第一部分 · 场景 03', palette: 'scene3',
+      title: '胖子托尼与博士约翰',
+      subtitle: 'FAT TONY VS DR. JOHN',
+      heroQuote: '胖子托尼在2008年金融危机中赚了大钱。他没有读过任何金融教科书。博士约翰拥有哈佛MBA和十几年的风险管理经验——他的公司破产了。',
+      narrative: [
+        '塔勒布虚构了两个人物来对比两种截然不同的认知方式。<b>博士约翰（Dr. John）</b>是典型的学院派精英——高学历、精通数学模型、相信理论可以描述现实。<b>胖子托尼（Fat Tony）</b>是布鲁克林街头的交易员——没什么正式教育，但有几十年在真实市场中摸爬滚打的经验。',
+        '塔勒布给他们出了一道经典的概率题：一枚硬币连续抛了99次都是正面朝上，第100次正面朝上的概率是多少？博士约翰毫不犹豫地回答："50%。每次抛硬币都是独立事件，之前的结果不影响后面。"胖子托尼的回答完全不同："<b>绝对不到50%——这枚硬币显然被做了手脚，我不会用它来赌。</b>"',
+        '博士约翰在数学上是正确的——如果硬币是公平的。但胖子托尼在认识论上是正确的——<b>99次连续正面的"数据"不应该用来强化"硬币是公平的"这个假设，而应该用来质疑这个假设本身</b>。现实世界中的硬币不是课本上的抽象物体，它们可能被做了手脚。博士约翰的错误在于把模型当作了现实，而不是把模型当作现实的近似。',
+        '这两个人物贯穿全书，代表了塔勒布所说的两种知识类型的根本对立。博士约翰拥有"明确知识"——可以写在教科书里、可以考试测验的知识。胖子托尼拥有"隐性知识"——从试错中积累、无法用公式表达、但在真实世界中更可靠的直觉和判断力。<b>2008年的金融危机，本质上就是一场博士约翰们的集体失败——他们的精密模型完美地描述了一个不存在的世界。</b>',
+        '塔勒布由此引出了"绿色木材谬误"：一个非常成功的木材交易员以为"绿色木材"是指涂了绿漆的木材——实际上它指的是新砍伐的、未干燥的木材。<b>他对自己交易品的基本概念都搞错了，但这丝毫不影响他的交易表现。</b>因为赚钱需要的不是"理解"木材，而是理解市场的供需动态。理论知识和实践成功之间的关系远比我们以为的要弱得多。'
+      ],
+      deepDives: [
+        {
+          title: '两种知识：学院智慧与街头智慧', icon: '🎲',
+          triggerQuestion: '一个没上过大学的街头交易员比一个哈佛MBA更善于应对不确定性——这可能吗？如果可能，我们的教育体系到底在教什么？',
+          chain: {
+            premise: '塔勒布区分了两种知识类型。第一种是"叙事知识"——可以用理论和模型表达的显性知识（博士约翰型）。第二种是"试错知识"——从实践中积累的隐性知识（胖子托尼型）。现代社会系统性地高估了第一种、低估了第二种。',
+            evidence: '绿色木材谬误是最有力的证据。Joe Siegel是历史上最成功的木材交易员之一，但他以为"绿色木材"是涂了绿漆的木材。一个不了解自己交易品基本术语的人怎么能赚到几十亿美元？因为交易成功所需的知识不是"关于木材的知识"，而是"关于市场参与者行为的知识"——供需动态、价格模式、对手的心理。同样，伦敦鲸事件中摩根大通的风险管理团队精通最先进的金融数学，却没有发现一个简单的仓位集中风险。他们有太多的理论知识，太少的实践直觉。',
+            conclusion: '塔勒布称之为"苏联-哈佛幻觉"（Soviet-Harvard illusion）：认为社会和经济可以像工程项目一样被自上而下地设计和管理。苏联试图用中央计划管理经济，哈佛MBA试图用精密模型管理风险——两者犯的是同一个错误：用抽象理论替代了对现实复杂性的尊重。真正有效的知识往往是无法被明确表述的——就像骑自行车的知识无法通过阅读物理教科书获得。'
+          }
+        },
+        {
+          title: '绿色木材谬误与实践优先', icon: '🌲',
+          chain: {
+            premise: '我们的文化倾向于认为"理论先于实践"——先理解原理，然后应用。但塔勒布论证，在大多数领域，因果关系是相反的：实践先于理论，试错先于理解。',
+            evidence: '蒸汽机的发明早于热力学理论约一百年。工业革命是由工匠和修补匠驱动的，不是由物理学家。阿司匹林被使用了几十年之后，人们才理解它的作用机制。同样，航空工程在很大程度上是从试飞失败中学习的——空气动力学理论是对工程实践的事后解释，而非其先行指导。塔勒布引用一个尖锐的类比："如果说鸟类不需要理解空气动力学就能飞行，那人类的许多成功实践也不需要理论支撑。"',
+            conclusion: '这并不意味着理论毫无价值——疫苗和抗生素确实是理论驱动的发明。但塔勒布的论点是，我们系统性地高估了理论对实践的贡献，低估了试错和直觉。在不确定性高的领域（金融市场、创业、地缘政治），胖子托尼式的试错智慧比博士约翰式的理论模型更可靠——因为模型需要假设世界的运作方式，而试错只需要观察世界的实际反应。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART II · 非线性与选择权 · NONLINEARITY & OPTIONALITY
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 4: 非线性与凸性
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-4', number: '第二部分 · 场景 04', palette: 'scene4',
+      title: '非线性与凸性',
+      subtitle: 'NONLINEARITY AND THE CONVEXITY BIAS',
+      heroQuote: '如果你能从波动中获益超过从稳定中获益，那么波动对你来说就不是风险，而是燃料。这就是凸性的秘密。',
+      narrative: [
+        '塔勒布的整个反脆弱框架可以用一个数学概念来精确描述：<b>凸性（convexity）</b>。凸性是什么？简单说：如果一个事物对变量变化的反应是加速的——好的结果比坏的结果更大——那么它就是凸的，也就是反脆弱的。',
+        '考虑一个简单的例子。一块石头从1米高处掉落造成的损害，远小于从10米高处掉落造成损害的十分之一。损害对高度的反应是<b>非线性的、凸的</b>——高度增加10倍，损害增加可能100倍。这意味着石头是脆弱的：它从波动中受损的程度超过了从稳定中受益的程度。',
+        '反过来，如果你持有一个期权（option），情况就完全相反。<b>期权给你在好的方面无限的上行空间，在坏的方面有限的下行风险（最多损失权利金）。</b>市场大涨你赚很多，市场大跌你只损失一点——这就是凸性回报，是反脆弱的金融原型。',
+        '塔勒布把这个数学直觉推广到了几乎所有领域。<b>试错法本质上就是一种选择权结构</b>：每次尝试的下行风险有限（一次失败），但上行空间可能巨大（一次突破性发现）。创业是选择权：投入有限的资本，但回报可能是百倍、千倍。进化也是选择权：每一次基因突变都是一次"赌注"，大多数突变有害（有限损失——个体死亡），少数突变有利（巨大收益——物种适应新环境）。',
+        '这个框架解释了为什么<b>集中化的、大规模的系统天然是脆弱的，而分散化的、小规模试错的系统天然是反脆弱的</b>。一个国家只押注一种经济模式是脆弱的（像苏联）；一千个创业公司各自押注不同方向是反脆弱的（像硅谷）。不是因为每个创业公司都会成功，而是因为整个系统拥有凸性回报——少数极大的成功远远超过了大量的小失败。'
+      ],
+      deepDives: [
+        {
+          title: '凸性回报：反脆弱的数学骨架', icon: '📈',
+          triggerQuestion: '为什么一个交易员可以亏损99次只要第100次赚得足够多？为什么创业公司的失败率超过90%但创业生态系统依然是世界上最强大的创新引擎？',
+          chain: {
+            premise: '反脆弱不是一种神秘的属性，它有精确的数学描述：凸性。一个系统如果对变量的正面变化反应大于对负面变化的反应（即收益曲线是凸的），那么它就是反脆弱的。波动性越大，凸性系统获益越多。',
+            evidence: '考虑两个投资者。投资者A每年稳定回报5%。投资者B一半的年份亏损10%，另一半年份赚取25%。投资者B的平均回报为7.5%——高于A。但更关键的是，如果波动性增加（坏年份亏15%、好年份赚35%），投资者B的平均回报升至10%，而A不变。波动性的增加对凸性投资者是好消息。塔勒布的数学贡献是证明了：任何凸性回报函数在波动性增加时期望收益都会增加——这是一个纯数学结果（Jensen不等式的直接推论），不依赖于任何经济学假设。',
+            conclusion: '这给出了一个可操作的策略：不要试图预测波动——去构建凸性暴露。在投资中，这意味着杠铃策略（稍后详述）。在职业中，这意味着保持一份稳定工作的同时追求高风险高回报的副业。在企业管理中，这意味着分散投入多个小实验而非集中赌一个大项目。核心逻辑始终是：让好的结果比坏的结果更大，然后欢迎波动。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 5: 杠铃策略——塞内加的智慧
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-5', number: '第二部分 · 场景 05', palette: 'scene5',
+      title: '杠铃策略——塞内加的智慧',
+      subtitle: 'THE BARBELL STRATEGY & SENECA',
+      heroQuote: '塞内加是古罗马最富有的人之一，同时也是斯多葛主义者——这不是矛盾，而是最精妙的杠铃策略：在心理上做好失去一切的准备，在行动上积极追求最高回报。',
+      narrative: [
+        '塔勒布从古罗马斯多葛哲学家塞内加身上发现了反脆弱思维的原型。塞内加是尼禄皇帝的导师，积累了巨大的财富——据估计相当于今天的数十亿美元。同时，他又是斯多葛主义者的代表人物，他的哲学核心是<b>对命运无常的接受和对外在财富的淡然</b>。许多人认为这是虚伪，塔勒布认为这恰恰是高超的策略。',
+        '塞内加每天晚上都会在脑海中演练失去一切的场景——财富被没收、流放、死亡。这种心理训练不是悲观主义，而是<b>对下行风险的系统性"脱敏"</b>。当你已经在心理上接受了最坏的结果，你就不再脆弱——因为任何实际发生的事情都不会比你已经准备好的情况更糟。在这个底线之上，一切都是"上行空间"。',
+        '塔勒布将这种思维方式形式化为<b>"杠铃策略"（barbell strategy）</b>：将资源集中在两个极端，完全避开中间地带。在投资中：90%的资产放在极端安全的地方（短期国债），10%放在极端投机的地方（远端期权或初创企业）。绝对不碰中间的"中等风险"投资——因为中等风险的回报通常也是中等的，但它的风险在极端情况下可能变得很大（2008年那些"中等风险"的次贷产品变成了有毒废料）。',
+        '杠铃策略的精髓在于<b>不对称性</b>：最大可能的损失是已知的（10%的投机部分归零），最大可能的收益是无限的（10%的投机部分可能翻100倍）。这就是凸性回报的实践版本。而"中间道路"看似保守，实则脆弱——它的最大损失是未知的（黑天鹅可以摧毁一个"中等风险"的投资组合），这恰恰是火鸡问题的结构。'
+      ],
+      deepDives: [
+        {
+          title: '杠铃vs中间道路：为什么"安全"的中间地带最危险', icon: '⚖️',
+          triggerQuestion: '常识告诉我们"不要把鸡蛋放在一个篮子里"——要分散风险。但塔勒布说，分散到"中等风险"比集中在两个极端更危险。这怎么可能？',
+          chain: {
+            premise: '杠铃策略的核心洞见是：在存在黑天鹅的世界里，中等风险的暴露可能比看上去危险得多，因为"中等风险"的评估依赖于过去数据——而过去数据无法捕捉尚未发生的极端事件。',
+            evidence: '2008年金融危机提供了完美的案例。持有AAA评级的次级抵押贷款证券被认为是"中等风险"投资——比股票安全，比国债回报高。这些证券的风险评估基于过去的数据，而过去从未发生过全国性的房价同时下跌。结果，这些"中等风险"的投资在几周内损失了60%-90%的价值。反观杠铃策略：如果你把90%放在美国国债（完全安全），10%放在做空次贷的衍生品上，你不仅保住了本金，10%的投机部分还赚了10倍以上——这正是约翰·保尔森在2007-2008年的操作，他的基金赚了200亿美元。',
+            conclusion: '杠铃策略之所以有效，是因为它不需要准确预测。保尔森不需要精确预测次贷危机何时爆发——他只需要知道系统是脆弱的（大量杠杆、模型依赖、道德风险），然后构建一个在崩溃时获益的仓位。90%的安全部分确保他不会被消灭，10%的投机部分给他凸性暴露。这就是塞内加的古老智慧被量化后的样子。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 6: 选择权与试错法
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-6', number: '第二部分 · 场景 06', palette: 'scene6',
+      title: '选择权与试错法',
+      subtitle: 'OPTIONALITY AND TINKERING',
+      heroQuote: '自然界没有教科书。进化不是通过"理解"来适应环境的，而是通过试错——通过拥有大量的选择权。每一次基因突变都是一张低成本的彩票。',
+      narrative: [
+        '塔勒布提出了一个挑衅性的论断：<b>人类历史上大多数重要的技术和知识进步不是"研究"的产物，而是"试错"和"偶然发现"的产物。</b>抗生素？弗莱明的青霉素发现纯属意外。X射线？伦琴在实验中无意发现。轮子、火的使用、发酵——这些改变人类命运的发现没有一个来自系统性的理论研究。',
+        '这种试错法本质上是一种<b>选择权（optionality）结构</b>。每次尝试都是一个低成本的"赌注"——失败了损失有限（一次实验的时间和材料），成功了回报可能巨大（一项改变世界的发明）。关键在于：<b>你不需要在尝试之前知道哪个实验会成功。</b>你只需要确保每次尝试的成本足够低，并且成功的回报足够高。',
+        '塔勒布在这里引入了一个关键的概念区分：<b>选择权不需要"理解"就能获益。</b>一个药物研发实验室可以测试一千种化合物，即使完全不理解每种化合物的作用机制，只要其中一种有效就值回票价。这与理论驱动的方法完全不同——理论方法试图先理解机制，然后设计药物。塔勒布论证，在复杂系统中，试错法比理论法更可靠——因为复杂系统的机制往往超出我们的理解能力。',
+        '但选择权有一个经常被忽视的条件：<b>你必须能够识别成功。</b>塔勒布指出，许多人拥有选择权却不知道自己拥有。弗莱明看到了发霉的培养皿，识别出了它的价值——这需要的不是理论知识，而是一种"准备好的直觉"。历史上有无数的意外发现被忽视了，因为发现者没有足够的经验来识别眼前事物的重要性。<b>试错法的成功需要两个条件：大量低成本的尝试 + 识别成功的判断力。</b>'
+      ],
+      deepDives: [
+        {
+          title: '绿色木材谬误：你不需要理解才能获利', icon: '🪵',
+          triggerQuestion: '一个成功的木材交易员以为"绿色木材"是指涂了绿色油漆的木材（实际上是指新砍伐的未干燥木材）。他对自己交易的产品有根本性的误解——但他赚了大钱。这说明了什么？',
+          chain: {
+            premise: '我们天然假定理解是行动的前提——你必须先理解一件事，才能有效地利用它。塔勒布通过"绿色木材谬误"挑战了这个假设：在复杂系统中，实践智慧（知道"怎么做"）常常与理论知识（知道"为什么"）完全分离。',
+            evidence: '乔·西格尔（Joe Siegel）是纽约最成功的木材交易员之一。有一次有人提到"绿色木材"，他以为这是涂了绿色油漆的木材——事实上"绿色木材"（green lumber）是指新砍伐的、未经干燥处理的木材，是木材交易中最基本的术语。西格尔对自己交易了数十年的产品有一个令人震惊的基本误解——<b>但这完全没有影响他赚钱</b>。他理解的是价格模式、供需关系、季节性波动和交易对手的心理，这些是交易成功真正需要的东西。相反的例子同样存在：大量拥有MBA学位的金融"专家"精通定价模型和风险理论，但在2008年金融危机中损失惨重。他们理解"理论"，但不理解市场。<b>塔勒布将这个模式概括为：与现实有效互动所需要的知识类型，和学院教授所传授的知识类型，是两种完全不同的东西。</b>前者是隐性的、实践的、通过试错积累的；后者是显性的、理论的、通过阅读获得的。两者不仅不重叠，有时还互相干扰——过多的理论知识会让你用模型来覆盖直觉，而直觉在复杂环境中往往比模型更可靠。',
+            conclusion: '绿色木材谬误对"知识"的本质提出了根本性质疑。学校和大学建立在"理解先于行动"的假设之上——先学理论，再去实践。但塔勒布的案例表明，在复杂系统（金融市场、创业、烹饪、外交）中，<b>行动先于理解，理解是行动的副产品而非前提</b>。这并不意味着理论知识没有价值——而是意味着我们严重高估了理论知识的实用性，同时严重低估了实践智慧的价值。最好的策略不是"先学后做"，而是"边做边学"——保持选择权结构（低成本试错），同时培养识别成功的判断力。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART III · 减法智慧与林迪 · VIA NEGATIVA & THE LINDY EFFECT
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 7: 减法智慧——Via Negativa
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-7', number: '第三部分 · 场景 07', palette: 'scene7',
+      title: '减法智慧——Via Negativa',
+      subtitle: 'THE WISDOM OF SUBTRACTION',
+      heroQuote: '最有力的知识通常是否定性的——我们知道什么是错的比知道什么是对的要可靠得多。不吸烟的建议比任何"健康饮食法"都更有价值，因为我们确知吸烟有害，但对"最优饮食"一无所知。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '加法思维 vs 减法思维：为什么少即是多',
+        description: '塔勒布论证，在复杂系统中，减法（去除有害因素）几乎总是比加法（添加有益因素）更可靠。',
+        data: {
+          columns: ['领域', '加法思维（脆弱）', '减法思维（反脆弱）'],
+          rows: [
+            ['医学', '开更多的药、做更多的检查、更频繁地干预', '首先停止有害行为（戒烟、减糖、不久坐）'],
+            ['饮食', '追逐最新的"超级食物"和营养补充剂', '消除已知有害的成分（精加工食品、反式脂肪、过量糖分）'],
+            ['投资', '寻找"下一个大机会"——越来越复杂的策略', '首先避免毁灭性风险——不用杠杆、不碰自己不懂的产品'],
+            ['写作', '加入更多的论点、数据和修饰', '删除多余的词句——"好文章不是没什么可加的，而是没什么可删的"'],
+            ['企业管理', '增加新流程、新团队、新项目', '消除会议膨胀、官僚冗余和低效流程'],
+            ['个人成长', '学习更多技能、阅读更多书', '戒掉坏习惯、减少无效社交、停止拖延']
+          ],
+          note: '减法思维的深层原理：我们对"什么有害"的知识比对"什么有益"的知识更可靠。吸烟有害是确定的；任何特定的"健康食品"是否真的有益，科学界每隔几年就翻一次结论。在不确定性中，确定性的否定判断比不确定的肯定判断价值更高。'
+        }
+      },
+      narrative: [
+        '拉丁语"via negativa"来自基督教神学——通过描述上帝不是什么来接近上帝的本质。塔勒布将这个概念世俗化为一个通用的认识论原则：<b>在复杂系统中，减法（去除有害因素）比加法（添加有益因素）更可靠、更安全、效果更好。</b>',
+        '为什么？因为我们的知识是不对称的。<b>我们对"什么是有害的"知道得比"什么是有益的"多得多。</b>吸烟有害——这已经被几十年的流行病学数据确凿地证明了。但"什么是最健康的饮食"——科学界每隔几年就翻一次结论：低脂、低碳水、地中海式、间歇性断食……每一种都有支持者和反对者。在这种不确定性中，最可靠的策略不是追逐最新的"健康食品"，而是<b>简单地戒除已知有害的东西</b>。',
+        '塔勒布将减法原则推广到了医学实践。他引用了一个惊人的统计数据：<b>在美国，医疗错误是第三大死因——每年杀死的人超过交通事故和枪支暴力之和。</b>其中很大一部分来自"过度治疗"——不必要的手术、不必要的药物、不必要的检查导致的连锁反应。医学界有一句古老的格言："首先，不要伤害"（Primum non nocere）。塔勒布认为，这句话的深刻含义被现代医学遗忘了——在追求"做更多"的压力下，医生们忘记了"不做"有时是最好的治疗。',
+        '减法原则延伸到了个人生活的各个方面。塔勒布论证：<b>幸福更多地来自消除不幸的因素，而非追加幸福的因素。</b>一段有毒的关系被终止，比十段新友谊更能提升幸福感。一个坏习惯被戒除，比十个好习惯被养成更有效。这不是悲观——这是对人类认知局限性的务实承认：我们更善于识别伤害我们的东西，而非辨别真正有益于我们的东西。'
+      ],
+      deepDives: [
+        {
+          title: '医源性伤害：当治愈比疾病更危险', icon: '💊',
+          triggerQuestion: '在美国，医疗错误每年杀死的人超过交通事故和枪支暴力之和。如果看医生本身就是一种风险，我们应该在什么时候就医、什么时候不就医？',
+          chain: {
+            premise: '塔勒布论证"医源性伤害"（iatrogenics）——由治疗者造成的伤害——不是医学的边缘问题，而是核心问题。现代医学在治疗严重疾病方面取得了巨大进步，但在"轻度干预"领域造成的净伤害可能超过其带来的净收益。',
+            evidence: '数据令人震惊。约翰·霍普金斯大学2016年的研究估计，美国每年有25万到44万人死于医疗错误——使其成为第三大死因。但问题不仅仅是"错误"——更深层的问题是"过度治疗"。每年有数百万例不必要的手术：大量的支架植入手术对稳定性心绞痛患者没有降低死亡率；大量的背部手术效果不优于物理治疗；前列腺癌的常规筛查导致许多男性接受了不必要的手术，带来阳痿和尿失禁的副作用——而这些癌症中很多终其一生都不会致命。制药行业的激励结构使问题雪上加霜：药物越多、检查越多、手术越多，收入越高。',
+            conclusion: '塔勒布提出的判据直接而实用：当病情严重到足以威胁生命时，积极干预是正确的——骨折必须治疗、心脏病发作必须抢救、感染必须用抗生素。但当病情轻微时（轻度高血压、轻度胆固醇偏高、轻微的关节疼痛），干预的副作用可能超过病情本身的风险，此时减法智慧——等待、观察、改变生活方式——往往是更好的策略。核心原则是不对称性评估：如果干预的潜在伤害大于不干预的潜在伤害，就不要干预。'
+          }
+        },
+        {
+          title: '否定知识的力量：波普尔的遗产', icon: '🚫',
+          chain: {
+            premise: '减法智慧的认识论基础来自波普尔：我们不能证明一个理论是对的（归纳问题），但我们可以证明一个理论是错的（证伪）。类似地，我们不能确知什么是最优的，但我们可以确知什么是有害的。',
+            evidence: '在科学史上，最确定的知识几乎都是否定性的。"永动机不可能"（热力学第二定律）比"这个能源方案是最优的"更可靠。"吸烟致癌"比"红酒有益心脏"更确定——后者的研究结论已经被修正过多次。在投资领域，查理·芒格的格言——"我只想知道我会死在哪里，这样我就不去那里"——正是via negativa的完美表述。避免灾难性损失（不使用杠杆、不投资自己不懂的产品、不集中持仓）比追求最优回报更能决定长期财富。',
+            conclusion: '减法知识的优势在于它的鲁棒性：它在面对新信息时不容易被推翻。"吸烟有害"这个结论不太可能被未来的研究推翻。但"每天喝一杯红酒有益健康"这个结论已经被推翻过了。在一个充满不确定性的世界中，我们应该优先使用最鲁棒的知识——而最鲁棒的知识几乎总是否定性的。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 8: 林迪效应——时间作为检验标准
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-8', number: '第三部分 · 场景 08', palette: 'scene8',
+      title: '林迪效应——时间作为检验标准',
+      subtitle: 'THE LINDY EFFECT: TIME AS THE ULTIMATE JUDGE',
+      heroQuote: '如果一本书已经被阅读了两千年，它很可能还会被阅读两千年。但如果一本书只被阅读了两个月，它很可能在两个月后就被遗忘。不是我们选择了经典，是时间替我们选择了。',
+      narrative: [
+        '"林迪"是纽约曼哈顿的一家熟食餐厅，喜剧演员们喜欢在那里聚会。他们发现了一个反直觉的规律：<b>一部百老汇演出存续的时间越长，它预期继续演出的时间也越长。</b>这违反了"越老越接近死亡"的直觉——因为那个直觉适用于会自然死亡的生物有机体，但不适用于非生物性的事物。',
+        '塔勒布将这个观察形式化为<b>"林迪效应"</b>：对于不会自然死亡的事物（技术、思想、书籍、制度、文化实践），它们的预期剩余寿命与已存在的时间成正比。一项存活了100年的技术预期还能再存活100年；一项只存在了1年的技术预期只能再存活1年。',
+        '这不仅仅是一个统计规律——它有深刻的因果机制支撑。<b>时间是最严酷的检验者。</b>每一天，一本书、一种技术、一个观念都面临着被遗忘、被替代、被证伪的风险。存活下来的事物不是"幸运"——它们身上有某种让它们能经受住时间筛选的内在品质。亚里士多德的《伦理学》被阅读了2400年不是偶然的——它包含了某种经得起所有文化变迁和技术进步检验的深层洞见。',
+        '林迪效应给出了一个强大的决策启发法：<b>在不确定性面前，优先选择经过时间检验的事物。</b>读古典著作而非最新的畅销书。吃人类吃了几万年的食物（水果、蔬菜、肉类）而非最新的"科学配方"营养品。用已经存在了几十年的技术而非最新的时髦工具。这不是保守主义——这是对时间作为信息来源的理性尊重。',
+        '但塔勒布也指出了林迪效应的一个重要限制：它只适用于<b>不会自然死亡的事物</b>。人类有自然寿命，一个80岁的人不会因为活了80年就预期还能活80年。但一本80年的书确实因为存活了80年而预期还能存活更长时间。区分"会自然死亡的"和"不会自然死亡的"是正确运用林迪效应的关键。'
+      ],
+      deepDives: [
+        {
+          title: '林迪效应：为什么旧的比新的更可能持续', icon: '⏳',
+          triggerQuestion: '你的手机三年后就会过时，但你用的叉子和三千年前的设计基本相同。为什么有些技术昙花一现而另一些永恒不变？',
+          chain: {
+            premise: '直觉告诉我们"新的总是更好的"——新技术、新理论、新趋势。但林迪效应提出了相反的假设：对于不会自然死亡的事物，旧的比新的有更长的预期寿命。',
+            evidence: '考虑技术预测的历史记录。1960年代人们预测核能将在2000年之前取代所有化石能源——没有发生。1990年代人们预测纸质书会在十年内消失——纸质书仍然是最大的阅读载体。2010年代人们预测VR将彻底改变日常生活——VR至今仍是小众市场。与此同时，轮子（发明于约5000年前）、钉子（3400年前）、铅笔（1565年）、自行车（1817年）至今仍在被广泛使用，且看不到被替代的迹象。叉子有上千年历史，仍然是最高效的进食工具。从统计意义上看：一项已存在50年的技术被替代的概率，远小于一项只存在5年的技术。',
+            conclusion: '林迪效应的实用推论是：对新事物持怀疑态度，对旧事物保持敬畏。这不是拒绝创新——而是承认我们无法预测哪些创新会存活。时间是最好的筛选器，已经通过筛选的事物比尚未通过筛选的事物更值得信任。在生活中，这意味着：选择存在了几十年的锻炼方式（跑步、游泳、力量训练）而非最新的健身潮流；阅读经典著作而非追逐畅销榜；使用经过验证的投资原则（分散化、低成本、长期持有）而非最新的量化策略。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 9: 毒物兴奋效应——杀不死你的让你更强
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-9', number: '第三部分 · 场景 09', palette: 'scene9',
+      title: '毒物兴奋效应——杀不死你的让你更强',
+      subtitle: 'HORMESIS: WHAT DOES NOT KILL ME',
+      heroQuote: '小剂量的毒药可以增强机体的抵抗力。小规模的压力可以强化系统。小型的失败可以防止大型的灾难。反脆弱的核心机制不是保护——而是刺激。',
+      narrative: [
+        '毒物兴奋效应（hormesis）是生物学中一个被长期低估的现象：<b>小剂量的有害因素反而对生物体有益。</b>少量的辐射增强细胞修复机制，少量的酒精刺激心血管系统（虽然这个具体案例有争议），低温暴露激活棕色脂肪的燃烧，禁食触发细胞自噬——身体在"微创伤"后启动的修复机制不仅修复了损伤，还超额修复，使系统比损伤前更强。',
+        '塔勒布将毒物兴奋效应视为反脆弱的<b>核心生物学机制</b>。身体不是被设计来在稳定环境中运作的——它是被设计来在波动环境中运作的。肌肉需要被"损伤"才能生长；骨骼需要承受冲击才能保持密度；免疫系统需要接触病原体才能建立防御。<b>每一种"保护"——避免运动、过度消毒、温室式生活——实际上都在削弱这些系统的反脆弱性。</b>',
+        '这个原理延伸到了心理学。尼采的名言"凡不能杀死我的，必使我更强大"在心理学研究中得到了部分支持。<b>创伤后成长（post-traumatic growth）</b>是一个有实证支持的现象：经历过严重困难（但未被摧毁）的人，在经历之后往往报告更深层的人生意义感、更强的人际关系和更大的心理韧性。当然，这里有一个关键的限定条件——压力必须在系统能承受的范围内。超过承受阈值的压力不是反脆弱的燃料，而是毁灭。',
+        '塔勒布由此对现代社会的"安全文化"提出了尖锐的批评。<b>我们过度保护儿童不受挫折、过度保护经济不受衰退、过度保护市场不受波动。</b>每一次"保护"都剥夺了系统从小型压力中学习和强化的机会，结果积累了更大的脆弱性。就像系统性地扑灭小型森林火灾的结果是干燥灌木不断积累——最终引发一场无法扑灭的超级火灾。'
+      ],
+      deepDives: [
+        {
+          title: '压力的最优剂量：反脆弱的甜蜜点', icon: '🔥',
+          triggerQuestion: '如果压力让系统更强，为什么不是越多压力越好？反脆弱有没有一个"最优剂量"？何时压力从"有益"变成"毁灭性"？',
+          chain: {
+            premise: '毒物兴奋效应暗示了一个非线性关系：零压力让系统退化，适度压力让系统强化，过度压力摧毁系统。反脆弱不是"越多越好"——它需要正确的剂量和恢复时间。',
+            evidence: '运动科学提供了最清晰的类比。力量训练的基本原则是"超负荷+恢复"：肌肉纤维在训练中被微损伤，然后在休息期间修复得更强。但如果训练过度——不给肌肉足够的恢复时间——结果不是更强而是受伤和退化（过度训练综合症）。同样的模式出现在免疫学中：少量的病原体暴露建立免疫力，大剂量的病原体导致疾病。在经济中：小型的商业失败清除低效企业并释放资源（创造性破坏），但系统性的金融崩溃摧毁整个经济生态系统（如1929年大萧条）。',
+            conclusion: '反脆弱的最优条件是：频繁的小压力 + 充分的恢复时间 + 有限的最大损失。这就是杠铃策略的生物学版本——暴露在频繁的小冲击中（一次次的力量训练），同时确保任何单次冲击不会是致命的（不要试图做500磅的深蹲）。现代社会的问题恰恰是倒过来的：压制所有小压力（零波动的经济政策），结果积累了一个致命的大压力（2008年金融危机）。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART IV · 切身利害与伦理 · SKIN IN THE GAME & ETHICS
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 10: 切身利害——风险与回报的对称
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-10', number: '第四部分 · 场景 10', palette: 'scene10',
+      title: '切身利害——风险与回报的对称',
+      subtitle: 'SKIN IN THE GAME: SYMMETRY OF RISK',
+      heroQuote: '永远不要听一个不会因为给出错误建议而承担后果的人的建议。如果一个经济学家推荐你买某只股票，问他一个简单的问题：你自己买了吗？',
+      narrative: [
+        '塔勒布的反脆弱框架在伦理维度上的核心概念是<b>"切身利害"（skin in the game）</b>——决策者必须承担其决策后果的原则。这不是一个新概念——汉谟拉比法典四千年前就规定：如果建筑师建的房子倒塌砸死了房主，建筑师也要被处死。但现代社会系统性地违反了这个古老的原则。',
+        '考虑2008年金融危机的核心结构：<b>银行家用别人的钱冒险。</b>如果赌赢了，他们拿走巨额奖金。如果赌输了，损失由纳税人和储户承担。这就是"没有切身利害"的典型案例——风险和回报是不对称的：上行归自己，下行归别人。在这种激励结构下，理性的策略是尽可能多地冒险——因为你只分享收益，不分担损失。',
+        '塔勒布将这种不对称性视为<b>现代社会脆弱性的根本来源</b>。学者推荐的政策如果失败了，他们不会失去教职。政客发动的战争如果造成灾难，他们不会上战场。医生过度开药如果损害了病人健康，他们的收入不会减少（可能反而增加，因为需要更多的后续治疗）。在每一个案例中，<b>没有切身利害的决策者会系统性地低估风险、过度自信、做出鲁莽的决定</b>——因为他们不需要为错误买单。',
+        '这个原则的推论直接而深刻：<b>不要信任没有切身利害的人。</b>不要听从不持有自己推荐股票的分析师。不要听从自己的孩子在私立学校但推荐公立教育改革的政客。不要听从不为自己的预测下注的预测者。评判一个人是否值得信任的最简单标准不是他说了什么，而是他做了什么——他是否把自己的利益和他的建议绑在了一起。'
+      ],
+      deepDives: [
+        {
+          title: '代理问题：没有切身利害的世界', icon: '🎭',
+          triggerQuestion: '如果银行家拿走利润但不承担损失，如果政客发动战争但不上前线，如果教授推荐政策但不承受后果——这种系统性的不对称如何摧毁了现代社会的信任和稳定？',
+          chain: {
+            premise: '现代社会的一个核心特征是"代理"——越来越多的决策由不直接承受其后果的人做出。经理人管理别人的公司，基金经理管理别人的钱，官僚制定影响别人的政策。塔勒布论证，这种代理结构是系统性脆弱性的根源。',
+            evidence: '金融危机提供了最清晰的案例。2007年，花旗集团CEO查尔斯·普林斯被问及为什么继续发放高风险贷款时回答："只要音乐还在响，你就得继续跳舞。"他个人的激励是短期利润和年度奖金——即使长期风险在积累。当崩溃发生时，他带着上亿美元的累积薪酬离开，而花旗集团的股东损失了90%以上的价值，纳税人为救助买了单。同样的逻辑适用于学术界：一个经济学家可以倡导激进的货币政策，如果政策失败了，他发表一篇"反思论文"反而能增加引用量。没有切身利害意味着失败不是成本而是机会。',
+            conclusion: '塔勒布的解决方案不是监管（监管者自己也没有切身利害），而是恢复对称性。最有效的机制是古老的：让决策者和其决策的后果不可分割。创业者的钱就投在自己的公司里——所以创业生态系统虽然混乱但反脆弱。对冲基金经理法律要求投入自己的资金——所以对冲基金比共同基金更审慎。汉谟拉比法典比SEC的千页规则更有效，因为它直接对齐了激励：你的决定如果伤害了别人，同样的伤害会回到你身上。'
+          }
+        },
+        {
+          title: '英雄与反英雄：谁值得被尊敬', icon: '⭐',
+          chain: {
+            premise: '塔勒布重新定义了英雄主义：真正的英雄不是冒险赢得荣耀的人，而是为了保护他人而承担个人风险的人。这与现代社会对"成功人士"的崇拜形成了鲜明对比。',
+            evidence: '考虑两种人。第一种：一个华尔街银行家，用客户的钱做高风险交易，连续几年获得巨额奖金，被商业杂志评为"年度金融家"。当市场崩盘时，客户损失惨重，银行家拿着已经到手的奖金全身而退。第二种：一个消防员，每次进入火场都在拿自己的生命冒险，年薪不到银行家奖金的零头。在塔勒布的框架中，银行家是反英雄——他把风险转嫁给了别人；消防员是真正的英雄——他承担了别人的风险。历史上最持久的道德传统（从汉谟拉比到基督教到骑士精神）都把"为他人承担风险"视为最高美德。',
+            conclusion: '切身利害不仅是一个经济原则，也是一个伦理原则。塔勒布论证，一个社会如果系统性地奖励那些转移风险的人（银行家、说客、官僚）而低估那些承担风险的人（创业者、消防员、士兵），这个社会就是伦理上堕落的——而且注定是脆弱的，因为风险会不断积累在最无力承受它的人身上。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 11: 非线性回报与"大数据"幻觉
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-11', number: '第四部分 · 场景 11', palette: 'scene11',
+      title: '非线性回报与"大数据"幻觉',
+      subtitle: 'NONLINEAR PAYOFFS & THE BIG DATA ILLUSION',
+      heroQuote: '在平均斯坦中，个体微不足道。在极端斯坦中，一个观测值可以改变一切。不理解这两个世界的区别，是现代统计学的原罪。',
+      narrative: [
+        '塔勒布在前作《黑天鹅》中区分了两个截然不同的世界：<b>"平均斯坦"（Mediocristan）和"极端斯坦"（Extremistan）</b>。在平均斯坦中——身高、体重、智商——极端值对总体统计量影响很小。你可以把世界上最高的人加入样本，平均身高几乎不变。但在极端斯坦中——财富、书籍销量、战争伤亡——一个极端值可以改变一切。把杰夫·贝佐斯加入一个1000人的样本，平均财富直接飙升。',
+        '这个区分的重要性在于：<b>我们的大部分统计工具和直觉都是为平均斯坦设计的，但现代世界越来越多地运行在极端斯坦中。</b>高斯分布（正态分布）在平均斯坦中是有效的——你的身高不太可能偏离平均值太远。但在极端斯坦中，高斯分布不仅无效，而且危险——它系统性地低估了极端事件的概率。',
+        '塔勒布对现代"大数据"热潮提出了尖锐的批评。<b>更多的数据在极端斯坦中不一定意味着更好的预测。</b>如果数据的生成过程是非线性的，那么过去的模式不能可靠地外推到未来。一只火鸡拥有的数据越多（1000天的喂食记录），它对未来就越"自信"——但这种自信是致命的。在极端斯坦中，你需要的不是更多数据，而是对数据本质的理解——尤其是对数据中可能缺失什么的理解。',
+        '塔勒布的替代方案不是更好的模型，而是<b>承认不可模型化的东西</b>，然后构建对模型失败具有鲁棒性（甚至反脆弱性）的策略。这又回到了杠铃策略：不要假装你能预测极端事件，而是确保极端事件无论向哪个方向发展，你都不会被摧毁——甚至能从中获益。'
+      ],
+      deepDives: [
+        {
+          title: '平均斯坦与极端斯坦：两个世界的混淆', icon: '📊',
+          triggerQuestion: '如果你把比尔·盖茨放进一个1000人的房间，房间里的"平均财富"会发生什么？如果你把一个身高2.3米的人放进去，"平均身高"会发生什么？为什么这两种情况如此不同？',
+          chain: {
+            premise: '我们的大脑和我们的统计工具都是在"平均斯坦"中进化的——在这个世界里，极端值不重要，平均值是有意义的。但现代世界越来越多的关键领域属于"极端斯坦"——在这个世界里，平均值是误导性的，一个极端值就能改变一切。混淆这两个世界是塔勒布所说的"现代统计学的原罪"。',
+            evidence: '在平均斯坦中：把世界上最高的人（约2.51米）加入一个1000人样本，平均身高从约170cm变为170.08cm——几乎不变。这是因为身高受多个基因和环境因素的叠加影响，极端值不可能太极端。高斯分布在这里有效。在极端斯坦中：把杰夫·贝佐斯（约$1500亿）加入一个1000人样本，平均财富从约$50万变为约$1.5亿——<b>增加了300倍</b>。财富分布不遵循高斯分布，而遵循幂律分布——极端值不仅存在，而且主导一切。书籍销量、城市人口、公司市值、战争伤亡、地震强度——全部属于极端斯坦。2008年金融危机的根源之一就是用平均斯坦的工具（VaR模型，基于正态分布）来管理极端斯坦的风险（金融市场回报）。这些模型告诉银行家们："一天内损失超过X的概率不到1%。"但真实世界中的金融市场损失分布有<b>肥尾</b>——"不到1%"的事件实际上发生的频率是模型预测的十倍甚至百倍。雷曼兄弟的风险模型在倒闭前一天显示一切正常——因为模型看的是平均斯坦，而灾难发生在极端斯坦。',
+            conclusion: '塔勒布的核心论点是：<b>在极端斯坦中，你不能靠预测来保护自己——因为极端事件在定义上就是不可预测的</b>。你能做的是：（1）检测你的暴露——你的生活/投资/事业中有多少处于极端斯坦？（2）确保你的下行是有限的（不要在极端斯坦中使用杠杆）；（3）确保你的上行是无限的（在极端斯坦中保持选择权）。这就是杠铃策略的数学基础——不是因为你知道黑天鹅何时到来，而是因为你承认自己不知道。'
+          }
+        }
+      ]
+    },
+
+    // ═════════════════════════════════════════════════════════════
+    // PART V · 反脆弱的生活 · LIVING WITH ANTIFRAGILITY
+    // ═════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────
+    // SCENE 12: 伦理学的反脆弱维度
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-12', number: '第五部分 · 场景 12', palette: 'scene12',
+      title: '伦理学的反脆弱维度',
+      subtitle: 'THE ETHICS OF ANTIFRAGILITY',
+      heroQuote: '如果你从一个行动中获取收益但不承担风险，而把风险转嫁给了别人，那你不仅在经济上是寄生虫——在伦理上也是。自古以来最受尊敬的人就是那些以个人风险为他人承担风险的人。',
+      narrative: [
+        '塔勒布在全书的最后部分将反脆弱性从技术概念提升为<b>伦理原则</b>。他论证，人类文明中最持久的伦理传统——从汉谟拉比法典到基督教、从罗马法到伊斯兰金融学——都包含同一个核心原则：<b>行动者必须承担其行动的后果。</b>',
+        '这个原则被塔勒布称为<b>"至少有一只脚在坟墓里"</b>——真正的英雄是那些为了正确的事情承担个人风险的人。圣人不是追求安全的人；圣人是那些把别人的风险放在自己肩上的人。创业者以个人破产为代价追求创新；消防员以生命为代价保护公众；好的领导者在战场的最前线而非指挥部的后方。',
+        '现代社会的伦理困境恰恰在于这个原则的系统性违反。<b>风险从有权做决定的人转移到了无权做决定的人身上。</b>银行家用储户的钱冒险——如果赚了钱他们拿走奖金，如果亏了钱由纳税人买单。政治家发动战争——他们的孩子在安全的常春藤名校，而普通人的孩子在前线。企业高管做出裁员决定——他们自己拿着金色降落伞离开。',
+        '塔勒布提出了一个激进的论断：<b>一个系统的健康程度可以用其内部切身利害的对称程度来衡量。</b>高度对称的系统（如创业生态系统——创业者赢也输也是自己的钱）是反脆弱的。高度不对称的系统（如大型银行——赢了归高管，输了归纳税人）是脆弱的。修复现代社会的方法不是更多的监管，而是重建风险-回报的对称性——让每一个决策者都有"至少一只脚在坟墓里"。'
+      ],
+      deepDives: [
+        {
+          title: '汉谟拉比 vs 现代监管：哪个更有效', icon: '📜',
+          triggerQuestion: '四千年前的汉谟拉比法典规定建筑师必须为倒塌的房屋负责。今天我们有数千页的建筑规范和监管机构。哪个系统更能防止建筑事故？',
+          chain: {
+            premise: '现代监管的思路是事前预防——制定详细的规则来防止坏事发生。塔勒布论证，这种方法不仅效率低下（监管者自己没有切身利害），而且创造了一种虚假的安全感。古代的方法更简单也更有效：不要试图预防坏事，而是确保造成坏事的人承受相应的后果。',
+            evidence: '美国的金融监管体系拥有数万名监管人员和数十万页的规则。但它没有阻止2008年的金融危机——事实上，许多监管措施反而创造了更多的套利机会和道德风险。银行家们雇佣了比监管者更多、更聪明的律师来规避规则。与此同时，汉谟拉比的规则只有几行字——但它的激励效果极其强大。如果你知道你建的房子倒塌会导致你自己被处死，你会用最好的材料和最谨慎的工艺。不需要任何检查员、任何审计报告、任何合规流程。切身利害自动对齐了所有激励。',
+            conclusion: '塔勒布的论点不是要字面上恢复汉谟拉比法典——而是要恢复其背后的原则。最有效的监管不是更多的规则，而是更直接的后果。如果银行CEO必须用个人财产为银行的损失担保（如合伙制投行时代），他们会本能地避免过度冒险。问题不在于规则太少，而在于后果太轻——收益被私有化，风险被社会化。'
+          }
+        }
+      ]
+    },
+
+    // ─────────────────────────────────────────
+    // SCENE 13: 反脆弱的生活哲学
+    // ─────────────────────────────────────────
+    {
+      id: 'scene-13', number: '第五部分 · 场景 13', palette: 'scene13',
+      title: '反脆弱的生活哲学',
+      subtitle: 'LIVING ANTIFRAGILE',
+      heroQuote: '我想像塞内加一样生活——享受财富带来的一切，但随时准备好在它们全部消失后依然快乐。这就是最高级的自由：不是拥有很多，而是不需要很多。',
+      dataViz: {
+        type: 'comparison-table',
+        title: '反脆弱生活的操作手册',
+        description: '塔勒布的哲学不是抽象理论，而是一套可以直接应用于日常决策的启发法。',
+        data: {
+          columns: ['生活领域', '脆弱的做法', '反脆弱的做法'],
+          rows: [
+            ['职业', '在一家大公司有一份高薪但高度专业化的工作', '稳定工作 + 副业冒险（杠铃）；或创业（全身入局）'],
+            ['健康', '过度医疗、频繁体检、依赖营养补充剂', '消除已知有害因素 + 适度压力（间歇性断食、力量训练、冷暴露）'],
+            ['投资', '把全部积蓄放在"中等风险"的投资组合中', '90%极安全（国债）+ 10%极投机（期权/天使投资）'],
+            ['饮食', '追逐最新的"超级食物"和营养学潮流', '吃"你祖母能认出来的食物"——林迪效应应用于饮食'],
+            ['学习', '追逐最新的商业书籍和在线课程', '阅读经典（林迪效应）+ 通过实践试错学习'],
+            ['社交', '大量浅层社交、追求人脉网络的广度', '少数深层关系 + 敢于说"不"——减法智慧应用于社交'],
+            ['决策', '收集更多信息、使用更复杂的模型', '简单规则 + 关注下行风险而非上行预测']
+          ],
+          note: '核心原则：不要优化"最好的结果"——消除"最坏的结果"。不要追求"做对什么"——专注于"不要做错什么"。减法先于加法，生存先于成功。'
+        }
+      },
+      narrative: [
+        '全书的最后，塔勒布从系统层面回到了个人层面：<b>如何在日常生活中实践反脆弱？</b>他的回答不是一套规则，而是一种思维方式的转变——从试图预测和控制，转向拥抱不确定性并从中获益。',
+        '在健康方面，塔勒布身体力行地实践他的理论。他采用间歇性断食——不是为了减肥，而是因为人类的祖先在进化史上从来不是一日三餐的。<b>饥饿是一种毒物兴奋刺激，触发细胞的自我修复和清理机制（自噬）。</b>他进行高强度的力量训练——因为肌肉和骨骼在被"损伤"后才会变强。他避免一切"中等"的身体活动（比如每天慢跑45分钟），认为这既不够放松也不够强烈——不如在极度休息和极度用力之间交替（身体的杠铃策略）。',
+        '在知识方面，塔勒布只读"林迪兼容"的书——存活了至少几十年的书。他的理由很简单：<b>一本新出的畅销书明年还在书架上的概率不到10%，但《奥德赛》再过一千年大概率还会被阅读。</b>时间已经替你做了筛选工作——为什么要浪费时间在未经时间验证的东西上？同时，他强调"在图书馆中漫游"式的阅读方式——不要有计划地读书，让好奇心和偶然发现引导你。这是一种对知识的选择权策略：低成本的尝试（翻开一本书），如果不感兴趣就放下（有限的下行），如果发现了思想的宝藏就深入（无限的上行）。',
+        '在社交方面，塔勒布实践减法智慧：<b>远离消耗你能量的人比寻找给你能量的人更重要。</b>一段有毒的关系对幸福感的损害，远大于十段良好关系的贡献。他引用了一个精妙的判据："如果你有一个朋友，你永远不确定他对你是友善还是敌意的，那么丢掉他——因为生活中的不确定性已经够多了，你不需要在朋友关系中也承受这种不确定性。"',
+        '塔勒布以一个深刻的悖论结束全书：<b>最终极的反脆弱是死亡。</b>个体的死亡确保了物种的进化——如果没有死亡，就没有自然选择，就没有适应，就没有生命的进步。个体是脆弱的，但正是个体的脆弱性保证了整体的反脆弱性。理解了这一点，你就理解了为什么塔勒布说"你不需要怕死——你需要怕的是白活"。真正脆弱的不是失去生命，而是拥有生命却从未真正使用过它。'
+      ],
+      deepDives: [
+        {
+          title: '从理论到实践：反脆弱的日常决策框架', icon: '🧭',
+          triggerQuestion: '反脆弱听起来很好，但具体到明天早上醒来，我应该做什么不同的事情？有没有一个简单的决策清单？',
+          chain: {
+            premise: '反脆弱不是一个需要精密计算的系统——它是一套简单的启发法，任何人都可以立即开始应用。核心是三个问题：(1) 这个决定的最大可能损失是什么？(2) 我是否拥有不对称性（上行大于下行）？(3) 我能否从这个行动的失败中学到东西？',
+            evidence: '塔勒布自己的生活是最好的案例研究。在投资上，他把大部分资产放在极端安全的标的中，只用小部分做极端投机——这让他在2008年的危机中大赚，因为他买了大量的远端看跌期权。在职业上，他从交易员转为作家和学者——写书是一种极端的选择权：下行风险有限（几年的时间），上行空间无限（《黑天鹅》卖了超过300万册）。在健康上，他不做常规体检（除非有症状），进行高强度间歇训练，实践间歇性断食。在社交上，他只维持少量深度关系，公开拉黑他认为是"脆弱推手"的人。',
+            conclusion: '反脆弱的日常实践可以归纳为五条规则：(1) 在所有领域应用杠铃——极端安全+极端冒险，避开中间；(2) 优先使用减法——先停止做有害的事，再考虑增加有益的事；(3) 尊重林迪——选择经过时间验证的食物、书籍、锻炼方式和生活方式；(4) 拥抱小失败——每次小失败都是学习信号，是系统的免疫训练；(5) 确保切身利害——只做你愿意用自己的钱、自己的时间、自己的声誉去承担后果的事情。'
+          }
+        }
+      ]
+    }
+  ],
+
+  knowledgeMaps: [
+    {
+      afterPart: 2, palette: 'scene4',
+      title: '反脆弱的核心概念', center: '反脆弱<br>三元组',
+      branches: [
+        { title: '三元分类', leaves: ['脆弱：受波动伤害', '坚固：抵抗波动不变', '反脆弱：从波动中获益'] },
+        { title: '非线性与凸性', leaves: ['凸性=上行空间>下行风险', '凹性=脆弱的数学本质', '简森不等式揭示隐藏收益'] },
+        { title: '杠铃策略', leaves: ['90%极保守+10%极冒险', '避开中间地带的伪安全', '不对称性是核心设计原则'] },
+        { title: '选择权思维', leaves: ['不对称回报：有限损失无限收益', '试错优于规划', '理性=知道该放弃什么'] },
+        { title: '过度干预批判', leaves: ['医源性损伤：干预造成的伤害', '天真干预主义的代价', '少做比多做更难也更重要'] }
+      ]
+    },
+    {
+      afterPart: 4, palette: 'scene10',
+      title: '反脆弱的应用维度', center: '从理论<br>到实践',
+      branches: [
+        { title: '减法智慧', leaves: ['via negativa：去除有害之物', '减法知识比加法知识更稳健', '知道不做什么比知道做什么更重要'] },
+        { title: '林迪效应', leaves: ['存活越久预期寿命越长', '时间是最好的去噪过滤器', '经典技术>前沿技术'] },
+        { title: '毒物兴奋效应', leaves: ['适量压力激发生长', '过度保护制造脆弱', '反脆弱需要压力源'] },
+        { title: '切身利害', leaves: ['没有skin in the game就没有信任', '不对称性是腐败的根源', '承担后果才能过滤愚蠢'] },
+        { title: '伦理对称', leaves: ['银律：己所不欲勿施于人', '英雄为他人承担风险', '官僚转嫁风险是最大不道德'] }
+      ]
+    },
+    {
+      afterPart: 5, palette: 'scene13',
+      title: '反脆弱生活哲学', center: '在不确定中<br>获益',
+      branches: [
+        { title: '胖子托尼vs博士约翰', leaves: ['街头智慧vs学院理论', '实践者嗅到脆弱性', '书呆子被模型蒙蔽'] },
+        { title: '平均斯坦vs极端斯坦', leaves: ['温和随机性vs狂野随机性', '黑天鹅住在极端斯坦', '正态分布是危险的幻觉'] },
+        { title: '理论vs实践', leaves: ['实践先于理论(鸟先于航空学)', '叙事谬误把运气包装成能力', '绿色木材谬误：成功者不需要理论'] },
+        { title: '英雄伦理', leaves: ['为集体承担下行风险', '企业家精神是现代英雄主义', '牺牲让社会系统反脆弱'] },
+        { title: '日常操作框架', leaves: ['杠铃化你的职业和投资', '拥抱小失败排斥大灾难', '做减法：删掉生活中的脆弱源'] }
+      ]
+    }
+  ],
+
+  mindMaps: [
+    {
+      afterPart: 5, palette: 'scene13',
+      title: '反脆弱全书思维导图',
+      subtitle: 'ANTIFRAGILITY BEYOND ROBUSTNESS',
+      root: '脆弱的反面不是坚固，而是反脆弱',
+      branches: [
+        {
+          text: '三元组与现代性',
+          children: [
+            { text: '脆弱-坚固-反脆弱三元分类', children: ['脆弱：受波动伤害', '坚固：抵抗波动不变', '反脆弱：从波动中获益'] },
+            { text: '现代性的脆弱化陷阱', children: ['过度优化消灭冗余', '天真干预主义的代价', '医源性损伤：干预造成的伤害'] },
+            { text: '压力源的必要性', children: ['毒物兴奋效应：适量压力激发生长', '过度保护制造脆弱', '森林需要小火灾来防止大火灾'] }
+          ]
+        },
+        {
+          text: '非线性与选择权',
+          children: [
+            { text: '凸性与凹性的数学', children: ['凸性=上行空间大于下行风险', '凹性=脆弱的数学本质', '简森不等式揭示隐藏收益'] },
+            { text: '杠铃策略', children: ['90%极保守+10%极冒险', '避开中间地带的伪安全', '不对称性是核心设计原则'] },
+            { text: '选择权思维', children: ['有限损失无限收益的不对称', '试错优于规划', '理性就是知道该放弃什么'] },
+            { text: '胖子托尼vs博士约翰', children: ['街头智慧vs学院理论', '实践者嗅到脆弱性', '书呆子被模型蒙蔽'] }
+          ]
+        },
+        {
+          text: '减法智慧与林迪',
+          children: [
+            { text: 'Via Negativa减法哲学', children: ['去除有害之物而非添加', '减法知识比加法知识更稳健', '知道不做什么比知道做什么更重要'] },
+            { text: '林迪效应', children: ['存活越久预期寿命越长', '时间是最好的去噪过滤器', '经典技术优于前沿技术'] },
+            { text: '实践先于理论', children: ['鸟先于航空学飞行', '叙事谬误把运气包装成能力', '绿色木材谬误：成功者不需要理论'] }
+          ]
+        },
+        {
+          text: '切身利害与伦理',
+          children: [
+            { text: 'Skin in the Game', children: ['没有切身利害就没有信任', '不对称性是腐败的根源', '承担后果才能过滤愚蠢'] },
+            { text: '伦理对称性', children: ['银律：己所不欲勿施于人', '英雄为他人承担风险', '官僚转嫁风险是最大不道德'] },
+            { text: '平均斯坦vs极端斯坦', children: ['温和随机性vs狂野随机性', '黑天鹅住在极端斯坦', '正态分布是危险的幻觉'] }
+          ]
+        },
+        {
+          text: '反脆弱的生活',
+          children: [
+            { text: '杠铃化你的人生', children: ['职业和投资都适用杠铃策略', '拥抱小失败排斥大灾难', '做减法：删掉生活中的脆弱源'] },
+            { text: '英雄伦理与企业家精神', children: ['为集体承担下行风险', '企业家精神是现代英雄主义', '牺牲让社会系统反脆弱'] },
+            { text: '在不确定中获益的操作框架', children: ['不预测黑天鹅而是调整暴露', '让自己成为九头蛇', '从每一次混乱中获取力量'] }
+          ]
+        }
+      ]
+    }
+  ],
+
+  aiReflection: null,
+
+  footer: {
+    title: '全书 · 终',
+    text: '脆弱的反面不是坚固——而是反脆弱。<br>这个世界奖励那些愿意承受波动的人，惩罚那些试图消灭波动的人。<br><br>不要预测黑天鹅。不要优化平均值。不要信任没有切身利害的人。<br><br><b>让自己变成九头蛇——<br>越打越强，从每一次混乱中获取力量。</b>',
+    note: '纳西姆·尼古拉斯·塔勒布《反脆弱》· 沉浸式深度导读 · 全五部分'
+  }
+};
+
+</script>
+<script>
+// No custom components
+</script>
+<script>
+BookEngine.init();
+</script>
+</body>
+</html>
