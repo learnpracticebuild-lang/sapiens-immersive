@@ -77,13 +77,15 @@ books.forEach(bookSlug => {
   booksMeta.push({ slug: bookSlug, title, titleEn, author, authorEn, shelf });
 
   // Build HTML
+  // NOTE: Use function replacement to avoid $', $&, $` special patterns
+  // in content strings being misinterpreted as replacement directives.
   let html = template
-    .replace('<!-- BOOK_TITLE -->', `${title} · 沉浸式深度导读`)
-    .replace('<!-- ENGINE_CSS -->', engineCSS)
-    .replace('<!-- COMPONENTS_JS -->', componentsJS)
-    .replace('<!-- ENGINE_JS -->', engineJS)
-    .replace('<!-- BOOK_DATA -->', dataJS)
-    .replace('<!-- BOOK_CUSTOM -->', customJS);
+    .replace('<!-- BOOK_TITLE -->', () => `${title} · 沉浸式深度导读`)
+    .replace('<!-- ENGINE_CSS -->', () => engineCSS)
+    .replace('<!-- COMPONENTS_JS -->', () => componentsJS)
+    .replace('<!-- ENGINE_JS -->', () => engineJS)
+    .replace('<!-- BOOK_DATA -->', () => dataJS)
+    .replace('<!-- BOOK_CUSTOM -->', () => customJS);
 
   // Write output
   const outDir = path.join(DIST, bookSlug);
