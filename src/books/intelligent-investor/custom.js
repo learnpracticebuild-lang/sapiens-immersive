@@ -58,6 +58,10 @@ const CUSTOM_CSS = `
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.6); }
 }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 .ii-module .ii-desc {
   font-size: 0.9rem;
   line-height: 1.8;
