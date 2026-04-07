@@ -49,6 +49,7 @@
     const { meta, scenes } = CONTENT_DATA;
     const parts = meta.parts || [];
     const knowledgeMaps = CONTENT_DATA.knowledgeMaps || [];
+    const mindMaps = CONTENT_DATA.mindMaps || [];
     const aiReflection = CONTENT_DATA.aiReflection || null;
     let html = '';
 
@@ -85,6 +86,11 @@
         const kmBefore = knowledgeMaps.find(km => km.afterPart === partBefore.number - 1);
         if (kmBefore) {
           html += BookEngine.renderKnowledgeMap(kmBefore);
+        }
+        // Mind map for the previous part
+        const mmBefore = mindMaps.find(mm => mm.afterPart === partBefore.number - 1);
+        if (mmBefore) {
+          html += BookEngine.renderMindMap(mmBefore);
         }
         // Part intro
         const prevScene = idx > 0 ? scenes[idx - 1] : null;
@@ -219,6 +225,11 @@
     const lastPart = parts.length > 0 ? Math.max(...parts.map(p => p.number)) : 0;
     knowledgeMaps.filter(km => km.afterPart >= lastPart || km.afterPart === 'final').forEach(km => {
       html += BookEngine.renderKnowledgeMap(km);
+    });
+
+    // Final mind maps (after last part)
+    mindMaps.filter(mm => mm.afterPart >= lastPart || mm.afterPart === 'final').forEach(mm => {
+      html += BookEngine.renderMindMap(mm);
     });
 
     // AI Reflection / Epilogue

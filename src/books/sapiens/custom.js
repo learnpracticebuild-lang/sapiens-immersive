@@ -600,6 +600,211 @@ const CUSTOM_CSS = `
 }
 
 /* ═══════════════════════════════════════════════════════
+   VICIOUS CYCLE VISUALIZATION
+   ═══════════════════════════════════════════════════════ */
+.vicious-cycle-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 2rem 0;
+  padding: 2rem 1rem;
+}
+.vc-stage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  background: var(--accent-glow);
+  border: 1px solid var(--border);
+  opacity: 0;
+  transform: translateY(12px);
+  animation: vcFadeIn 0.5s var(--ease-out) forwards;
+}
+@keyframes vcFadeIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+.vc-icon { font-size: 1.3rem; }
+.vc-label { font-family: var(--serif); font-size: 0.85rem; font-weight: 700; }
+.vc-arrow {
+  font-size: 1.1rem;
+  color: var(--accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.vc-loop { font-size: 1.5rem; color: #DC2626; }
+.vc-examples {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  margin: 1.5rem 0 1rem;
+}
+.vc-example-btn {
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.3s var(--ease-out);
+  letter-spacing: 0.05em;
+}
+.vc-example-btn.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.vc-example-btn:hover:not(.active) {
+  border-color: var(--accent-mid);
+  background: var(--accent-glow);
+}
+.vc-detail {
+  padding: 1.2rem;
+  border-radius: 10px;
+  background: var(--accent-glow);
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+  line-height: 2;
+  color: var(--fg-secondary);
+  min-height: 3rem;
+}
+
+/* ═══════════════════════════════════════════════════════
+   TRUST STACK VISUALIZATION
+   ═══════════════════════════════════════════════════════ */
+.trust-stack-viz {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 4px;
+  margin: 2rem 0;
+  padding: 1rem;
+}
+.ts-layer {
+  display: grid;
+  grid-template-columns: 120px 1fr 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: tsFadeIn 0.5s var(--ease-out) forwards;
+  cursor: default;
+  transition: background 0.3s;
+}
+.ts-layer:hover { background: var(--accent-glow); }
+@keyframes tsFadeIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+.ts-bar {
+  height: 8px;
+  border-radius: 4px;
+  grid-column: 1 / -1;
+  margin-bottom: -0.4rem;
+}
+.ts-label {
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.ts-desc {
+  font-size: 0.72rem;
+  color: var(--fg-secondary);
+  opacity: 0.7;
+  grid-column: 2 / -1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PROGRESS PARADOX VISUALIZATION
+   ═══════════════════════════════════════════════════════ */
+.pp-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: 2rem 0;
+  padding: 2rem 1rem 1rem;
+  min-height: 280px;
+  position: relative;
+}
+.pp-axis-label {
+  position: absolute;
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.pp-power-label { top: 0; left: 1rem; color: var(--accent); }
+.pp-happy-label { top: 0; right: 1rem; color: #8A5AA0; }
+.pp-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  position: relative;
+  cursor: pointer;
+}
+.pp-bar-power {
+  width: 60%;
+  background: var(--accent);
+  border-radius: 4px 4px 0 0;
+  transition: height 1.5s var(--ease-out);
+  min-height: 2px;
+}
+.pp-bar-happy {
+  width: 40%;
+  background: #8A5AA0;
+  opacity: 0.6;
+  border-radius: 4px 4px 0 0;
+  transition: height 1.5s var(--ease-out);
+  min-height: 2px;
+  position: absolute;
+  bottom: 0;
+  right: 5%;
+}
+.pp-era {
+  font-family: var(--serif);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 0.5rem;
+  white-space: nowrap;
+}
+.pp-year {
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  color: var(--fg-secondary);
+  opacity: 0.6;
+}
+.pp-tooltip {
+  position: absolute;
+  bottom: calc(100% + 1rem);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  width: 220px;
+  font-size: 0.7rem;
+  line-height: 1.7;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s var(--ease-out);
+  z-index: 10;
+  white-space: normal;
+}
+.pp-col:hover .pp-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════════
    RESPONSIVE OVERRIDES (Sapiens-specific)
    ═══════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
@@ -611,6 +816,11 @@ const CUSTOM_CSS = `
   .timeline-explorer { padding: 3rem 1rem; }
   .timeline-track { min-width: 900px; }
   .wheat-map-section { padding: 2rem 0; }
+  .vicious-cycle-container { gap: 0.2rem; }
+  .vc-stage { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+  .pp-chart { gap: 0.4rem; min-height: 200px; }
+  .pp-tooltip { width: 180px; }
+  .ts-layer { grid-template-columns: 80px 1fr; }
 }
 `;
 
@@ -1012,6 +1222,107 @@ const CUSTOM_COMPONENTS = {
     }
   },
 
+  // ── Vicious Cycle (Scene 8) ──
+  'vicious-cycle': {
+    render: function(scene, config) {
+      var stages = [
+        {label:'\u5076\u7136\u4E8B\u4EF6', icon:'\uD83C\uDFB2', desc:'\u5F81\u670D\u3001\u5206\u5DE5\u3001\u57FA\u56E0\u7A81\u53D8\u2014\u2014\u5076\u7136\u7684\u5386\u53F2\u4E8B\u4EF6\u5728\u4EBA\u7FA4\u4E4B\u95F4\u5236\u9020\u6700\u521D\u7684\u533A\u5206'},
+        {label:'\u865A\u6784\u6545\u4E8B', icon:'\uD83D\uDCDC', desc:'\u533A\u5206\u88AB\u8D4B\u4E88\u201C\u81EA\u7136\u201D\u6216\u201C\u795E\u5723\u201D\u7684\u89E3\u91CA\uFF0C\u6210\u4E3A\u6587\u5316\u53D9\u4E8B'},
+        {label:'\u5236\u5EA6\u5316', icon:'\u2696\uFE0F', desc:'\u6545\u4E8B\u88AB\u7F16\u5165\u6CD5\u5F8B\u3001\u6559\u80B2\u3001\u5EFA\u7B51\u3001\u4E60\u4FD7\u4E2D'},
+        {label:'\u5B9E\u9645\u5DEE\u8DDD', icon:'\uD83D\uDCC9', desc:'\u5236\u5EA6\u6027\u6B67\u89C6\u5236\u9020\u4E86\u6559\u80B2\u3001\u8D22\u5BCC\u3001\u5065\u5EB7\u7684\u771F\u5B9E\u5DEE\u8DDD'},
+        {label:'\u201C\u8BC1\u5B9E\u201D\u6545\u4E8B', icon:'\uD83D\uDD04', desc:'\u5DEE\u8DDD\u53CD\u8FC7\u6765\u88AB\u7528\u4F5C\u6B67\u89C6\u7684\u201C\u8BC1\u636E\u201D\u2014\u2014\u5FAA\u73AF\u95ED\u5408'}
+      ];
+      return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${config.title || '\u6076\u6027\u5FAA\u73AF\uFF1A\u6B67\u89C6\u5982\u4F55\u81EA\u6211\u8BC1\u660E'}</div>
+        <div class="vicious-cycle-container" data-viz="vicious-cycle">
+          ${stages.map(function(s, i) {
+            return '<div class="vc-stage" data-vc-stage="' + i + '" style="animation-delay:' + (i*0.3) + 's">' +
+              '<div class="vc-icon">' + s.icon + '</div>' +
+              '<div class="vc-label">' + s.label + '</div>' +
+              (i < stages.length - 1 ? '<div class="vc-arrow">\u2192</div>' : '<div class="vc-arrow vc-loop">\u21BB</div>') +
+            '</div>';
+          }).join('')}
+        </div>
+        <div class="vc-examples">
+          <div class="vc-example-btn active" data-vc-ex="race">\u79CD\u65CF (\u7F8E\u56FD)</div>
+          <div class="vc-example-btn" data-vc-ex="caste">\u79CD\u59D3 (\u5370\u5EA6)</div>
+          <div class="vc-example-btn" data-vc-ex="hukou">\u6237\u7C4D (\u4E2D\u56FD)</div>
+        </div>
+        <div class="vc-detail" id="vcDetail">
+          <div class="vc-detail-text" data-vc-detail="race" style="display:block;">\u5076\u7136\uFF1A17\u4E16\u7EAA\u5974\u96B6\u8D38\u6613\u662F\u7ECF\u6D4E\u51B3\u7B56 \u2192 \u865A\u6784\uFF1A\u767D\u4EBA\u81F3\u4E0A\u8BBA \u2192 \u5236\u5EA6\uFF1A\u5409\u59C6\u00B7\u514B\u52B3\u6CD5 \u2192 \u5DEE\u8DDD\uFF1A\u8D22\u5BCC\u5DEE8\u500D \u2192 \u201C\u8BC1\u636E\u201D\uFF1A\u201C\u4ED6\u4EEC\u5C31\u662F\u4E0D\u884C\u201D</div>
+          <div class="vc-detail-text" data-vc-detail="caste" style="display:none;">\u5076\u7136\uFF1A\u96C5\u5229\u5B89\u5165\u4FB5\u7684\u804C\u4E1A\u5206\u5DE5 \u2192 \u865A\u6784\uFF1A\u7EAF\u6D01/\u6C61\u67D3\u7684\u5B97\u6559\u53D9\u4E8B \u2192 \u5236\u5EA6\uFF1A3000\u5E74\u7684\u79CD\u59D3\u6CD5\u89C4 \u2192 \u5DEE\u8DDD\uFF1A\u6559\u80B2\u3001\u5C31\u4E1A\u3001\u5A5A\u59FB\u5168\u9762\u53D7\u9650 \u2192 \u201C\u8BC1\u636E\u201D\uFF1A\u201C\u524D\u4E16\u4E1A\u62A5\u201D</div>
+          <div class="vc-detail-text" data-vc-detail="hukou" style="display:none;">\u5076\u7136\uFF1A1958\u5E74\u4EBA\u53E3\u6D41\u52A8\u7BA1\u63A7\u9700\u6C42 \u2192 \u865A\u6784\uFF1A\u57CE\u4E61\u4E8C\u5143\u4F53\u5236\u53D9\u4E8B \u2192 \u5236\u5EA6\uFF1A\u6559\u80B2\u3001\u533B\u7597\u3001\u4F4F\u623F\u7684\u5236\u5EA6\u6027\u5DEE\u5F02 \u2192 \u5DEE\u8DDD\uFF1A\u57CE\u4E61\u6536\u5165\u6BD42.5:1 \u2192 \u201C\u8BC1\u636E\u201D\uFF1A\u201C\u519C\u6751\u4EBA\u7D20\u8D28\u4F4E\u201D</div>
+        </div>
+      </div>`;
+    }
+  },
+
+  // ── Trust Stack (Scene 9) ──
+  'trust-stack': {
+    render: function(scene, config) {
+      var layers = [
+        {label:'\u519B\u4E8B\u529B\u91CF', color:'var(--accent)', desc:'\u7F8E\u56FD\u519B\u4E8B\u529B\u91CF\u4FDD\u62A4\u7F8E\u5143\u4F53\u7CFB'},
+        {label:'\u7ECF\u6D4E\u589E\u957F', color:'var(--accent-mid)', desc:'\u7F8E\u56FD\u7ECF\u6D4E\u6301\u7EED\u589E\u957F\u7684\u9884\u671F'},
+        {label:'\u653F\u5E9C\u4FE1\u7528', color:'var(--accent)', desc:'\u7F8E\u56FD\u653F\u5E9C\u5C06\u5C65\u884C\u503A\u52A1\u627F\u8BFA'},
+        {label:'\u592E\u884C\u653F\u7B56', color:'var(--accent-mid)', desc:'\u7F8E\u8054\u50A8\u5C06\u7EF4\u6301\u5E01\u503C\u7A33\u5B9A'},
+        {label:'\u5927\u4F17\u4FE1\u4EFB', color:'var(--accent)', desc:'\u6240\u6709\u4EBA\u90FD\u76F8\u4FE1\u522B\u4EBA\u4E5F\u63A5\u53D7\u7F8E\u5143'}
+      ];
+      return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${config.title || '\u4FE1\u4EFB\u7684\u5C42\u7EA7\uFF1A\u8D27\u5E01\u4EF7\u503C\u7684\u201C\u4FE1\u4EFB\u6808\u201D'}</div>
+        <div class="trust-stack-viz" data-viz="trust-stack">
+          ${layers.map(function(l, i) {
+            return '<div class="ts-layer" data-ts-layer="' + i + '" style="animation-delay:' + ((layers.length - i) * 0.2) + 's">' +
+              '<div class="ts-bar" style="background:' + l.color + ';opacity:' + (0.4 + i*0.15) + '"></div>' +
+              '<div class="ts-label">' + l.label + '</div>' +
+              '<div class="ts-desc">' + l.desc + '</div>' +
+            '</div>';
+          }).join('')}
+        </div>
+        <div class="ts-crisis-note" style="text-align:center; padding:1.5rem 0; font-family:var(--serif); font-size:0.8rem; opacity:0.5; line-height:2;">
+          \u2191 \u4EFB\u4F55\u4E00\u5C42\u65AD\u88C2\uFF0C\u4E0A\u65B9\u5168\u90E8\u5D29\u5854 \u2191<br>
+          2023\u5E74SVB\u6324\u5151 = \u201C\u5927\u4F17\u4FE1\u4EFB\u201D\u5C42\u88C2\u7F1D<br>
+          2008\u5E74\u91D1\u878D\u5371\u673A = \u201C\u7ECF\u6D4E\u589E\u957F\u201D\u5C42\u5D29\u584C
+        </div>
+      </div>`;
+    }
+  },
+
+  // ── Progress Paradox (Scene 17/18) ──
+  'progress-paradox': {
+    render: function(scene, config) {
+      var revolutions = [
+        {era:'\u8BA4\u77E5\u9769\u547D', year:'7\u4E07\u5E74\u524D', power:5, happiness:50, gain:'\u865A\u6784\u80FD\u529B\u2192\u7A81\u7834150\u4EBA\u5408\u4F5C\u4E0A\u9650', cost:'\u5176\u4ED6\u4EBA\u79CD\u706D\u7EDD\u3001\u751F\u6001\u5927\u5C60\u6740'},
+        {era:'\u519C\u4E1A\u9769\u547D', year:'1\u4E07\u5E74\u524D', power:15, happiness:45, gain:'\u4EBA\u53E3\u26905000%\u3001\u7CB2\u98DF\u603B\u91CF\u66B4\u589E', cost:'\u4E2A\u4F53\u66F4\u82E6\u3001\u8EAB\u9AD8\u219312cm\u3001\u75BE\u75C5\u66B4\u589E'},
+        {era:'\u878D\u5408\u7EDF\u4E00', year:'3000\u5E74\u524D', power:30, happiness:48, gain:'\u91D1\u94B1\u3001\u5E1D\u56FD\u3001\u5B97\u6559\u2192\u5168\u7403\u6587\u660E', cost:'\u5730\u65B9\u6587\u5316\u88AB\u541E\u566C\u3001\u5E1D\u56FD\u66B4\u529B\u3001\u5B97\u6559\u8FEB\u5BB3'},
+        {era:'\u79D1\u5B66\u9769\u547D', year:'500\u5E74\u524D', power:60, happiness:50, gain:'\u529B\u91CF\u6307\u6570\u7EA7\u589E\u957F\uFF0C\u4EA7\u51FA\u00D7240', cost:'\u6838\u6B66\u5668\u3001\u6B96\u6C11\u5265\u524A\u3001\u751F\u6001\u7834\u574F'},
+        {era:'\u5DE5\u4E1A\u9769\u547D', year:'200\u5E74\u524D', power:85, happiness:50, gain:'\u751F\u4EA7\u529B\u7206\u70B8\uFF0CGDP\u2191600%', cost:'\u5BB6\u5EAD\u74E6\u89E3\u3001\u6D88\u8D39\u4E3B\u4E49\u3001\u52A8\u7269\u5DE5\u4E1A\u5316\u5C60\u5BB0'},
+        {era:'AI\u9769\u547D', year:'\u5F53\u4E0B', power:98, happiness:50, gain:'\u8BA4\u77E5\u80FD\u529B\u5916\u5316\u3001\u751F\u547D\u6CD5\u5219\u53EF\u6539', cost:'\u672A\u77E5\u2014\u2014\u4F46\u8D4C\u6CE8\u6BD4\u4EFB\u4F55\u65F6\u5019\u90FD\u9AD8'}
+      ];
+      return `
+      <div class="data-viz reveal">
+        <div class="data-viz-title">${config.title || '\u8FDB\u6B65\u7684\u6096\u8BBA\uFF1A\u529B\u91CF\u2191\u221E \u5E78\u798F\u21920'}</div>
+        <div class="pp-chart" data-viz="progress-paradox">
+          <div class="pp-axis-label pp-power-label">\u529B\u91CF\u6307\u6570</div>
+          <div class="pp-axis-label pp-happy-label">\u5E78\u798F\u611F</div>
+          ${revolutions.map(function(r, i) {
+            return '<div class="pp-col" data-pp-col="' + i + '">' +
+              '<div class="pp-bar-power" style="height:0%" data-target="' + r.power + '"></div>' +
+              '<div class="pp-bar-happy" style="height:0%" data-target="' + r.happiness + '"></div>' +
+              '<div class="pp-era">' + r.era + '</div>' +
+              '<div class="pp-year">' + r.year + '</div>' +
+              '<div class="pp-tooltip">' +
+                '<div style="color:var(--accent);font-weight:700;margin-bottom:0.3rem;">\u2191 ' + r.gain + '</div>' +
+                '<div style="color:#DC2626;font-weight:600;">\u2193 ' + r.cost + '</div>' +
+              '</div>' +
+            '</div>';
+          }).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
   // ── Wheat Spread Map (Scene 5) ──
   'wheat-map': {
     render: function(scene, config) {
@@ -1259,7 +1570,40 @@ BookEngine.registerObserver(function setupPopulationObserver() {
   document.querySelectorAll('[data-pop-counter]').forEach(function(el) { popObs.observe(el); });
 });
 
-// Register init for wheat scrubber
+// Register init for wheat scrubber and new components
 BookEngine.registerInit(function initSapiensComponents() {
   initWheatScrubber();
+  initViciousCycle();
+  initProgressParadox();
 });
+
+function initViciousCycle() {
+  var btns = document.querySelectorAll('.vc-example-btn');
+  btns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      btns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var key = btn.dataset.vcEx;
+      document.querySelectorAll('.vc-detail-text').forEach(function(d) {
+        d.style.display = d.dataset.vcDetail === key ? 'block' : 'none';
+      });
+    });
+  });
+}
+
+function initProgressParadox() {
+  var ppObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.pp-bar-power').forEach(function(bar) {
+          bar.style.height = bar.dataset.target + '%';
+        });
+        e.target.querySelectorAll('.pp-bar-happy').forEach(function(bar) {
+          bar.style.height = bar.dataset.target + '%';
+        });
+        ppObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.pp-chart').forEach(function(el) { ppObs.observe(el); });
+}
