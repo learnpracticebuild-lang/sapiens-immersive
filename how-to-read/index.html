@@ -2021,7 +2021,7 @@ window.BookEngine = (function() {
           let text = p;
           if (kt.length) {
             kt.forEach(k => {
-              const escaped = k.term.replace(/[.*+?^${}()|[\]\\]/g, '\\<!-- ENGINE_JS -->');
+              const escaped = k.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
               text = text.replace(new RegExp(`(?:<[^>]*>.*?<\\/[^>]*>)|(?:${escaped})`, 'g'), match => {
                 if (match.startsWith('<')) return match; // inside HTML tag, skip
                 return `<span class="key-term" title="${k.definition}">${match}</span>`;
