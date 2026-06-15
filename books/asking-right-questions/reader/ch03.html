@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <script>
+    (function(){var s=localStorage.getItem('reader-theme');if(s==='light'||s==='dark'){document.documentElement.setAttribute('data-theme',s);}else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}})();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第 02 章 · 论题和结论是什么 | 学会提问</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/reader.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="./assets/reader.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body x-data="chapterApp({ sixTabs: window.__SIX_TABS__, sectionIds: ['hero','core','concepts','quotes','related','deep-six'] })" x-init="init()">
+
+  <!-- Reading progress -->
+  <div class="read-progress" :style="`width: ${readProgress}%`"></div>
+
+  <!-- Side nav dots -->
+  <nav class="side-nav hidden lg:flex">
+    <a :class="activeSection === 'hero' ? 'active' : ''" href="#hero" title="开篇"></a>
+    <a :class="activeSection === 'core' ? 'active' : ''" href="#core" title="核心主张"></a>
+    <a :class="activeSection === 'concepts' ? 'active' : ''" href="#concepts" title="关键概念"></a>
+    <a :class="activeSection === 'quotes' ? 'active' : ''" href="#quotes" title="金句"></a>
+    <a :class="activeSection === 'related' ? 'active' : ''" href="#related" title="关联"></a>
+    <a :class="activeSection === 'deep-six' ? 'active' : ''" href="#deep-six" title="完整六问"></a>
+  </nav>
+
+  <!-- Top bar -->
+  <header class="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-[#0a0a0f]/70 border-b border-[#2a2a38]/50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="./index.html" class="flex items-center gap-3 hover:opacity-80 transition">
+        <div class="w-8 h-8 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+          <span class="font-sans-modern text-xs font-bold text-amber-400">02</span>
+        </div>
+        <div class="text-xs font-sans-modern text-[#a8a5a0]">
+          <div class="text-[#6b6b73] uppercase tracking-widest text-[0.65rem]">学会提问 · 第 10 版</div>
+          <div class="text-white">第 02 章 · 论题和结论是什么</div>
+        </div>
+      </a>
+      <div class="flex items-center gap-4 font-sans-modern text-xs text-[#a8a5a0]">
+        <a href="./index.html" class="hidden md:flex items-center gap-1 hover:text-amber-400 transition">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          <span>目录</span>
+        </a>
+        <div class="hidden md:flex items-center gap-2">
+          <span class="text-[#6b6b73]">阅读进度</span>
+          <span class="text-amber-400 font-mono" x-text="`${Math.round(readProgress)}%`"></span>
+        </div>
+        <button class="theme-toggle" @click="toggleTheme()" :title="theme === 'light' ? '切换到深色' : '切换到浅色'">
+          <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section id="hero" class="relative min-h-screen flex flex-col justify-center px-6 lg:px-16 pt-24 pb-32 overflow-hidden">
+    <div class="absolute -top-40 -right-40 w-[600px] h-[600px] glow-amber rounded-full"></div>
+    <div class="relative max-w-6xl mx-auto w-full z-10">
+      <div class="hint-tag bg-amber-500/10 text-amber-400 border border-amber-500/30 mb-8">CHAPTER 02 · 识别论证</div>
+      <div class="flex items-baseline gap-8 mb-8">
+        <div class="chapter-num">02</div>
+        <div class="hidden md:block flex-1">
+          <div class="text-xs font-sans-modern uppercase tracking-[0.3em] text-[#6b6b73] mb-3">ISSUE & CONCLUSION</div>
+          <div class="font-sans-modern text-base text-[#a8a5a0] leading-relaxed max-w-md">识别作者究竟在争什么、要你接受什么 — 评价的起点。</div>
+        </div>
+      </div>
+      <h1 class="hero-cn text-4xl md:text-6xl lg:text-7xl mb-12 max-w-5xl text-white">
+        论题和结论是什么
+      </h1>
+      <div class="grid md:grid-cols-3 gap-6 max-w-4xl">
+        <div class="border-l border-amber-500/30 pl-4">
+          <div class="font-mono text-3xl text-amber-400 mb-1">5</div>
+          <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">核心主张</div>
+        </div>
+        <div class="border-l border-amber-500/30 pl-4">
+          <div class="font-mono text-3xl text-amber-400 mb-1">8</div>
+          <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">关键概念</div>
+        </div>
+        <div class="border-l border-amber-500/30 pl-4">
+          <div class="font-mono text-3xl text-amber-400 mb-1">11,696</div>
+          <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">深度产出汉字</div>
+        </div>
+      </div>
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 pulse">
+        <div class="font-sans-modern text-xs text-[#6b6b73] uppercase tracking-widest mb-2 text-center">向下滚动</div>
+        <svg class="mx-auto" width="20" height="32" viewBox="0 0 20 32" fill="none">
+          <rect x="1" y="1" width="18" height="30" rx="9" stroke="#6b6b73" stroke-width="1"/>
+          <circle cx="10" cy="10" r="2" fill="currentColor" style="color:var(--accent-amber)">
+            <animate attributeName="cy" values="10;20;10" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORE CLAIMS -->
+  <section id="core" class="relative px-6 lg:px-16 py-24 max-w-7xl mx-auto">
+    <div class="reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§1 · 核心主张</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-12 max-w-4xl leading-tight text-white">作者的<span class="text-amber-400">几个关键判断</span></h2>
+      <div class="grid lg:grid-cols-2 gap-6 max-w-6xl">
+        <div class="card rounded-xl p-7">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-mono text-amber-400 font-bold">01</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-base text-white mb-3">批判性思考的第一步是找准论题和结论,否则无法客观评价他人的推理,更无法做出切题的…</h3>
+              <p class="text-[#d4d2cf] leading-relaxed text-[15px]">批判性思考的第一步是找准论题和结论,否则无法客观评价他人的推理,更无法做出切题的回应。</p>
+            </div>
+          </div>
+        </div>
+        <div class="card rounded-xl p-7">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-mono text-amber-400 font-bold">02</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-base text-white mb-3">论题分两类:描述性论题关注世界过去、现在或将来的存在方式,规定性论题关注什么该做…</h3>
+              <p class="text-[#d4d2cf] leading-relaxed text-[15px]">论题分两类:描述性论题关注世界过去、现在或将来的存在方式,规定性论题关注什么该做、什么对什么错等伦理或道德判断,两者对应不同的评价路径。</p>
+            </div>
+          </div>
+        </div>
+        <div class="card rounded-xl p-7">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-mono text-amber-400 font-bold">03</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-base text-white mb-3">所谓结论,即作者或演说者希望你接受的信息,它由其他陈述支撑</h3>
+              <p class="text-[#d4d2cf] leading-relaxed text-[15px]">所谓结论,即作者或演说者希望你接受的信息,它由其他陈述支撑;没有支撑陈述的断言只是'纯观点'(mere opinion),不构成结论。</p>
+            </div>
+          </div>
+        </div>
+        <div class="card rounded-xl p-7">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-mono text-amber-400 font-bold">04</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-base text-white mb-3">当论题未直接说出时,应先找出结论再反推论题:结论总是对论题的一个回应</h3>
+              <p class="text-[#d4d2cf] leading-relaxed text-[15px]">当论题未直接说出时,应先找出结论再反推论题:结论总是对论题的一个回应。</p>
+            </div>
+          </div>
+        </div>
+        <div class="card rounded-xl p-7">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-mono text-amber-400 font-bold">05</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-base text-white mb-3">找结论有六条线索:从论题反推、寻找指示词、在文章开头结尾寻找、排除不可能作为结论…</h3>
+              <p class="text-[#d4d2cf] leading-relaxed text-[15px]">找结论有六条线索:从论题反推、寻找指示词、在文章开头结尾寻找、排除不可能作为结论的内容、考察作者背景与语境、问'所以呢'以推出隐含结论。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- KEY TERMS -->
+  <section id="concepts" class="relative px-6 lg:px-16 py-24 max-w-7xl mx-auto">
+    <div class="reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§2 · 关键概念</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4 text-white">本章<span class="text-amber-400">核心术语</span></h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-12">掌握这些术语,就掌握了本章的工具骨架。</p>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">论题(issue)</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">结论(conclusion)</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">描述性论题(descriptive issues)</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">规定性论题(prescriptive issues)</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">指示词(indicator word)</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">纯观点(mere opinion)</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">分析推理</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">批判性思维</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- QUOTES -->
+  <section id="quotes" class="relative px-6 lg:px-16 py-24">
+    <div class="absolute top-0 right-0 w-[400px] h-[400px] glow-amber rounded-full opacity-30"></div>
+    <div class="max-w-5xl mx-auto reveal relative z-10">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§3 · 作者原声</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-12 text-white">本章<span class="text-amber-400">章节金句</span></h2>
+      <div class="space-y-6">
+        <div class="author-voice rounded-r-xl p-6 md:p-8">
+          <div class="flex items-start gap-6">
+            <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0">01</div>
+            <div class="flex-1">
+              <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4">要成为会批判性思考问题的人,第一步就得培养找准论题和结论的能力。</div>
+              
+            </div>
+          </div>
+        </div>
+        <div class="author-voice rounded-r-xl p-6 md:p-8">
+          <div class="flex items-start gap-6">
+            <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0">02</div>
+            <div class="flex-1">
+              <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4">找不准作者的结论,你就会曲解别人的意图,这样做出的回应也就显得驴唇不对马嘴。</div>
+              
+            </div>
+          </div>
+        </div>
+        <div class="author-voice rounded-r-xl p-6 md:p-8">
+          <div class="flex items-start gap-6">
+            <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0">03</div>
+            <div class="flex-1">
+              <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4">有说服力的交流或论证的基本结构是:甲之所以成立是因为乙。</div>
+              
+            </div>
+          </div>
+        </div>
+        <div class="author-voice rounded-r-xl p-6 md:p-8">
+          <div class="flex items-start gap-6">
+            <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0">04</div>
+            <div class="flex-1">
+              <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4">我们只有找到结论才能进行客观评价!</div>
+              
+            </div>
+          </div>
+        </div>
+        <div class="author-voice rounded-r-xl p-6 md:p-8">
+          <div class="flex items-start gap-6">
+            <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0">05</div>
+            <div class="flex-1">
+              <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4">批判性思维一个最大的障碍就是无法建立起沟通的桥梁。</div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- RELATED -->
+  <section id="related" class="relative px-6 lg:px-16 py-24">
+    <div class="max-w-7xl mx-auto reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§4 · 全书坐标</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4 text-white">本章在<span class="text-amber-400">工具链</span>中的位置</h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-12">完整的章节关联(承接 / 铺垫)在下方 §5 完整六问的 Q5 中详细展开。</p>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3 mb-12">
+        <a href="./ch02.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 01</div>
+          <div class="text-sm text-[#d4d2cf]">学会提出好问题</div>
+        </a>
+        <a href="./ch03.html" class="block rounded-lg border border-amber-500 bg-amber-500/10 p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 02</div>
+          <div class="text-sm text-amber-400 font-medium">论题和结论是什么</div>
+        </a>
+        <a href="./ch04.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 03</div>
+          <div class="text-sm text-[#d4d2cf]">理由是什么</div>
+        </a>
+        <a href="./ch05.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 04</div>
+          <div class="text-sm text-[#d4d2cf]">哪些词语意思不明确</div>
+        </a>
+        <a href="./ch06.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 05</div>
+          <div class="text-sm text-[#d4d2cf]">什么是价值观假设和描述性假设</div>
+        </a>
+        <a href="./ch07.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 06</div>
+          <div class="text-sm text-[#d4d2cf]">推理过程中有没有谬误</div>
+        </a>
+        <a href="./ch08.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 07</div>
+          <div class="text-sm text-[#d4d2cf]">证据效力(一):直觉 / 经历 / …</div>
+        </a>
+        <a href="./ch09.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 08</div>
+          <div class="text-sm text-[#d4d2cf]">证据效力(二):个人观察 / 研究报…</div>
+        </a>
+        <a href="./ch10.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 09</div>
+          <div class="text-sm text-[#d4d2cf]">有没有替代原因</div>
+        </a>
+        <a href="./ch11.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 10</div>
+          <div class="text-sm text-[#d4d2cf]">数据有没有欺骗性</div>
+        </a>
+        <a href="./ch12.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 11</div>
+          <div class="text-sm text-[#d4d2cf]">有什么重要信息被省略了</div>
+        </a>
+        <a href="./ch13.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 12</div>
+          <div class="text-sm text-[#d4d2cf]">能得出哪些合理的结论</div>
+        </a>
+      </div>
+      <div class="mt-8 p-6 rounded-xl border border-amber-500/20 bg-amber-500/5 flex items-start gap-4">
+        <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent-amber)"><path d="M12 2v20M2 12h20"/></svg>
+        </div>
+        <div class="flex-1">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-amber-400 mb-1">向下继续</div>
+          <div class="text-[#d4d2cf]">下一节就是<strong class="text-white">完整六问深度产出</strong>——反例、前提、章节关系、个人实践,全部就地展开,无需跳转。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- DEEP SIX -->
+  <section id="deep-six" class="relative px-6 lg:px-16 py-24">
+    <div class="absolute -top-40 left-0 w-[600px] h-[600px] glow-violet rounded-full opacity-30 pointer-events-none"></div>
+    <div class="max-w-6xl mx-auto reveal relative z-10">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§5 · 完整六问深度产出</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4 text-white">11,696 汉字<span class="text-amber-400">就地展开</span></h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-10">核心主张、论据、反例、隐含前提、章节关系、个人实践——本章六问完整产出,无需跳转,在此就地阅读。点击下方 tab 切换。</p>
+
+      <div class="tab-bar mb-10">
+        <div class="flex flex-wrap gap-2">
+          <template x-for="(t, i) in sixTabs" :key="i">
+            <button class="filter-pill flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-sans-modern transition-all"
+                    :class="activeQ === t.id ? 'border-amber-500 bg-amber-500/10 text-amber-400' : 'border-[#2a2a38] text-[#d4d2cf] hover:border-amber-500/40 hover:text-amber-400'"
+                    @click="setActiveQ(t.id)">
+              <span class="font-mono text-xs opacity-80" x-text="t.id"></span>
+              <span class="font-medium" x-text="t.label"></span>
+              <span class="text-xs opacity-60 hidden md:inline" x-text="`· ${t.chars}字`"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <div class="mb-8 p-4 rounded-lg bg-[#14141d] border border-[#2a2a38]">
+        <div class="flex items-start gap-3">
+          <div class="font-mono text-amber-400 text-xs flex-shrink-0 pt-0.5" x-text="currentTab.id"></div>
+          <div>
+            <div class="font-sans-modern font-medium text-white mb-1" x-text="currentTab.label"></div>
+            <div class="text-sm text-[#a8a5a0]" x-text="currentTab.desc"></div>
+          </div>
+        </div>
+      </div>
+
+      <article class="prose-six tab-content" :key="activeQ" x-html="renderedQ"></article>
+
+      <div class="mt-16 pt-8 border-t border-[#2a2a38] flex flex-wrap items-center justify-between gap-4">
+        <div class="text-xs font-sans-modern text-[#6b6b73]">
+          数据源:<span class="font-mono text-amber-400">chapters/ch03/six_q/</span>
+          <span>·</span> 严格按纪律 1 独立落盘
+        </div>
+        <button @click="scrollToTop()" class="font-sans-modern text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          回到章节顶部
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- CHAPTER NAV -->
+  <section class="px-6 lg:px-16 py-16">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-4">
+        <a href="./ch02.html" class="chapter-nav-card">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73]">← 上一章</div>
+          <div class="font-mono text-amber-400 text-sm">CH 01</div>
+          <div class="text-white font-medium">学会提出好问题</div>
+        </a>
+        <a href="./ch04.html" class="chapter-nav-card text-right">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73]">下一章 →</div>
+          <div class="font-mono text-amber-400 text-sm">CH 03</div>
+          <div class="text-white font-medium">理由是什么</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="px-6 lg:px-16 py-16 border-t border-[#2a2a38]">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">本章</div>
+          <h3 class="hero-cn text-xl text-white mb-2">论题和结论是什么</h3>
+          <p class="text-sm text-[#a8a5a0]">学会提问 · 第 10 版 · 第 02 章</p>
+        </div>
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">作者</div>
+          <p class="text-[#d4d2cf]">Neil Browne · Stuart Keeley</p>
+          <p class="text-sm text-[#a8a5a0] mt-1">30+ 年迭代 · 至第 10 版</p>
+        </div>
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">数据源</div>
+          <p class="text-sm text-[#a8a5a0] font-mono">chapters/ch03/insights.md</p>
+          <p class="text-sm text-[#a8a5a0] font-mono">chapters/ch03/quotes.md</p>
+        </div>
+      </div>
+      <div class="text-center text-xs font-sans-modern text-[#6b6b73] tracking-widest">
+        智识图书馆 V2 · 阅读体验 · ch03
+      </div>
+    </div>
+  </footer>
+
+  <!-- Embedded markdown source for §5 -->
+  <script type="text/markdown" id="md-q1">
+作者从一个方法论顺序切入:要客观评价一个人的推理,必须先找到他的推理在哪里——也就是先找准论题和结论,否则后续的批判性思考无从落脚,回应也会驴唇不对马嘴。本章是全书十个关键问题的第一问。
+
+作者把论题分为两类。描述性论题关心的是世界过去、现在或将来的存在方式——诸如音乐学习对数学能力的影响、帕罗西汀能否治疗抑郁、某大学心理学院水平如何。规定性论题关心的是什么该做、什么对什么错、什么好什么坏——诸如公立学校是否应当教智能设计、是否应该立法禁止运动型轿车。作者强调:两种论题对应两套不同的评价路径,读者最终得出的客观评价长什么样,取决于论题的类型,因此分类不可省略。
+
+作者随后界定结论的本质。所谓结论,就是作者或演说者希望你接受的信息,它由其他陈述支撑;有说服力的交流的基本结构是"甲之所以成立是因为乙"——甲是结论,乙是支撑材料。作者特别区分了"结论"与"纯观点"(mere opinion):没有支撑陈述的断言只是纯观点,不构成结论。理解这一本质属性是批判性阅读的前提。
+
+作者接着处理一个常见困难:很多文章的论题并不直接说出来,必须从上下文推断。此时最有效的方法是先找结论——因为结论总是对论题的一个回应,确定结论后可反推论题。
+
+为帮助读者找结论,作者给出六条线索:(1)从论题反推;(2)寻找指示词(如"因此""由此可知""问题的实质是"等约十个);(3)在文章开头和结尾查看;(4)排除不可能作为结论的内容(例句、数据、定义、背景资料、证据);(5)考察作者背景与语境;(6)问"所以呢"以推出含蓄结论。这六条构成一套可操作的定位流程。
+
+最后作者把视角从"读者"切换到"作者"——当你自己写作时,必须把论题范围尽量缩小(作者举例年轻作者试图在 3-5 页里讲清气候改变的存在、原因、批评、读者为何关心,是典型的贪多嚼不烂),并把结论说得明白无误、放在显著位置;指示词、开头结尾的明确表述,都是帮助读者跨越"看不见作者内心"这道门槛的桥梁。作者认为:批判性思维最大的障碍之一就是无法建立沟通的桥梁,而清楚地表述论题和结论正是搭这座桥的第一砖。
+
+  </script>
+  <script type="text/markdown" id="md-q2">
+# Q2 · 论据是什么
+
+本章作为"十问"的第一问,作者的任务是**把抽象的'批判性思维起点'落到一个可操作的技能——定位论题和结论——上**。论据密度整体不高,以"逻辑推理 + 操作示范式的历史案例"为主,规范性主张较多。下面逐一论点拆解。
+
+## 论点 1 · 找准论题和结论是批判性思考的第一步
+
+- **【逻辑推理】功能顺序论证:** 作者用一个不可跳过的顺序——"客观评价推理之前必须先找到推理之所在"——把"定位"放在"评价"之前,是一种秩序性的先决条件。逻辑结构是:没有第一步,后面所有步骤都无法启动。
+- **【逻辑推理】反例归谬:** "找不准作者的结论,你就会曲解别人的意图,这样做出的回应也就显得驴唇不对马嘴。" 通过列出"不找准"的后果(曲解 + 回应失焦),反推必须找准。
+- **【论据不足提示】** 作者没有给出经验研究来佐证"读者在真实阅读中常常误判结论",这个论点更多靠常识直觉,而非数据。
+
+## 论点 2 · 论题分两类(描述性 vs 规定性)
+
+- **【历史案例】例子罗列建类:** 作者用两组并列例子建立二分概念。描述性论题侧给出 5 个(音乐学习对数学能力的影响、家庭暴力最常见诱因、帕罗西汀治疗抑郁、2016 年美国医保花费、伊利诺伊大学心理学研究院水平);规定性论题侧给出 3 个(公立学校教智能设计、医疗补助欺诈对策、立法禁止运动型轿车)。通过密集具象化例子,让二分从抽象定义变得可识别。
+- **【逻辑推理】功能性论证:** "你最终做出的客观评价到底是什么样,主要取决于你所回答的论题的类型"——这条是"为什么非要分类"的核心理由。不分类 → 评价错配,分类 → 评价路径匹配。
+- **【论据不足提示】** 作者自己承认"这样说有点儿太过简单和笼统了,有时候,我们很难判断自己讨论的到底是哪一类论题",但并未展开**边界情况**的处理办法(例如既含描述又含规定的复合论题)。这是作者主动留白的地方。
+
+## 论点 3 · 结论的本质 = 有其他陈述支撑(非"纯观点")
+
+- **【逻辑推理】定义性陈述 + 结构公式:** 作者把有说服力的交流简化为**"甲之所以成立是因为乙"** 这一元结构——甲为结论、乙为支撑。这个公式是后续"线索四(例句/数据/定义/背景/证据不可能作为结论)"的理论前提。
+- **【历史案例】最小示范段:** "大规模室内养殖业不应该合法化,还有其他更自然的方法来生产我们所需的食品。" 一句话内拆出结论(不应合法化)和理由(有更自然的方法),作为"最短可解剖样本"。案例极简但功能精确——让读者立即看到"理由如何支撑结论"的最小单元。
+- **【逻辑推理】概念切割:** 把"结论"与"纯观点(mere opinion)"对立起来,用"是否被其他陈述支撑"这一测试标准一刀切开两者。这是术语层面的清晰动作,而非实证。
+
+## 论点 4 · 论题未直接说出时,应先找结论再反推
+
+- **【逻辑推理】秩序反转论证:** 结论总是对论题的一个回应 → 已知回应可反推问题。这是一条**形式逻辑**式论证,不依赖经验证据,靠"问答匹配"的结构关系成立。
+- **【论据不足提示】** 作者没有说明"先找结论再反推"在什么比例的文本中必要,也没给出"直接找论题"与"先找结论"两条路径的效率比较。属于经验性建议的断言化。
+
+## 论点 5 · 找结论有六条线索
+
+- **【逻辑推理】规则清单(6 条):** 从论题反推、寻找指示词、开头结尾、排除非结论内容、考察作者背景、问"所以呢"。
+- **【历史案例】指示词示范:** "因为宪法上的这些措辞,**因此可以断定**公学里不得允许有祈祷行为存在。" 用"因此可以断定"这一具体指示词演示线索二。
+- **【历史案例】家庭学校批判文章:** "**问题的实质是**父母在家教育子女往往是一种错误" + 文章开头位置——同时演示线索一(反推论题)、线索二(指示词)、线索三(开头位置),一文多用。
+- **【历史案例】电视广告管控文章:** 无指示词情况下,文章**结尾**的"应该"一词定位结论,演示线索三(结尾)+ 通过"应该"判断规定性论题。
+- **【历史案例】政治广告隐含结论:** "某候选人会对犯罪行为心慈手软"——听众需自己从广告信息中推出结论,演示线索六(所以呢)。
+- **【论据不足提示】** 六条线索之间的**优先级、覆盖重叠率、冲突时如何取舍**作者均未论证。清单式呈现使得它们看起来并列、独立,但实操中多条线索往往同时适用(如家庭学校案例),作者未给出"同时命中 3 条 vs 只命中 1 条"情境下的置信度梯度。
+
+## 论点 6 · 作者自己写作时要缩小论题 + 突出结论
+
+- **【历史案例】气候改变贪多嚼不烂:** "在一篇 3～5 页的文章里,年轻的作者很可能竭力要向读者证明:气候改变确实存在、什么原因导致了气候改变、为什么针对气候改变的批评是错误的、读者为什么要关心气候改变"——给出**具体失败画像**(四个子论题塞进五页),比抽象说教有感染力。
+- **【逻辑推理】读者视角论证:** "读者无法听到我们内心的真实想法,我们许多隐藏的看法他们也无法看透。他们不知道我们的价值观和背景......他们所有的就只是摆在他们面前的纸张或是屏幕。" 作者用"读者信息劣势"这一认知不对称,推出"作者必须把论题和结论写明白"的义务。这条论证扎实。
+- **【逻辑推理】桥梁隐喻:** "批判性思维一个最大的障碍就是无法建立起沟通的桥梁"——把"论题/结论的清晰表述"升格为跨越这一障碍的**第一块砖**,与 ch02 的"让对话一直进行下去"形成延续。
+- **【论据不足提示】** 没有引用写作教学或修辞学研究来佐证"论题不清晰 → 读者理解崩塌"这一因果链的强度,纯属教学经验的归纳。
+
+---
+
+## 整章论据结构的三点观察
+
+1. **论据类型以"逻辑推理"+"操作示范式历史案例"为主,"事实/数据"几乎缺席。** key_data 里的"2 类论题""6 条线索""10 个左右指示词""5 类非结论内容"这些数字都是作者**自己分类的产物**,不是外部实证数据。本章本质上是**技能教学**,不是实证论文,因此这样的论据结构是恰当的。
+
+2. **"历史案例"在本章的功能与 ch02 不同。** ch02 的案例多是**文化文本**(艾伯特毒舌、辛普森家庭、哈利·波特、火柴盒二十乐队),用来激活情感与共鸣;ch03 的案例多是**操作靶材**(手机文章、禁枪论述、家庭学校、儿童广告、法庭直播),用来让读者在具象文本上练手——**案例形态从"调情"转为"操练"**,契合本章作为"第一问"的工具性定位。
+
+3. **最扎实的一节是论点 6** ——"读者信息劣势 → 作者义务"这一推理链条完整,气候改变的失败画像具象有力。**最需要补强的是论点 5 的线索优先级问题** ——六条并列呈现,但现实文本常同时命中多条,作者未给出"多条命中时的置信度合成"规则,读者可能在复杂文本面前反而不知该信哪一条。
+
+  </script>
+  <script type="text/markdown" id="md-q3">
+# Q3 · 反例与局限
+
+Q3 的任务是厘清作者"找论题和结论"方法论的适用边界。下文先引用作者本人在文中的保留,再补充来自哲学、认知心理学、修辞学的外部反例。
+
+## 一、作者本人已承认的局限(优先引用)
+
+### 1. 描述性 vs 规定性的二分作者自己承认"笼统"
+
+原文:"这样说有点儿太过简单和笼统了,有时候,我们很难判断自己讨论的到底是哪一类论题。但是,记住这两种不同的论题类型很管用......"作者主动承认:**二分是教学方便,不是刚性事实**。这条自认对读者很重要——Q1/Q2 在呈现这个二分时容易给人"清晰可辨"的错觉,作者自己其实留了余地。
+
+### 2. 作者承认"陈述论题的正确方法不止一种"
+
+原文:"在你辨认论题的时候,要努力抵制这种思想:陈述这个论题的正确方法只有一种,其他都是错误的。"作者认识到:**论题的措辞本身是开放的**,只要符合"论题"的界定标准即可。这条自我限定防止读者把本章变成"找唯一正确答案"的机械训练——但作者没有进一步说明"两种都说得通的论题表述"应当如何选择。
+
+### 3. 作者承认练习题答案"并非唯一解"
+
+原文在"思维体操"前写道:"我们所提供的答案并不是唯一正确的解答,但它们确实提供了例证"。承认批判性思维的开放性——但这种开放性与本章反复强调的"找结论"任务感之间存在张力,作者未展开这个张力如何处理。
+
+## 二、作者未展开、但来自外部知识领域的反例与局限
+
+### 4. "描述性 vs 规定性"二分在哲学上有争议
+
+**事实-价值二分的崩塌(fact-value dichotomy collapse)** 是当代哲学的重要议题。Hilary Putnam 在《事实/价值二分法的崩溃》(2002)中论证:许多看似描述性的词语实质上是 **"厚概念"(thick concepts)**——它们同时承载描述与评价,无法干净拆分。例如:
+
+- "残忍""勇敢""虐待儿童"既描述一种行为模式,也已经嵌入道德评价。
+- 经济学"失业率""贫困线""通货膨胀"的**定义方式**就携带价值判断(失业多久算失业?贫困线画在哪里?),看似描述性实则隐含规定。
+- 作者自己举的例子"家庭暴力最常见的诱因"属于"描述性",但"家庭暴力"这个词本身已经做了规范性切分。
+
+对 CFO/独董而言,这意味着:**财务报告里的很多"描述性指标"(如"减值迹象""重大错报")在会计准则的定义里已经嵌入价值判断**,不能当纯粹的描述事实对待。
+
+### 5. "结论必须有其他陈述支撑,否则是纯观点"的刚性过强
+
+作者把"结论"与"纯观点"二分,以"是否被其他陈述支撑"作为切分标准。这一标准有至少三类反例:
+
+- **公理与公设:** 数学基础的公理(欧几里得第五公设、集合论 ZFC 公理)不被其他陈述支撑,但仍是数学推理的结论性起点。
+- **专家直觉与默会知识(Michael Polanyi, Gary Klein):** 消防队长几秒内判断"这栋房子要塌"、经验丰富的医生一眼认出罕见病——这些判断**当下不可完全命题化**,但不能被贬为"纯观点"。
+- **审美与宗教判断:** "这幅画令人震撼""我信仰上帝"在持有者眼中是实在的结论,不是纯观点——只是它们的支撑形态不是命题性的。
+
+作者的二分在**政策辩论、社论评述**类文本中适用良好,但推广到**专业判断、艺术批评、宗教话语**时会过度简化。Q4 前提 2("思考=论证")已经指出同一底层问题。
+
+### 6. "指示词 / 开头结尾"线索的跨文本类型失效
+
+作者列的 10 个指示词(consequently / therefore / thus / the point I'm trying to make is ...)有强烈的**英语学术/论说文**色彩。跨文体时失效:
+
+- **叙事性文本(小说、新闻特稿):** 论点常埋在情节、隐喻、引语中,没有指示词——但仍有清晰立场。
+- **中文古典散文与政治评论:** 常用"起承转合""开合收放",主论点经常**藏在中部或反复变奏**,不在开头结尾。
+- **学术哲学、文学批评:** 结论往往是渐进式、分布式的,一篇文章可能"没有一个可以被指认的最终结论",而是多个小结论的网格。
+- **现代新闻的"倒金字塔"失效:** 在特稿、长报道、深度调查中结论刻意延后,线索三(看开头)会误导。
+
+### 7. "排除五类非结论内容"(例句/数据/定义/背景/证据)的刚性
+
+这条规则在社论和论述文里好用,但在以下文本类型里反例明显:
+
+- **科学论文:** 主要结论常常**就是一组数据**(如气候模型的温升预测、临床试验的疗效数字)——数据既是证据又是结论本身。
+- **法律文书与判决书:** 判决书的结论往往**就是一个定义**("本院认定被告的行为构成欺诈"),定义即结论。
+- **技术规范文件:** 标准、操作规程、会计准则——核心结论就是定义(如 IFRS 9 对"金融资产"的分类定义)。
+
+对一个 CFO 审计报告、合规文件时,机械套用"定义不是结论"会漏掉最关键的结论性条款。
+
+### 8. "考察作者背景/语境"线索的双刃性
+
+作者把"查作者背景"作为线索五,这在实操中有**诉诸人身(ad hominem)和确认偏误(confirmation bias)** 的双重风险:
+
+- 看到作者是"左派智库研究员"就预读为"左派结论"——这是 Q2 Kahan 文化认知效应引用的典型机制,实证心理学显示:**知道作者立场反而会系统性扭曲对文本的理解**。
+- 作者的意图和文本的实际陈述并不总是一致——一个偏保守背景的作者有时写出的恰是破除自身立场的论述(亚当·斯密同情穷人、弗里德曼承认市场失灵)。
+
+作者给出这条线索时没有配套警告——对一个走向强势批判性思维的读者,线索五是**最容易滑向弱势批判**的那一条。
+
+### 9. "写作时缩小论题 + 结论前置"的文化/文体特异性
+
+作者建议"把论题缩小、结论放在显著位置、用指示词强调",这与**英语学术论文 IMRAD 结构、新闻倒金字塔、商业备忘录 BLUF(bottom line up front)** 的惯例一致。但:
+
+- **中国、日本传统修辞**重视"含而不露"的力量——结论前置有时被视为粗鲁或缺乏余韵。
+- **哲学、文学、艺术评论**往往不适合 BLUF——需要带读者**沿路径抵达结论**,前置反而破坏论证的生成感。
+- **跨文化商务场景**:中式商务备忘录常用"背景 → 分析 → 建议"结构,与英美"建议 → 理由 → 背景"相反;一味"结论前置"会在中方场景显得突兀。
+
+Will 作为跨境电商 CFO,在写给美方董事会的 memo 应当结论前置,而写给中方高管的同一内容则可能需要调换顺序——**同一批判性思维工具在不同文化修辞传统里要换外壳**。
+
+## 三、小结
+
+作者在方法论层面的主要建构——二分论题、定义结论、六条线索、写作建议——**在英语政策辩论和社论类文本中相当好用**,但在以下场景需要加条件或松绑:
+
+- 厚概念领域(伦理、政治、经济指标)——描述性/规定性二分失灵
+- 专业判断领域(直觉、默会知识、专家经验)——"有支撑才是结论"失灵
+- 跨文体/跨文化文本(叙事、哲学、古典散文、日中商务文本)——指示词、位置、结论前置规则失灵
+- 技术文本(科学论文、法律判决、会计准则)——排除五类非结论失灵
+
+这些局限不否定本章核心价值——对于普通读报纸、评社论、审议 memo 的读者,作者的框架仍是**最高性价比的入门工具**。但对**跨文化/跨文体/专业判断场景**的读者(如 CFO/独董),要清楚:**六条线索是启发式(heuristics)而非算法(algorithms)**,冲突时要靠判断,不是靠清单投票。
+
+  </script>
+  <script type="text/markdown" id="md-q4">
+# Q4 · 隐含前提
+
+Q4 挖的是作者**没明说却必须依赖**的底层假设。本章教"找论题 + 找结论"这一项具体技能,隐含前提集中在**文本性质、语言哲学、读者心智**三类。下面六条按**从最表层(目的论)到最底层(认知主体)** 的顺序排列,每条给出(a)前提是什么、(b)为什么论证依赖它、(c)现实可靠性评估。
+
+## 前提 1 · 所有"值得批判性阅读"的文本都是"说服性"文本
+
+**(a) 前提是什么:** 作者开篇即写"那些建网页、博客、写社论、出书、给杂志写文章或做演讲的人都在竭力改变你的看法或是信仰",把文本的创作动机**默认为"试图说服读者"**——因此读者的任务就是**识别说服企图**(结论)并评价其合理性。
+
+**(b) 为什么作者的论证依赖它:** 本章的整套方法——找论题、找结论、六条线索——只在"文本有说服意图"时才有意义。如果文本不是在说服,而是在描述、叙述、抒情、记录、提问,那"作者要推销给你的结论"这个框架就落不到位。
+
+**(c) 现实可靠性:** **部分成立**。社论、评论、政治演说、营销广告、辩论文章——前提成立,本章框架锋利。但:
+- **纯新闻报道**原则上不做说服,只做事实呈现(虽然现实中角度选择已是立场)
+- **文学、诗歌、艺术评论**常常是**表达、共鸣、激发思考**,而非说服
+- **学术综述**的目的是**整理现状**,不必然有作者的单一结论
+- **叙事性非虚构**(Joan Didion、John McPhee)通过故事让读者自己抵达判断,作者刻意不下结论
+
+对一个读财报、审计报告、合规文件、内部备忘录的 CFO 而言,这些文本**不全都在"说服"**——有的是事实呈现(资产负债表)、有的是规则界定(准则条文)、有的是程序记录(董事会会议纪要)。用"找结论"的框架读财务报表会失焦。作者在这点上默认了文本的"论辩性"底色,未说明这一默认本身是一种选择。
+
+## 前提 2 · 论题与结论是两个可以干净切开的对象
+
+**(a) 前提是什么:** key_term"论题(issue)"与"结论(conclusion)"在作者笔下是两个**独立且不同类**的对象——论题是**问题**,结论是**答案**。本章的整套"反推"技术建立在这一切分之上:找到其一,可以定位另一。
+
+**(b) 为什么作者的论证依赖它:** 如果论题的措辞本身已经嵌入答案倾向(问"是否应该禁止"与问"如何更好地禁止"隐含不同立场),那么"从论题反推结论"就带着作者在论题阶段的立场偏置;反过来,"从结论反推论题"也会反过来重写问题。两者互相污染,作者的秩序性方法失去清洁度。
+
+**(c) 现实可靠性:** **有哲学争议**。语言哲学的**"厚概念"(thick concepts)** 研究(Bernard Williams, Hilary Putnam)表明许多问题-答案对无法干净切分——问"家庭暴力最常见的诱因"已经预设"家庭暴力"这一范畴的道德切分;问"同性婚姻是否应当合法化"与问"同性关系如何被制度承认"是两种不同语言政治的产物,各自暗藏不同结论区间。更极端的是**福柯的"问题化"(problematization)** 分析:历史上某些问题**本身就是一种答案**(把"同性恋"问题化,已经把它放到一个需要回答的位置上,而这个位置本身是一种规训)。
+
+作者默认论题和结论的干净可分,是实用主义的教学简化——在大多数日常文本里够用,在**涉及概念政治、术语之争**的场合不够用。Will 做跨境电商,遇到"平台经济的反垄断边界""数据跨境合规边界"这类议题,问题的措辞本身已经是立场。
+
+## 前提 3 · 每篇文本都有"一个"可辨识的主结论
+
+**(a) 前提是什么:** 作者把找结论当作一个**单数任务**——"作者或演说者希望你相信的一个或一系列陈述"虽然提到"一系列",但本章的全部示范都指向**定位某个主结论**。线索四"排除五类非结论"和线索六"所以呢"都预设了"结论是一个可锁定的焦点"。
+
+**(b) 为什么作者的论证依赖它:** 如果一篇文章是**多论点网格**——多个平行论点、互相支撑、共同织成立场——那"找主结论"的任务就无从定义。批判性评价的"接下来你所关心的是:基于支撑这一论断的所有材料,我该不该接受这个结论"就需要被**分拆重写**。
+
+**(c) 现实可靠性:** **分文本类型**。短小的社论、政治广告、营销文案——单一主结论的框架贴合;长篇学术论文、深度调查报道、哲学散文——**多结论网格是常态**。一篇 20 页的哲学文章可能有 5 个子结论共同服务于一个隐含的大立场,"找一个结论"会失真。作者在本章末尾的"大规模室内养殖业不应合法化"示范段只有一句话——示范长度的选择本身就筛选了"单结论"可见的文本。对一个读麦肯锡报告、投行研究报告、年报 MD&A 的 CFO 而言,**多结论网格**是日常文本形态,需要变换框架。
+
+## 前提 4 · "定位"与"评价"是严格先后的两个阶段
+
+**(a) 前提是什么:** 作者反复强调"客观评价推理之前必须先找到推理之所在"、"我们只有找到结论才能进行客观评价",**把定位作为评价的前置条件**,两者被看作可以严格先后的两个阶段。
+
+**(b) 为什么作者的论证依赖它:** 整个"第一问"之所以是"第一问",正是这个阶段论的产物——没有定位就没有评价,所以全书十问必须从"找论题和结论"开始。如果定位与评价互相交缠、循环依赖,那"第一问"的优先性就站不住。
+
+**(c) 现实可靠性:** **诠释学(hermeneutics)提出挑战**。Gadamer、Heidegger 阐发的**"诠释学循环"(hermeneutic circle)** 指出:对局部(结论)的理解依赖对整体(文本)的理解,对整体的理解反过来又依赖对局部的理解——两者**互相依赖、循环推进**,不能严格先后。
+
+在实操中这表现为:你常常是**读到第三页才突然"看懂"第一页说的是什么**,回头重读时才能准确定位第一页的论点;或者你已经在**评价**的过程中才逐渐**理解**作者的真实意图。"先定位后评价"的阶段论是一种**教学上方便的理想化**,真实阅读是多轮往返的循环。作者未提及这一复杂性。
+
+## 前提 5 · 语言是论证的透明载体
+
+**(a) 前提是什么:** 作者假定**词语、句子、段落忠实地承载论证**——结论可以被"说得明白无误",指示词可以"告诉读者这就是结论",论题可以"界定清楚"。语言在作者笔下是**透明的中介**,不是自身带扭曲的介质。
+
+**(b) 为什么作者的论证依赖它:** 六条线索里至少四条(指示词、开头结尾、排除非结论、"所以呢")都建立在"语言是可解析的信号系统"之上——如果语言本身是不透明的(隐喻、修辞、反讽、语境依赖、跨文化不可译),那么这些信号会错位甚至反向。
+
+**(c) 现实可靠性:** **语言哲学长期的反方**。Wittgenstein 后期哲学、Derrida 的解构、George Lakoff 的概念隐喻研究、跨文化修辞学(Connor)——都指出**语言不是透明中介**。具体场景:
+
+- **反讽**:"他真是个好人"可能是反义
+- **隐喻**:"我们要打一场硬仗"中"仗"承担多少字面义、多少比喻义,会影响结论判读
+- **含糊修辞**:政治演说常用"可能""或许""有人认为"构造**可撤回的结论**
+- **文化语境**:同一句中文在大陆语境和港台语境的意涵可能不同
+
+作者的方法在**干净的论说文**里够用,遇到**政治话术、商业修辞、跨文化文本**时会暴露语言的非透明性。Ch04(哪些词语意思不明确)部分回补这一前提,但回补只针对词语的"多义",不触及更深的语言哲学问题。
+
+## 前提 6 · 读者是一个稳定、自洽、统一的心智
+
+**(a) 前提是什么:** 本章默认读者**在任何文本、任何时刻、任何状态下**都可以运用同一套"找论题/找结论"技能——读者是一个稳定的、自洽的、单一的认知主体。
+
+**(b) 为什么作者的论证依赖它:** "六条线索"作为一套普适工具的合法性建立在"读者的定位能力不随状态波动"之上;如果读者在疲劳、情绪、信息过载、文化错位时定位能力会系统性下降,那"学会六条线索"的承诺就需要大量条件。
+
+**(c) 现实可靠性:** **认知心理学反方丰富**。
+
+- **注意力经济与阅读浅化**:Nicholas Carr《浅薄》(The Shallows)指出互联网阅读模式让人**难以完成深度线性阅读**,"读完才找到结论"的能力在年轻一代已经显著退化
+- **情绪污染**:受情绪影响的读者会**过滤性阅读**(confirmation-biased reading)——只看见支持自己立场的部分,对反方论述的结论系统性盲视
+- **文化认知差异**:跨文化阅读时对"结论前置 vs 结论后置""含蓄 vs 直白"的期待差异会导致定位错位
+- **读者类型多样**:本章默认一个受过高等教育的英文读者,但本书面向"广大读者"——不同教育背景、不同语言背景的读者不是同一技能接受者
+
+对 Will 这样的读者(多语环境、信息密度极高、时间压力大),"找结论"不是**单一技能**,而是**一个需要根据文本类型、自身状态、时间预算动态分配的处理策略**。作者的框架默认了这种差异不存在。
+
+## 小结
+
+以上六条前提按深度递进:**说服性文本**是目的论表层;**论题/结论可分**是分析层;**单一主结论**是结构层;**定位优先于评价**是方法论层;**语言透明**是语言哲学层;**读者统一心智**是认知主体层。
+
+这些前提在**英语社论、政治演说、营销文本**这种"本章主要示例场景"里基本都成立,作者的方法在那里是高效的。但在以下场景**全部六条都需要打折扣**:跨文化商务文本、哲学/文学散文、财务报告与合规文件、长篇调查报道、艺术评论、多论点网格的学术论文——这些场景对 Will 这类读者恰恰是**工作文本的主体**。
+
+Q5 将检视本书后续章节是否部分回补这些前提(ch04 回补前提 5 的词语多义性,ch07–ch08 可能松动前提 2 的问题-答案切分),哪些前提在全书范围内**不被回补**(前提 1、3、4、6 基本无回应)。
+
+  </script>
+  <script type="text/markdown" id="md-q5">
+# Q5 · 章节关系
+
+ch03 是全书"十问序列"的**第一问**——从 ch02 方法论宪法章过渡到 ch03 开始的具体技能训练,ch03 承担**"宪法落地为第一把工具"** 的枢纽角色。
+
+## 一、承上:ch01 → ch02 → ch03 的三级递进
+
+**递进结构:**
+- ch01(**动机层**):说服型文本充斥,需要筛选工具——回答"为什么要学"
+- ch02(**宪法层**):淘金式姿态 + 批判性思维三要素 + 四价值观 + "论证=理由+结论"定义 + 对话策略 + 反一厢情愿——回答"批判性思维是什么"
+- ch03(**实操层开篇**):十问之第一问"论题和结论是什么"——回答"第一步怎么做"
+
+**ch03 承接 ch02 的三条钩子:**
+
+**钩子 1 · "论证=理由+结论" 的定义被拆出落地。** ch02 把论证定义为"一个结论 + 支持这一结论的理由的结合",这一定义在 ch02 还停留在术语层;ch03 把它**拆成两个可定位对象**——论题(引出结论的问题)和结论(作者要你接受的断言)——作为第一问的正式对象。这一拆分也决定了后续章节的排序:先识别"零件"(ch03 结论、ch04 词语、ch05 假设),再评估"组合质量"(ch06 谬误、ch07–ch11 证据/数据/省略)。
+
+**钩子 2 · "淘金式思维需要主动提问" 获得第一个具体问题。** ch02 反复强调批判性思维的核心姿态是"带着问题去读"——但 ch02 本身没有给出任何一个具体问题。ch03 填上这个空:"论题和结论是什么"是**全书的第一个可背诵的操作性问题**,淘金盘正式开工。
+
+**钩子 3 · ch02 的"评价之前先定位"被制度化。** ch02 暗含这一顺序(定义先于评估、姿态先于技能),ch03 把它**明文制度化**——"我们只有找到结论才能进行客观评价"。这个阶段论不只是 ch03 自身的组织逻辑,也是全书十问排序的深层脉络:每一问都是在**前一问已经完成定位**的基础上展开的新评估。
+
+此外,ch03 呼应 ch02 的"批判性思维的最大障碍是无法建立沟通的桥梁"——把它从听者/质疑者视角扩展到作者/表达者视角(本章末节"轮到你自己写时,可得吸取教训"),与 ch02 的"让对话一直进行下去"延续同一主题:**批判性思维是双向社交活动,不只是阅读技能,也是写作义务**。
+
+## 二、启下:ch03 为 ch04–ch13 输出什么
+
+ch03 输出**四个可迁移组件**,为后续十章共同使用:
+
+**组件 1 · "论题/结论识别"技能的普适前置性。** 后续 10 问全部以"先有一个结论已被识别"为隐含前提:
+- ch04 "哪些词语意思不明确"——质疑的是**结论表述中的**关键词
+- ch05 "什么是价值观假设和描述性假设"——识别的是**支撑结论的**假设
+- ch06 "推理过程中有没有谬误"——谬误是**从理由到结论**的推理缺陷
+- ch07–ch08 "证据的效力如何"——证据是**支撑结论**的论据
+- ch09 "有没有替代原因"——替代的是**因果结论**
+- ch10 "数据有没有欺骗性"——数据是**指向结论**的证据
+- ch11 "有什么重要信息被省略了"——省略的是**影响结论判断**的信息
+- ch12 "能得出哪些合理的结论"——直接以结论为对象
+
+十问像一把层层递进的手术刀,**刀尖始终对准 ch03 识别出的那个结论**。没有 ch03,十问失去聚焦对象。
+
+**组件 2 · 描述性 vs 规定性的分类作为"工具选择过滤器"。** 这一分类在后续章节会反复发酵:
+- **ch05(价值观假设 + 描述性假设)** 直接对应 ch03 的二分——**价值观假设主要活跃在规定性论题里**,描述性假设主要活跃在描述性论题里。ch03 的分类是 ch05 选择假设类型的路径分叉器。
+- **ch12(合理结论)** 对规定性论题的"合理"和描述性论题的"合理"有不同标准——ch03 的二分决定了 ch12 的评估路径。
+
+**组件 3 · "纯观点 vs 结论"的切分为 ch07–ch08 证据章节铺路。** ch03 定义:没有支撑陈述的断言只是纯观点。这直接预告了 ch07–ch08 的任务:**考察各种支撑形态(直觉、个人经历、典型案例、当事人证词、专家意见、个人观察、研究报告、类比)的质量**——这些正是把纯观点升格为结论的各种"支撑材料"。ch03 画出"结论需要支撑"的要求,ch07–ch08 展开"什么样的支撑算数"。
+
+**组件 4 · "信号词 / 位置 / 推断" 的线索思维被迁移。** ch03 给的六条线索是一种**启发式模板**,这个模板思维在后续章节被反复借用:
+- ch06 谬误识别中的**谬误信号词**
+- ch10 数据欺骗中的**平均数/百分比陷阱的典型信号**
+- ch11 省略信息中的**"应该出现却没出现"的信号**
+
+线索思维的统一范式——"留意特定词/特定位置/特定推断动作"——在 ch03 定型,后续章节不断复用。
+
+## 三、对 Q4 六条前提的回补预期(基于 toc 推测,待补实)
+
+ch03 Q4 识别的六条前提,全书后续章节的**回补前景**:
+
+- **前提 1(所有文本都是说服性的)**:全书**不回补**。作者在全书预设读者都在读说服性文本,对财务报表、法律条文、诗歌叙事这些非说服性文本,批判性思维的入场需要另一套框架——**这是全书的一个留白**。
+- **前提 2(论题/结论可分)**:**ch05(价值观假设)部分回补**——假设的引入某种程度上模糊了问题-答案的干净边界,因为价值观假设同时塑造问题和答案;但厚概念的哲学问题不被触及。
+- **前提 3(单一主结论)**:**不回补**。ch12"能得出哪些合理的结论"虽然用了复数,但语境是"同一个论题下的不同结论可能",不是"多论点网格"——单结论假设贯穿全书。
+- **前提 4(定位→评价严格先后)**:**不回补,但实践中被破坏**——读者越评价越需要重读、重新定位,诠释学循环自然发生,作者未讨论这一现实。
+- **前提 5(语言透明)**:**ch04(词语含糊)显著回补**——词语多义和情绪化用词正是"语言非透明"的一种典型表现;**ch11(省略信息)间接回补**——语言通过沉默也在构造意义。但隐喻、反讽、语境依赖等更深层的语言哲学问题不被触及。
+- **前提 6(读者统一心智)**:**不回补**。全书默认一个稳定、自洽的读者心智,对疲劳、情绪、信息过载、跨文化差异等波动因素不作区分。
+
+预计全书在**ch04、ch05、部分 ch11** 对 ch03 的前提有系统回补,在**前提 1、3、4、6** 基本无回应。这些留白不是失败——作者写的是实用入门书,不是语言哲学或认知科学专著——但读者(特别是在多文本类型、多文化语境中工作的知识工作者)应当知道这些边界。
+
+## 小结
+
+ch03 是**"宪法落地为第一工具"** 的枢纽章,承接 ch02 的"论证=理由+结论"定义 + 淘金式姿态,输出供全书十问共用的四个组件(识别技能、论题分类、纯观点切分、线索思维)。教学密度低于 ch02 的方法论宪法章,但技能密度远高于 ch02——这是一本"实用工具书"第一次真正提供可操作工具的章节。后续 ch04–ch13 会在 ch03 已定位的"那个结论"之上,叠加越来越精细的十种追问。
+
+  </script>
+  <script type="text/markdown" id="md-q6">
+# Q6 · 我如何实践
+
+**画像定位:** 本章面向的画像是"追求系统化学习与工作方法的知识工作者";具体到本书的读者若身兼 CFO / 独立董事 / EMBA,则以下建议会落在其审议管理层报告、参与董事会议案、阅读投研材料、撰写对内对外书面输出的典型场景中。本章是十问的第一问,技能性强,行动指引也偏操作化。
+
+## 建议 1 · 建立"两栏定位笔记"阅读法(联动 Q1 找结论 + Q2 六条线索)
+
+**是什么:** 对任何长度超过 2 页的"说服性文本"(社论、投行研究报告、咨询报告、管理层 memo、独董意见书、并购备忘录),用**物理上的两栏结构**辅助阅读:左栏写"作者想让我接受的结论",右栏写"作者给出的主要理由"。读完后两栏的内容必须能拼回"甲之所以成立是因为乙"的句式。
+
+**触发场景:** 研报消化、并购 IM(information memorandum)审读、管理层议案预审、监管部门咨询意见稿回应。
+
+**执行要点:**
+- **用指示词反向高亮:** 用荧光笔标出作者的**指示词**("因此""问题的实质是""我想强调的是""综上"),以及"应该/不应该/必须/亟需"这类规定性信号词。这些高亮点**等同于作者在文本里埋的路标**。
+- **结尾跳读:** 对 20 页以上的长报告,先跳到**执行摘要 + 最后两段**,用 60 秒先勾一个临时结论假设,再回头读正文验证——避免被漫长的"背景介绍"吸走注意力。
+- **纯观点警报:** 读到任何断言立即问一句"这个陈述下面有支撑吗?"——如果没有,用 "MO"(mere opinion)标记,提醒后续决策时**降权处理**。
+- **警告:** 不要把"两栏笔记"等同于"找到了就算完"——Q3 诠释学循环提醒,真正的理解往往在**读完一遍回头重看**时才定型。两栏笔记是初稿,不是终稿。
+
+## 建议 2 · 描述性 / 规定性"分流"问同事、问自己(联动 Q1 论题二分 + Q3 厚概念警告)
+
+**是什么:** 开会或审读议案前,把桌上的核心问题**先分类**——这是**描述性问题**(事实如何?数据怎样?因果是否闭环?)还是**规定性问题**(该不该做?怎么做更好?)——不同类问题走不同评估路径。
+
+**触发场景:** 董事会议案开场、跨部门协调会、投委会项目讨论、独董会前的 caucus 沟通。
+
+**执行要点:**
+- **分流三问:** (1)我们在吵的是"是什么"还是"应该怎样"?(2)如果是"应该怎样",各方的根本价值分歧是什么?(3)如果是"是什么",数据源是否一致、测量口径是否一致?
+- **警惕厚概念陷阱(Q3 节 4):** 财务/合规文本大量"描述性词汇"嵌入价值判断——"减值迹象""重大错报""应付账款合理性"。遇到这类词,**不要当纯描述处理**——它们在会计准则的定义中已经做了价值切分。可用的反问模板:**"这个术语的定义在什么场景下会有争议?"**
+- **警告:** 在中方董事会场景,直接把议题拆成"价值观冲突"可能让人不舒服——建议措辞柔化为"我想确认一下我们这次讨论的焦点,是事实判断还是取舍判断?" 内核是分类,外壳是邀请。
+
+## 建议 3 · 自己写作时的"三角自查"(联动 Q1 作者义务 + Q2 气候改变贪多嚼不烂)
+
+**是什么:** 任何由自己署名或挂名的正式输出——给董事会的 memo、独董意见书、给管理层的质询清单、投资决议草稿、对外声明——**发送前强制跑一遍"三角自查"**:论题一句话、结论一句话、支撑理由两到三条。一行摘要若无法在 30 秒内念出,说明文本本身没写清。
+
+**触发场景:** 任何正式文档发送前的最后一步;任何会议发言前的 90 秒准备。
+
+**执行要点:**
+- **三角模板:**
+  - "这份 memo 回答的问题是:______"(论题一句话)
+  - "我给出的答案是:______"(结论一句话)
+  - "我的主要理由是:(1)______(2)______(3)______"(理由 2-3 条)
+- **贪多自检:** 如果发现自己在 10 页 memo 里想同时讲清楚 4-5 个不同论题——**分拆**。作者举的"气候改变 3-5 页同时讲四件事"的反例在商业文本里极常见,尤其是年轻分析师的 IC memo。一份文档只解决一个主论题是纪律。
+- **结论前置的文化调档(联动 Q3 节 9):** 对英美 / 审计师 / 外资投行 → 结论前置、BLUF 格式;对中方高管 / 家族股东 / 监管机构 → 可能需要"背景→分析→建议"顺序。同一文档两个版本不是重复劳动,是跨文化投入。
+- **指示词的刻意使用:** 在结论前加"综上""我的建议是""请委员会特别留意"这类指示词——Q1 六条线索里作者列了 10 个,反向用在自己文本里让读者**不可能错过你的结论**。
+
+## 建议 4(可选) · 阅读 / 倾听训练的"3×5 分钟"(联动 Q4 前提 6 读者不统一)
+
+**是什么:** Q4 前提 6 指出,"找结论"不是一个抽象技能,而是受状态波动严重影响的能力。把这项技能当"肌肉"来练:每天抽**3 段 5 分钟**做刻意训练——早上读一篇英文社论、午间听一段中文播客、晚上读一份中文新闻,每段用 30 秒写"论题/结论/主要理由",不写完不做下一件事。
+
+**触发场景:** 通勤、午休、睡前——不依赖任何具体工作场景,作为基础体能。
+
+**执行要点:**
+- 选**不同文体、不同语种、不同立场**的文本,强制跨文体训练(对抗 Q4 前提 5 的"语言透明"和前提 6 的"读者统一心智")
+- 把 30 秒自我复述写下来——书面比口头更能暴露定位模糊;累积两周能显著感觉到定位速度提升
+- 不追求每次都对——这是**肌肉训练**不是考试,允许第一周经常判错,复盘比准确率更重要
+
+## 诚实提醒(收尾)
+
+- **非说服性文本的失配(Q4 前提 1):** 财报、合规文件、技术规范、法律条文不是"试图说服"的文本,本章框架直接套用会失焦。对这些文本,更好的问题不是"作者的结论是什么",而是**"这份文件的功能是什么?哪些条款构成对决策/合规的实际约束?"**——切换问题框架,而不是换一套线索。
+- **多结论网格的失配(Q4 前提 3):** 麦肯锡报告、深度研究报告往往是 3-5 个平行子结论共同服务一个隐含立场,**单一主结论框架会漏网**——遇到这类文本先建"结论树",而不是找"结论点"。
+- **线索冲突时靠判断(Q3 节 5 警告):** 六条线索在复杂文本里常常**部分互斥**——开头和结尾的结论不一致、指示词指向一个结论但"所以呢"推出另一个。这时不要求投票,要问"哪条线索在这类文本里更可靠"。比如学术论文线索三(结尾)最可靠,新闻特稿线索二(指示词)常失效。启发式不是算法,要靠判断。
+- **KPI 化建议:** 下一个月内,用"两栏定位笔记"读完 3 份 20 页以上的正式报告,用"三角自查"跑 2 份自己的 memo,用"3×5 分钟"做 20 次短文本练习。没有可检视的动作量,建议都是书签。
+
+  </script>
+
+  <script>
+    window.__SIX_TABS__ = [{"id": "Q1", "label": "作者说了什么", "chars": "731", "desc": "本章核心主张的整体复述,看清作者究竟在主张什么、用怎样的论证骨架。"}, {"id": "Q2", "label": "论据是什么", "chars": "2,095", "desc": "把核心主张拆为多个论点,每个论点附作者原书中的论据(逻辑/案例/方法论)。"}, {"id": "Q3", "label": "反例与局限", "chars": "2,163", "desc": "本章工具的边界、反例、与学术界的对照——看清作者没说但应该被知道的局限。"}, {"id": "Q4", "label": "隐含前提", "chars": "2,890", "desc": "本章未明说但隐藏的前提——作者依赖什么默认才让工具成立。"}, {"id": "Q5", "label": "与其他章节的关系", "chars": "1,906", "desc": "本章如何承接前序章节、又为后续章节铺路——在全书工具链中的位置。"}, {"id": "Q6", "label": "我如何实践", "chars": "1,911", "desc": "针对知识工作者的具体实践——把本章工具嵌入日常工作流的可执行路径。"}];
+  </script>
+</body>
+</html>

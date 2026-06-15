@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <script>
+    (function(){var s=localStorage.getItem('reader-theme');if(s==='light'||s==='dark'){document.documentElement.setAttribute('data-theme',s);}else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}})();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第 11 章 · 有什么重要信息被省略了 | 学会提问</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/reader.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="./assets/reader.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body x-data="chapterApp({ sixTabs: window.__SIX_TABS__, sectionIds: ['hero','core','concepts','quotes','related','deep-six'] })" x-init="init()">
+
+  <!-- Reading progress -->
+  <div class="read-progress" :style="`width: ${readProgress}%`"></div>
+
+  <!-- Side nav dots -->
+  <nav class="side-nav hidden lg:flex">
+    <a :class="activeSection === 'hero' ? 'active' : ''" href="#hero" title="开篇"></a>
+    <a :class="activeSection === 'core' ? 'active' : ''" href="#core" title="核心主张"></a>
+    <a :class="activeSection === 'concepts' ? 'active' : ''" href="#concepts" title="关键概念"></a>
+    <a :class="activeSection === 'quotes' ? 'active' : ''" href="#quotes" title="金句"></a>
+    <a :class="activeSection === 'related' ? 'active' : ''" href="#related" title="关联"></a>
+    <a :class="activeSection === 'deep-six' ? 'active' : ''" href="#deep-six" title="完整六问"></a>
+  </nav>
+
+  <!-- Top bar -->
+  <header class="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-[#0a0a0f]/70 border-b border-[#2a2a38]/50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="./index.html" class="flex items-center gap-3 hover:opacity-80 transition">
+        <div class="w-8 h-8 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+          <span class="font-sans-modern text-xs font-bold text-amber-400">11</span>
+        </div>
+        <div class="text-xs font-sans-modern text-[#a8a5a0]">
+          <div class="text-[#6b6b73] uppercase tracking-widest text-[0.65rem]">学会提问 · 第 10 版</div>
+          <div class="text-white">第 11 章 · 有什么重要信息被省略了</div>
+        </div>
+      </a>
+      <div class="flex items-center gap-4 font-sans-modern text-xs text-[#a8a5a0]">
+        <a href="./index.html" class="hidden md:flex items-center gap-1 hover:text-amber-400 transition">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          <span>目录</span>
+        </a>
+        <div class="hidden md:flex items-center gap-2">
+          <span class="text-[#6b6b73]">阅读进度</span>
+          <span class="text-amber-400 font-mono" x-text="`${Math.round(readProgress)}%`"></span>
+        </div>
+        <button class="theme-toggle" @click="toggleTheme()" :title="theme === 'light' ? '切换到深色' : '切换到浅色'">
+          <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section id="hero" class="relative min-h-screen flex flex-col justify-center px-6 lg:px-16 pt-24 pb-32 overflow-hidden">
+    <div class="absolute -top-40 -right-40 w-[600px] h-[600px] glow-amber rounded-full"></div>
+    <div class="relative max-w-6xl mx-auto w-full z-10">
+      <div class="hint-tag bg-amber-500/10 text-amber-400 border border-amber-500/30 mb-8">CHAPTER 11 · 主动建设</div>
+      <div class="flex items-baseline gap-8 mb-8">
+        <div class="chapter-num">11</div>
+        <div class="hidden md:block flex-1">
+          <div class="text-xs font-sans-modern uppercase tracking-[0.3em] text-[#6b6b73] mb-3">OMITTED INFORMATION</div>
+          <div class="font-sans-modern text-base text-[#a8a5a0] leading-relaxed max-w-md">所有论证都是不完整的 — 真正自主必须扫描空白。</div>
+        </div>
+      </div>
+      <h1 class="hero-cn text-4xl md:text-6xl lg:text-7xl mb-12 max-w-5xl text-white">
+        有什么重要信息被省略了
+      </h1>
+      <div class="grid md:grid-cols-3 gap-6 max-w-4xl">
+        <div class="border-l border-amber-500/30 pl-4">
+          <div class="font-mono text-3xl text-amber-400 mb-1">5</div>
+          <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">核心主张</div>
+        </div>
+        <div class="border-l border-amber-500/30 pl-4">
+          <div class="font-mono text-3xl text-amber-400 mb-1">8</div>
+          <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">关键概念</div>
+        </div>
+        <div class="border-l border-amber-500/30 pl-4">
+          <div class="font-mono text-3xl text-amber-400 mb-1">17,183</div>
+          <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">深度产出汉字</div>
+        </div>
+      </div>
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 pulse">
+        <div class="font-sans-modern text-xs text-[#6b6b73] uppercase tracking-widest mb-2 text-center">向下滚动</div>
+        <svg class="mx-auto" width="20" height="32" viewBox="0 0 20 32" fill="none">
+          <rect x="1" y="1" width="18" height="30" rx="9" stroke="#6b6b73" stroke-width="1"/>
+          <circle cx="10" cy="10" r="2" fill="currentColor" style="color:var(--accent-amber)">
+            <animate attributeName="cy" values="10;20;10" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORE CLAIMS -->
+  <section id="core" class="relative px-6 lg:px-16 py-24 max-w-7xl mx-auto">
+    <div class="reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§1 · 核心主张</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-12 max-w-4xl leading-tight text-white">作者的<span class="text-amber-400">几个关键判断</span></h2>
+      <div class="grid lg:grid-cols-2 gap-6 max-w-6xl">
+        <div class="card rounded-xl p-7">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-mono text-amber-400 font-bold">01</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-base text-white mb-3">所有论证都是不完整的,真正的自主思考必须坚持不懈地追问'作者隐瞒了什么'——所谓…</h3>
+              <p class="text-[#d4d2cf] leading-relaxed text-[15px]">所有论证都是不完整的,真正的自主思考必须坚持不懈地追问'作者隐瞒了什么'——所谓重要的省略信息,就是那些会改变你是否被论证说服的信息;仅凭摆在台面上的信息做决定,只是对残缺画面做反应。</p>
+            </div>
+          </div>
+        </div>
+        <div class="card rounded-xl p-7">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-mono text-amber-400 font-bold">02</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-base text-white mb-3">信息省略有 5 类常见原因:时空限制、受众注意力短暂、持论者自身知识不完整、持论…</h3>
+              <p class="text-[#d4d2cf] leading-relaxed text-[15px]">信息省略有 5 类常见原因:时空限制、受众注意力短暂、持论者自身知识不完整、持论者有意欺骗(广告商、利益相关专家最常见)、持论者的价值观/视角与你不同导致他们自然忽略你关心的东西——像马眼罩一样遮蔽特定信息。</p>
+            </div>
+          </div>
+        </div>
+        <div class="card rounded-xl p-7">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-mono text-amber-400 font-bold">03</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-base text-white mb-3">识别省略信息有一份 9 大类型清单:反驳论证、缺失的定义、缺失的价值观/视角、'…</h3>
+              <p class="text-[#d4d2cf] leading-relaxed text-[15px]">识别省略信息有一份 9 大类型清单:反驳论证、缺失的定义、缺失的价值观/视角、'事实'来源、获取事实的程序细节、其他可用的证据收集方式、缺失或被裁剪的数据图表、被省略的正反面/短长期结果、被省略的预测失败记录;对每一类都配套了追问模板。</p>
+            </div>
+          </div>
+        </div>
+        <div class="card rounded-xl p-7">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-mono text-amber-400 font-bold">04</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-base text-white mb-3">负面效果(potential negative effects)是最容易被忽视的…</h3>
+              <p class="text-[#d4d2cf] leading-relaxed text-[15px]">负面效果(potential negative effects)是最容易被忽视的一类省略信息,因为持论者总在'这项行动大有好处'的语境下提出建议;必须系统追问:谁没受益/谁受损、权力分配怎么变、对健康/人际/自然环境的影响、潜在长期负面效果各是什么。</p>
+            </div>
+          </div>
+        </div>
+        <div class="card rounded-xl p-7">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-mono text-amber-400 font-bold">05</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-base text-white mb-3">广告用语(如'5 个医生 4 个同意''纯天然''无脂''ADA 认证')可以字…</h3>
+              <p class="text-[#d4d2cf] leading-relaxed text-[15px]">广告用语(如'5 个医生 4 个同意''纯天然''无脂''ADA 认证')可以字面真实却通过省略造成误导;对任何百分比或认证标签,都要追问'其他品牌呢''同类普通做法呢''这些指标之外还有什么被省略''省略了什么危害/副作用'。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- KEY TERMS -->
+  <section id="concepts" class="relative px-6 lg:px-16 py-24 max-w-7xl mx-auto">
+    <div class="reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§2 · 关键概念</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4 text-white">本章<span class="text-amber-400">核心术语</span></h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-12">掌握这些术语,就掌握了本章的工具骨架。</p>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">省略信息</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">重要的省略信息</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">反驳论证</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">负面效果</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">潜在长期负面效果</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">广告误导</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">价值观视角差异</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+        <div class="card rounded-lg p-5">
+          <div class="font-sans-modern font-bold text-amber-400 mb-2">预测失败</div>
+          <div class="text-xs text-[#6b6b73] italic">详见下方完整六问</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- QUOTES -->
+  <section id="quotes" class="relative px-6 lg:px-16 py-24">
+    <div class="absolute top-0 right-0 w-[400px] h-[400px] glow-amber rounded-full opacity-30"></div>
+    <div class="max-w-5xl mx-auto reveal relative z-10">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§3 · 作者原声</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-12 text-white">本章<span class="text-amber-400">章节金句</span></h2>
+      <div class="space-y-6">
+        <div class="author-voice rounded-r-xl p-6 md:p-8">
+          <div class="flex items-start gap-6">
+            <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0">01</div>
+            <div class="flex-1">
+              <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4">批判性思考的人追求独立思考的力量时,如果他们做决定的基础是极为有限的一点信息,他们也就无能为力了。几乎所有的结论或者产品都有一些正面的特点。那些只想告诉我们他们想让我们知道的信息的人,就会告诉我们所有这些正面的特点,而且是不厌其详,活灵活现。但是他们会隐藏那些结论的负面因素。因此,真正的自主思考需要我们坚持不懈地寻找作者到底隐瞒了什么信息,不论其是无心省略还是有意隐瞒。</div>
+              <div class="text-sm text-[#a8a5a0] font-sans-modern">本章对读者责任的最精炼定义。&quot;有限信息下的决定是无能为力的&quot;把&quot;信息充分&quot;确立为批判思维的**必要前提**,不是可选的奢侈品。这一判断把&quot;寻找省略&quot;从技巧提升为**独立思考的本质动作**——不查空白处就不是真的独立思考。</div>
+            </div>
+          </div>
+        </div>
+        <div class="author-voice rounded-r-xl p-6 md:p-8">
+          <div class="flex items-start gap-6">
+            <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0">02</div>
+            <div class="flex-1">
+              <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4">你应该记住几乎任何一个你所遇到的信息都有一个目的。换句话说,这个信息的组织结构是由别人精心挑选和呈现的,目的就是希望它能从某种程度上影响到你的思维方式。因此你的任务就是判断你自己是否想成为这一目的的傀儡。这个选定的目的常常就是为了说服你。</div>
+              <div class="text-sm text-[#a8a5a0] font-sans-modern">本章最具觉醒意识的一句。&quot;信息有目的&quot;&quot;读者可能是傀儡&quot;直接挑战了&quot;信息中性&quot;的常识幻觉——让读者意识到**每一次阅读都是一次&quot;是否被说服&quot;的博弈**,**接受信息的默认态度应该是警觉**,不是相信。这一句话为整章的工具链提供了心理基础——只有意识到傀儡风险,才会有意识地寻找省略。</div>
+            </div>
+          </div>
+        </div>
+        <div class="author-voice rounded-r-xl p-6 md:p-8">
+          <div class="flex items-start gap-6">
+            <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0">03</div>
+            <div class="flex-1">
+              <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4">一个特定的视觉就像马眼睛上所戴的一副眼罩。眼罩让马心无旁骛全神贯注于正前方的道路。但是,一个人看问题的视觉也像马所戴的眼罩那样,阻止他去关注某些特定的信息,而这些被他所忽略的信息对那些从不同参照系进行推理的人却显得至关重要。</div>
+              <div class="text-sm text-[#a8a5a0] font-sans-modern">本章最具哲学深度的比喻。**马眼罩**这一形象化的视角隐喻,把&quot;省略&quot;从&quot;技巧问题&quot;提升到&quot;**视角必然性问题**&quot;——任何人看问题都有眼罩,都有&quot;看不见&quot;的东西。这一洞察让读者对所有信息源(包括自己)都保持谦逊,与 ch10 的&quot;理智谦逊&quot;、ch13 的&quot;多视角合理性&quot;形成全书的认识论主轴。</div>
+            </div>
+          </div>
+        </div>
+        <div class="author-voice rounded-r-xl p-6 md:p-8">
+          <div class="flex items-start gap-6">
+            <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0">04</div>
+            <div class="flex-1">
+              <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4">对上述每一个问题,我们都不要忘了问一句:&quot;这个行动潜在的长期的负面效果是什么?&quot;</div>
+              <div class="text-sm text-[#a8a5a0] font-sans-modern">本章关于负面效果的核心追问,一句话概括了专题强调的精神。**&quot;潜在的长期的负面效果&quot;**这 3 个限定词都关键——&quot;潜在&quot;(未必已显现)、&quot;长期&quot;(不是眼前)、&quot;负面&quot;(不是光辉面)。这 3 个维度在日常决策中最容易被光辉叙事遮蔽,追问它们就是对抗&quot;积极语言偏误&quot;的最强武器。这一追问是知识工作者参与团队决策时最应默背的一句。</div>
+            </div>
+          </div>
+        </div>
+        <div class="author-voice rounded-r-xl p-6 md:p-8">
+          <div class="flex items-start gap-6">
+            <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0">05</div>
+            <div class="flex-1">
+              <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4">仅仅因为你能要求别人提供重要的省略信息并不能保证别人就能给你一个满意的回答。很可能你探究的问题根本就得不到回答。不要绝望!你已经尽力了。你要求得到这些亟须的信息然后你才能做出决定,现在你必须在找不到缺失的信息时确定你是否还有可能得出一个结论。我们早先曾警告过你推理的过程从来都是不完整的。这样,自动声明只要信息仍然找不到你就不能做出决断,那就会阻止你形成任何观点。</div>
+              <div class="text-sm text-[#a8a5a0] font-sans-modern">本章最现实智慧的一段。&quot;**不要绝望**&quot; 是对批判性思维的**去理想化**——避免读者滑入&quot;万事皆不可知&quot;的怀疑主义瘫痪。&quot;自动声明信息不全就不决断会阻止你形成任何观点&quot;是对完美主义追问者的诚实劝诫——**批判思维的终点不是完整信息,而是不完整信息下的相对更好判断**。这一成熟态度是本章把批判思维从&quot;工具&quot;升级为&quot;生活智慧&quot;的关键语句。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- RELATED -->
+  <section id="related" class="relative px-6 lg:px-16 py-24">
+    <div class="max-w-7xl mx-auto reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§4 · 全书坐标</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4 text-white">本章在<span class="text-amber-400">工具链</span>中的位置</h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-12">完整的章节关联(承接 / 铺垫)在下方 §5 完整六问的 Q5 中详细展开。</p>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3 mb-12">
+        <a href="./ch02.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 01</div>
+          <div class="text-sm text-[#d4d2cf]">学会提出好问题</div>
+        </a>
+        <a href="./ch03.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 02</div>
+          <div class="text-sm text-[#d4d2cf]">论题和结论是什么</div>
+        </a>
+        <a href="./ch04.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 03</div>
+          <div class="text-sm text-[#d4d2cf]">理由是什么</div>
+        </a>
+        <a href="./ch05.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 04</div>
+          <div class="text-sm text-[#d4d2cf]">哪些词语意思不明确</div>
+        </a>
+        <a href="./ch06.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 05</div>
+          <div class="text-sm text-[#d4d2cf]">什么是价值观假设和描述性假设</div>
+        </a>
+        <a href="./ch07.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 06</div>
+          <div class="text-sm text-[#d4d2cf]">推理过程中有没有谬误</div>
+        </a>
+        <a href="./ch08.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 07</div>
+          <div class="text-sm text-[#d4d2cf]">证据效力(一):直觉 / 经历 / …</div>
+        </a>
+        <a href="./ch09.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 08</div>
+          <div class="text-sm text-[#d4d2cf]">证据效力(二):个人观察 / 研究报…</div>
+        </a>
+        <a href="./ch10.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 09</div>
+          <div class="text-sm text-[#d4d2cf]">有没有替代原因</div>
+        </a>
+        <a href="./ch11.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 10</div>
+          <div class="text-sm text-[#d4d2cf]">数据有没有欺骗性</div>
+        </a>
+        <a href="./ch12.html" class="block rounded-lg border border-amber-500 bg-amber-500/10 p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 11</div>
+          <div class="text-sm text-amber-400 font-medium">有什么重要信息被省略了</div>
+        </a>
+        <a href="./ch13.html" class="block rounded-lg border border-[#2a2a38] p-4 transition hover:border-amber-500/50">
+          <div class="font-mono text-xs text-amber-400 mb-1">CH 12</div>
+          <div class="text-sm text-[#d4d2cf]">能得出哪些合理的结论</div>
+        </a>
+      </div>
+      <div class="mt-8 p-6 rounded-xl border border-amber-500/20 bg-amber-500/5 flex items-start gap-4">
+        <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent-amber)"><path d="M12 2v20M2 12h20"/></svg>
+        </div>
+        <div class="flex-1">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-amber-400 mb-1">向下继续</div>
+          <div class="text-[#d4d2cf]">下一节就是<strong class="text-white">完整六问深度产出</strong>——反例、前提、章节关系、个人实践,全部就地展开,无需跳转。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- DEEP SIX -->
+  <section id="deep-six" class="relative px-6 lg:px-16 py-24">
+    <div class="absolute -top-40 left-0 w-[600px] h-[600px] glow-violet rounded-full opacity-30 pointer-events-none"></div>
+    <div class="max-w-6xl mx-auto reveal relative z-10">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§5 · 完整六问深度产出</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4 text-white">17,183 汉字<span class="text-amber-400">就地展开</span></h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-10">核心主张、论据、反例、隐含前提、章节关系、个人实践——本章六问完整产出,无需跳转,在此就地阅读。点击下方 tab 切换。</p>
+
+      <div class="tab-bar mb-10">
+        <div class="flex flex-wrap gap-2">
+          <template x-for="(t, i) in sixTabs" :key="i">
+            <button class="filter-pill flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-sans-modern transition-all"
+                    :class="activeQ === t.id ? 'border-amber-500 bg-amber-500/10 text-amber-400' : 'border-[#2a2a38] text-[#d4d2cf] hover:border-amber-500/40 hover:text-amber-400'"
+                    @click="setActiveQ(t.id)">
+              <span class="font-mono text-xs opacity-80" x-text="t.id"></span>
+              <span class="font-medium" x-text="t.label"></span>
+              <span class="text-xs opacity-60 hidden md:inline" x-text="`· ${t.chars}字`"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <div class="mb-8 p-4 rounded-lg bg-[#14141d] border border-[#2a2a38]">
+        <div class="flex items-start gap-3">
+          <div class="font-mono text-amber-400 text-xs flex-shrink-0 pt-0.5" x-text="currentTab.id"></div>
+          <div>
+            <div class="font-sans-modern font-medium text-white mb-1" x-text="currentTab.label"></div>
+            <div class="text-sm text-[#a8a5a0]" x-text="currentTab.desc"></div>
+          </div>
+        </div>
+      </div>
+
+      <article class="prose-six tab-content" :key="activeQ" x-html="renderedQ"></article>
+
+      <div class="mt-16 pt-8 border-t border-[#2a2a38] flex flex-wrap items-center justify-between gap-4">
+        <div class="text-xs font-sans-modern text-[#6b6b73]">
+          数据源:<span class="font-mono text-amber-400">chapters/ch12/six_q/</span>
+          <span>·</span> 严格按纪律 1 独立落盘
+        </div>
+        <button @click="scrollToTop()" class="font-sans-modern text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          回到章节顶部
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- CHAPTER NAV -->
+  <section class="px-6 lg:px-16 py-16">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-4">
+        <a href="./ch11.html" class="chapter-nav-card">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73]">← 上一章</div>
+          <div class="font-mono text-amber-400 text-sm">CH 10</div>
+          <div class="text-white font-medium">数据有没有欺骗性</div>
+        </a>
+        <a href="./ch13.html" class="chapter-nav-card text-right">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73]">下一章 →</div>
+          <div class="font-mono text-amber-400 text-sm">CH 12</div>
+          <div class="text-white font-medium">能得出哪些合理的结论</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="px-6 lg:px-16 py-16 border-t border-[#2a2a38]">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">本章</div>
+          <h3 class="hero-cn text-xl text-white mb-2">有什么重要信息被省略了</h3>
+          <p class="text-sm text-[#a8a5a0]">学会提问 · 第 10 版 · 第 11 章</p>
+        </div>
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">作者</div>
+          <p class="text-[#d4d2cf]">Neil Browne · Stuart Keeley</p>
+          <p class="text-sm text-[#a8a5a0] mt-1">30+ 年迭代 · 至第 10 版</p>
+        </div>
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">数据源</div>
+          <p class="text-sm text-[#a8a5a0] font-mono">chapters/ch12/insights.md</p>
+          <p class="text-sm text-[#a8a5a0] font-mono">chapters/ch12/quotes.md</p>
+        </div>
+      </div>
+      <div class="text-center text-xs font-sans-modern text-[#6b6b73] tracking-widest">
+        智识图书馆 V2 · 阅读体验 · ch12
+      </div>
+    </div>
+  </footer>
+
+  <!-- Embedded markdown source for §5 -->
+  <script type="text/markdown" id="md-q1">
+# Q1 · 作者说了什么
+
+本章引入全书第九个关键问题——"**有什么重要信息被省略了**"。作者的核心论点:**任何论证都是不完整的**,真正的自主思考不只要审查"作者说了什么",还要审查"作者没说什么"——那些被无心省略或有意隐瞒的信息往往比说出来的信息更关键。读者若只对摆在面上的信息做反应,就是在对一个**不完整的论证画面**做反应。本章给出**5 条省略原因的解释**、**9 类常见省略信息类型**、**负面效果的专题强调**,并对读者提出"面对信息缺失的现实"的态度建议。
+
+## 本章的底层主张:信息都是被挑选的
+
+作者开篇即建立一个心理预设:"几乎任何一个你所遇到的信息都有一个目的"——广告商、教师、政客、作家、演说家、研究员、博主、父母都在精心组织信息来影响你的判断。**持论者几乎总是将他们的立场置于最强的光线之下**,这是人性,也是修辞的本质。
+
+因此,面对看似充分的论证——即便其中理由你都认同、证据你都信服——也需要**犹豫片刻**,想一想作者可能没有告诉你的那些信息。作者特意用"金块"的比喻:当你发现那些"较具说服力的理由",即那些你正在努力勘探的金块时,明智做法是先停一下,想想光谱的另一半在哪里。
+
+**重要的省略信息**的操作性定义:**那些影响到你该不该被作者的论证所影响的信息**,也就是影响推理过程的信息。这一定义把"省略"从"所有没说的信息"(无穷大)收缩到"会改变你判断的信息"(有限可操作)。
+
+## 省略不可避免的 5 个原因
+
+作者冷静指出,**不完整的推理在所难免**——这不是对作者不信任,而是认识论现实。5 条原因是:
+
+**原因 1:时空限制**。论证不得不省略——报纸社论字数有限,电视评论时段有限,广告秒数有限。持论者不得不"点到为止",这是媒介的客观约束,不是主观恶意。
+
+**原因 2:读者注意力有限**。即便作者想说透,读者也不愿看长——信息一多就会厌倦。所以持论者常**主动缩减信息**以保持读者参与度,这同样不是恶意,而是对注意力经济的响应。
+
+**原因 3:作者知识不完全**。没人全知全能,作者本身可能不知道反面证据、不了解替代方案、没见过类似研究——**省略源于无知**。这一原因在专业领域尤其常见——某研究者深知自己领域,但对跨界证据没意识。
+
+**原因 4:有意欺骗**。这是省略的道德维度——作者知道反面信息,但为了说服读者而选择隐瞒。广告商、利益相关方、推销专家深知"描述产品所有化学成分或不值钱的成分"会让销量下滑,所以**策略性省略**。作者还点出一个心理学观察——"如果那些尽力要给你建议的人把你当成一块'海绵',那么这类省略对他们而言就特别有诱惑力。"——读者被轻视,省略就更肆无忌惮。
+
+**原因 5:价值观与视角差异**。持论者的价值观、信仰、态度和你不同,其推理受不同假设引导——他觉得不重要的,你可能觉得关键;他认为理所当然的前提,你可能质疑。作者特别警示:**批判思考的人看重好奇心和合理性,而力图说服你的人常想打消你的好奇心**,鼓励你依靠情绪反应做选择——两者的认知目标根本相反。
+
+作者用**马眼罩**的比喻收束这一段:"一个人看问题的视觉也像马所戴的眼罩那样,阻止他去关注某些特定的信息"——任何视角都是**选择性看见**的视角,同时也是**选择性看不见**的视角。
+
+## 识别省略信息的 9 类提示清单
+
+作者给出读者可操作的 9 类省略信息类型,每类配套询问工具:
+
+**1. 常见的反驳论证**:反对的人会提供什么理由?有没有研究和所说的研究相冲突?有没有其他权威人士的例子、证词被省略?
+**2. 遗漏的定义**:如果关键词用另一种方式定义,论证会有怎样的不同?
+**3. 遗漏的价值观偏向或视角**:不同价值观下处理这一论题的方法是否不同?
+**4. "事实"的来源**:这些"事实"的来源是什么?是否由出色研究或可靠来源支撑?
+**5. 程序细节**:多少人参与问卷?调查问题怎样措辞?受访者有机会提供标准选项之外的答案吗?
+**6. 证据收集的其他技巧**:访谈 vs 书面问卷 vs 实验室试验,结果会怎样差异?
+**7. 数字、图表、数据的遗漏或不完整**:如果数据包含早期或后来的证据,看起来会不会不一样?作者有没有故意"拉长"数字?
+**8. 省略的结果**:正面/反面结果、短期/长期结果、支持/反对意见——代价是什么?好处又是什么?政治、经济、社会、生物、精神、健康、环境的影响?
+**9. 预测的失败率**:通灵巫师、经济学家、理财顾问推销特异能力时,需要追问其预测的失败概率——只有成功和失败概率都知道,才能判断真实准确度。
+
+这 9 类是**不穷举**的——作者强调"时刻问自己这个一般性的问题:'作者或演说者有没有遗漏什么其他信息?'"。清单是**脚手架**,不是**封闭列表**。
+
+### 祛痘灵洗面奶的 6 类省略
+
+作者以"祛痘灵洗面奶祛除 95% 深层污垢和油脂"的广告为例,展示单一广告陈述可能的多层省略:
+
+1. 其他品牌的祛除率是多少?
+2. 单用香皂能祛除多少?
+3. 这种产品有无负面效果?
+4. 斑点的其他来源(污垢油脂可能不是主因)?
+5. 剩余 5% 污垢会造成多少斑点?
+6. 这种产品的其他优缺点(气味、价格、有效期)?
+
+同理,"五个医生当中四个都同意""纯天然""无脂""ADA 认证""没有添加防腐剂"这类广告词,**可能都很准确但都产生了误导效果**——因为省略决定了这些词背后真实的意义。
+
+## 负面效果:最易被忽视的省略类型
+
+作者对 9 类中的**省略结果**类型(第 8 类)做了专题强调——**被提倡的行动的潜在负面效果**是最常被忽视又最需要警觉的省略。
+
+这一强调的理由是:行动提议通常发生在"支持者宣称意见非常棒"的语境下——治愈疾病、更长寿命、更多休闲时间、更好商品。**光的一面被充分照亮,阴影自然被掩盖**。读者应追问:
+
+- **社会的哪一部分并没有受益?谁蒙受了损失?受损的人对此有什么话说?**
+- 提议的行动对**权力分配**有什么影响?
+- 对**健康**有什么影响?
+- 对**人际关系**有什么影响?对**自然环境**有什么影响?
+
+最后一句总追问:**"这个行动潜在的长期的负面效果是什么?"**
+
+作者以"建设一所大型新学校"为例,展示潜在负面效果的多层扫描:
+- **破坏环境**:砍伐森林、毁掉野生动物栖息地
+- **教育质量变化**:可能把其他学校的优秀教师与学生吸走、吸走其他学校的经费
+- **房地产价值影响**:如果新学校质量不如预期,周边房价可能下跌
+- **税负增加**:公立学校运营需增加社区不动产税
+
+**"光辉行动"与"暗面成本"的对称审查**是本章对读者最重要的思维训练——任何提议都同时是"谁受益"与"谁受损"的问题,省略后者就是不完整分析。
+
+## 面对信息缺失的现实
+
+作者诚实处理一个关键难题:**你问了省略信息,但对方可能不给你答案**——信息真的缺失,或者对方不愿回答。这种情况下怎么办?
+
+作者的建议:**不要绝望**。你已尽到批判思考的责任——你要求信息、追问缺失。当信息确实无法获得,你有三个选择:
+
+1. 由于信息缺失表达对这一论证的**不快**(保留判断)
+2. 继续搜寻所需的信息
+3. **谨慎地同意这个推理**——理由是这个论证比他的对手的论证要好(相对更好)
+
+这一点特别重要:**自动声明"信息不全我就不判断"会阻止你形成任何观点**——现实决策永远不可能等所有信息齐全。**谨慎相对判断**是成年批判性思考者的必备态度——既不盲信也不过度怀疑,而是在不完整中依然能做出相对更理性的选择。
+
+## 写作伦理:什么该写什么该省
+
+作者对读者自己写作时的"省略决定"提出标准:**"如果我的读者知道这个信息,这会怎样影响他们对我的论证的反应?"**
+
+- 影响越大的信息 → 越不该省略
+- 影响越小的信息 → 可以根据篇幅合理省略
+
+作者提供两条具体建议:
+
+**建议 1:回到原研究**。查看你依据的研究本身,看研究者争论的关键点是什么,评估你有没有遗漏关键立场。例:写 2010 年奥斯卡最佳影片,评论家多数认为《社交网络》是热门,即便你自己不同意,也应提到——因为**读者已经知道这一立场,你不提就显得偏颇**。相反,《致命伴旅》评价蹩脚,不提并不偏颇——因为读者并不期待这种提名。
+
+**建议 2:换位不同读者**。想象持有不同价值观、不同世界观的读者,问他们"需要什么信息才会接受你的结论"——用他们的缺失感反推你的省略。
+
+两条建议的共同精神:**让你的论证经得起反方的审查**。你的写作应当是**主动引入反方的**,不是**被动回避反方的**。
+
+## 本章位置与全书结构
+
+本章是评价工具链的**第 6 章**(ch07 谬误、ch08-ch09 证据、ch10 因果、ch11 数据、**本章 信息省略**、ch13 多结论)。它是从"审查说了什么"过渡到"审查没说什么"的**视角翻转章**——前面所有章节都在教读者审查摆在面上的论证,本章突然把焦点转向论证的**空白处**。
+
+本章的独特贡献:**把批判性阅读从"前景审查"扩展到"背景审查"**——前景是作者给的信息,背景是作者省略的信息,完整批判需要两者都看。这一扩展是进入 ch13(多结论)的认知准备——只有读者意识到"同一论题有多种角度的信息",才能进一步接受"同一证据可推出多种结论"。本章的深层价值是把**批判性阅读从"反应式"升级为"建设式"**——不只是回应作者给的,还要主动构建作者没给的,这是全书从"识别错误"走向"主动重构"的最重要一步。
+
+  </script>
+  <script type="text/markdown" id="md-q2">
+# Q2 · 论据是什么
+
+本章的核心论点是"**任何论证都不完整,重要信息常被省略,读者必须主动识别**"。作者对这一核心论点的支撑论据呈现**五重结构**:认识论论据、清单论据、案例论据、专题强调、伦理建议。下面按"论点—论据"结构抽取。
+
+## 论点 1:省略的不可避免——5 条原因
+
+**论据类型**:结构性解释 + 现实案例。
+
+作者不把省略笼统归为"作者不诚实",而给出**系统的原因分类**:
+
+- **时空限制**:社论字数有限、电视时段有限、广告秒数有限——媒介客观约束
+- **读者注意力有限**:信息过长引发厌倦,持论者主动缩减以保持读者参与
+- **作者知识不完全**:无人全知,不知反面证据是常态
+- **有意欺骗**:广告商深知披露所有成分会失去销量
+- **价值观差异**:你觉得关键的,作者不觉得;作者觉得理所当然的,你不同意
+
+这一分类有**双重论据价值**:
+1. **去道德化**:把省略从"作者不诚实"的单一归因扩展到"5 种不同机制",让读者的审查更精细——面对一则广告与面对一篇学术论文,对应的省略原因不同,警觉方式也不同
+2. **增加可操作性**:知道省略的可能原因,才能针对性地追问——对"时空限制"类省略,应宽容处理;对"有意欺骗"类省略,应严肃追责
+
+作者的**电视评论员例证**("出了名的会将极其复杂的问题弄得听上去像小儿科一样简单")把抽象的"时空限制"具体化——读者能立即想到平时看过的简化新闻。
+
+## 论点 2:识别省略的 9 类清单
+
+**论据类型**:类型化分类 + 配套询问工具。
+
+作者给出的 9 类省略类型不是任意并列,而是**按论证结构分层**:
+
+| 层次 | 对应类型 | 审查焦点 |
+|------|---------|---------|
+| 论证结构层 | 1 反驳论证、3 价值观/视角 | 作者忽视了谁的立场 |
+| 定义层 | 2 定义 | 关键词被如何界定 |
+| 证据层 | 4 事实来源、5 程序细节、6 收集技巧、7 数字图表 | 证据是否可溯源、可重复 |
+| 结果层 | 8 正反面/长短期结果 | 行动的完整影响谱 |
+| 特殊类 | 9 预测失败率 | 选择性展示 |
+
+这一分层使清单不是 9 个零散的问题,而是**可叠加的审查体系**——从论证形式到证据细节到预测实效,层层深入。作者的**论据策略**是:不给一个大工具,给 9 个小工具,让读者按具体场景选用。
+
+每类都配有**操作化提问**(如"如果关键词用另一种方式定义,论证会有怎样的不同?"),让抽象类型转化为具体动作——这是本书一贯的"每个概念配一个追问"的风格在本章的集中体现。
+
+## 论点 3:祛痘灵洗面奶案例——6 类省略的复合展示
+
+**论据类型**:单一案例的多维剖析。
+
+作者用**"祛痘灵洗面奶祛除 95% 深层污垢和油脂"**这一普通广告陈述,展示了单一陈述可能隐藏的 **6 类关联省略**:
+
+| 省略类型 | 在祛痘灵广告中的具体表现 |
+|---------|-----------------------|
+| 比较基准缺失 | 其他品牌洗面奶的祛除率是多少?可能更高 |
+| 替代方案缺失 | 单用香皂能祛除多少?可能已经足够 |
+| 负面效果缺失 | 皮肤过分干燥风险?致癌风险? |
+| 原因多样性缺失 | 斑点可能不是污垢油脂引起,是否根本无效? |
+| 剩余量影响缺失 | 剩下 5% 污垢是否仍足够造成斑点? |
+| 其他优缺点缺失 | 气味、价格、有效时间都不知道 |
+
+这一论据的力量在于**单一陈述、多层省略**——一句看似无害的广告词背后,一次完整审查至少要追问 6 个方向。这让读者意识到:**省略的密度远高于表面所见**,批判性阅读需要系统性扫描,不能仅凭直觉。
+
+作者还点出"五个医生当中四个都同意""纯天然""无脂""ADA 认证""没有添加防腐剂"等常见广告词——**可能都很准确但都产生了误导效果**。这一引申把"祛痘灵"的案例从单个广告升级为**广告语言的一般性批判**——广告中最常见的表达形式本身就是省略密集地带。
+
+## 论点 4:负面效果的专题强调——新学校案例
+
+**论据类型**:单一案例的多维扩展 + 4 个普遍追问。
+
+9 类省略中,作者对**"省略的结果"特别是"负面效果"**做专题强调,其论据策略是:
+
+**先给 4 个普遍追问**:
+- 谁蒙受损失?受损者的声音?
+- 权力分配影响?
+- 健康影响?
+- 人际关系与自然环境影响?
+
+**再用新学校案例展开**:
+
+| 潜在负面维度 | 具体表现 |
+|-------------|---------|
+| 环境破坏 | 砍伐森林、毁掉野生动物栖息地 |
+| 教育质量变化 | 吸走其他学校的优秀教师、吸走经费 |
+| 房地产价值 | 若新学校不如预期,周边房价下跌 |
+| 税负增加 | 公立学校运营需要社区增税 |
+
+这一论据的价值是**反直觉教育**——"建新学校"表面是正面行动,但作者展示了它的 4 种潜在负面影响。**一个正面提议被解构为正反两面的复合影响**,这是本章论据最有冲击力的案例,让读者意识到任何"good news"都有隐藏成本。
+
+**这一论据的深层论据功能**:破除读者的**"积极语言偏误"**——读者倾向于接受正面描述、忽视负面提醒。作者用具体案例训练读者养成"听到光辉计划先扫描阴影"的反射。
+
+## 论点 5:不同媒介的省略典型性
+
+**论据类型**:媒介类型化 + 系统性偏误。
+
+作者在行文中暗示:**不同类型的信息源有不同的典型省略模式**——这不是显式列表,但通过多处提示可以抽取:
+
+- **广告**:省略负面效果、替代方案、比较基准——**销售动机驱动的选择性呈现**
+- **社论**:省略反驳立场——**立场动机驱动的片面论证**
+- **电视评论**:省略复杂性——**注意力约束驱动的过度简化**
+- **研究报告**:省略程序细节——**专业门槛驱动的不可追问**
+- **个人顾问建议**(医生、律师、财务顾问):省略替代方案、利益冲突——**专业权威驱动的单向建议**
+- **通灵/预测服务**:省略失败率——**招揽顾客驱动的选择性记忆**
+
+这一论据的价值是让读者获得**媒介意识**——面对不同信息源应触发不同的省略审查。面对广告,先查负面效果;面对社论,先查反驳立场;面对研究,先查程序细节。
+
+## 论点 6:面对信息缺失的现实策略——谨慎相对判断
+
+**论据类型**:决策现实论据。
+
+作者承认一个冷峻的事实:**即便你问了,你要的信息可能仍然得不到**。信息真的缺失(没人调查过)、对方不愿回答、或时间不够查——都是现实中常见的。
+
+作者提供的**三种应对选择**:
+1. 保留判断(表达不快)
+2. 继续搜寻
+3. **谨慎地相对接受**(因为这个论证比对手的论证好)
+
+**关键论据支撑**:"自动声明只要信息仍然找不到你就不能做出决断,那就会阻止你形成任何观点。"——这一判断是对批判思维的**去理想化**,避免读者滑入"万事皆不可知"的怀疑主义。
+
+这一论点是本章最有现实智慧的论据——**批判性思考不是追求完美信息,而是在不完整信息下做出相对更理性的判断**。这一**判断的成熟度**是全书从"识别错误"走向"承担责任"的关键过渡。
+
+## 论点 7:写作者的省略伦理——影响度作为决策标准
+
+**论据类型**:规范性原则 + 具体案例。
+
+作者提出写作者在"我该省略什么"面前的决策标准:**"如果我的读者知道这个信息,这会怎样影响他们对我的论证的反应?"**——影响度是决定保留/省略的关键判据。
+
+具体案例:
+
+- **奥斯卡最佳影片案例**:写 2010 年奥斯卡,评论家热捧《社交网络》——即便作者不同意,也应提及,因为读者已经知道,不提显偏颇。而《致命伴旅》整体评价差,不提无损——读者不期待这种提名。
+- **换位读者建议**:想象不同价值观、不同世界观的读者,问他们"需要什么信息才能接受你的结论"——这是把省略决策从主观偏好转化为**对多元读者的负责**。
+
+这一论点的论据价值:把写作伦理从"完整披露"的绝对理想降级为"**重点披露**"的操作标准——承认省略不可避免,但要求省略是**有判断的省略**,不是**逃避审查的省略**。
+
+## 论点 8:马眼罩的视角局限——看待"视角"的哲学洞察
+
+**论据类型**:隐喻 + 电影引述。
+
+作者引入**马眼罩**的比喻:"一个人看问题的视觉也像马所戴的眼罩那样,阻止他去关注某些特定的信息"——并引用电影《伯恩的身份之最后通牒》中的台词:**"不同的东西到底是什么样,主要取决于你坐在什么地方,这真有意思。"**
+
+这一论据是本章最有哲学深度的一句。它把"省略"从"技巧问题"提升到"**视角问题**"——每一种视角都是看见的方式,也是看不见的方式。你所持的价值观、职业、世界观,决定了你"眼罩"的形状。**作者不是坏意图省略,而是视角必然省略**——这一洞察让读者对所有信息源(包括自己)都保持谦逊。
+
+这一论点与 ch10 的"理智谦逊"呼应,与 ch13 的"多结论"铺路——让读者意识到:没有"无视角的真相",只有"不同视角下的部分真相",完整理解需要**视角叠加**。
+
+## 论据类别汇总
+
+| 论据类型 | 代表案例 |
+|---------|---------|
+| 原因分类 | 5 条省略原因(时空、注意力、知识、欺骗、价值观) |
+| 类型化清单 | 9 类省略类型 |
+| 单一案例多层剖析 | 祛痘灵 6 类省略、新学校 4 维负面效果 |
+| 媒介类型化 | 广告、社论、评论、研究、顾问、预测 |
+| 现实决策论据 | 三种应对选择 + 避免怀疑主义 |
+| 规范性原则 | 影响度标准 + 换位读者 |
+| 哲学隐喻 | 马眼罩 + 电影台词 |
+| 广告语言批判 | "五个医生四个同意"等广告词的误导性 |
+
+本章论据的**结构特征**是**"不完整是必然,审查是可选"**——作者没有把省略妖魔化,而是把它正常化(5 条原因),然后给读者**主动审查的工具**(9 类清单)和**现实应对的成熟**(谨慎相对判断)。这一"承认不完整又不陷入怀疑"的态度贯穿本章,让读者不仅获得识别工具,还获得**面对不完美世界的认知态度**。
+
+本章的一个隐藏论据策略是**"从单词到句子到整段论证"的尺度升级**:
+- 广告中的单个词("纯天然")——省略在**词汇层**
+- 洗面奶广告的单句陈述——省略在**句子层**
+- 建新学校的完整提议——省略在**论证层**
+
+读者训练完成后,应能在**任何尺度**上触发省略审查——从短标题到一整篇报告,都能问"什么被省略了"。这一多尺度训练是本章工具有效性的关键。
+
+  </script>
+  <script type="text/markdown" id="md-q3">
+# Q3 · 反例与局限
+
+本章把"信息省略"作为全书第九个关键问题独立出来,是识别批判性阅读"盲区维度"的重要工具。然而,将其放回更广的批判性思维研究、信息学、传播学、认知科学和当代数字生态中审视,本章的9类清单和审查逻辑存在多条边界与盲点。
+
+## 局限 1:"省略"的定义边界本身模糊
+
+作者将重要省略信息定义为"那些影响推理过程的信息"——但这一定义是**循环的**:判断某信息是否重要,本就需要先做推理;而推理又依赖完整信息。读者面对任何信息陈述时,如何**事先**判断哪些是重要省略?
+
+**认识论挑战**:信息理论中的**Shannon 熵**框架认为,信息价值依赖接收者的先验知识状态——对专家而言冗余的,对新手可能是关键。本章未处理"省略的重要性是相对于读者知识状态"这一核心变量。面对跨学科文本,读者如何判断自己是否知道"关键省略",本身就需要元认知能力,本章的工具清单对这一层级的追问无能为力。
+
+## 局限 2:9 类清单的"清单固化"风险
+
+作者给出 9 类省略类型,操作性强但也有**清单依赖症**的风险。把省略识别训练为"对清单做扫描",会让读者在**清单之外**的省略形式面前失去警觉。**Nassim Taleb** 在《黑天鹅》中专门批判这种"清单化审查"——真正颠覆性的省略恰恰是**未被预料的类型**。清单可以帮你捕获常见套路,但封锁你对非典型省略的感知。
+
+在真实复杂场景中,省略形式远超 9 类——**隐喻层面的省略**(作者用某种比喻框架,排除了其他可能框架)、**时间尺度的省略**(作者谈"短期"或"长期",隐含排除另一尺度)、**空间尺度的省略**(作者谈"国家"或"个人",隐含排除其他层级)、**对立面的省略**(作者假设某二元对立,排除第三条路)。本章未触及这些**结构性省略**,它们往往比"数据未披露"这类战术省略更影响认知。
+
+## 局限 3:算法时代的"无主体省略"
+
+本章假设省略是**作者行为**——有意或无意,总有一个"省略者"。读者可通过追问作者或更换信息源识破省略。但在**算法推荐、社交媒体 feed、AI 生成内容**的环境中,省略越来越是**无主体的**:
+
+- **信息茧房**(Filter Bubble,Pariser 2011):算法根据你的兴趣推送内容,**系统性地屏蔽不符合你喜好的反对观点**——这是省略,但没有"作者"
+- **推荐排序**:排在前 3 条的信息被浏览,第 50 条的信息实质被省略——排序算法是**隐性编辑**
+- **搜索引擎盲点**:Google 有意无意地把某类信息排到第二页——对 99% 的用户等于省略
+- **AI 生成回答**:ChatGPT 等 AI 给的"综合回答"省略了大量来源、立场、争议——但无人对省略负责
+
+**无主体省略**让本章的"追问作者"工具失效——你可以追问所有作者,但追问不了推荐算法的"作者意图"。读者需要**生态层面的审查工具**(比如主动搜索反面关键词、主动访问对立立场媒体),本章未处理这一维度。
+
+## 局限 4:省略的"无限后退"问题
+
+Q1 中的论证分析逻辑提示了一个**哲学难题**:每一次"补充省略"都可能引出**新的省略**。当读者追问"祛痘灵广告省略了副作用",作者补充副作用后,读者又可追问"这些副作用是否在不同年龄段表现不同";补充后又可追问"在不同种族表现不同";补充后又可追问"在不同剂量表现不同"——**省略永远可以被更细的省略替换**。
+
+这一"**无限后退**"现象暗示批判性阅读永远完不成完全的审查。作者虽然在"面对信息缺失的现实"一节建议"谨慎相对判断",但未给出**何时停止审查**的具体标准。读者容易陷入两种陷阱:
+- **审查不足**:扫描一遍清单就停,相当于浅审
+- **审查过度**:无限追问,永远达不到决策
+
+**Herbert Simon** 的"满意决策"(Satisficing)和 **Gerd Gigerenzer** 的"快速节俭启发式"(Fast and Frugal Heuristics)可补上这一缺失——在有限信息下做出"足够好"的判断比追求完美信息更重要。本章缺少这一**决策停机问题**的系统处理。
+
+## 局限 5:"负面效果"审查的数学基础薄弱
+
+作者对负面效果做专题强调(新学校案例),这是卓越的读者训练。但**如何评估正负面效果的净收益**,本章未提供量化工具。
+
+- 建新学校正面:教育机会 + 就业 + 地产增值
+- 建新学校负面:砍树 + 吸走其他学校资源 + 增税 + 房价不确定
+
+**净收益判断**需要:
+1. 对每项影响做概率与幅度估算
+2. 跨维度可通约的单位(经济价值?社会福利?)
+3. 时间折现(长期 vs 短期如何比较)
+4. 受益与受损群体的效用函数差异
+
+**成本-收益分析**(Cost-Benefit Analysis)、**决策理论**(Decision Theory)、**福利经济学**(Welfare Economics)在本问题上有丰富工具——期望值计算、风险中性/风险规避、帕累托改进、卡尔多-希克斯准则等。本章的"列出负面效果"只完成了第一步,后续的**权衡判断**缺乏工具支撑——读者可能列出 10 项负面效果,但不知如何与 5 项正面效果比较。
+
+## 局限 6:"视角省略"与"权力分配"的政治经济学盲点
+
+作者提到"权力分配"和"受损者声音"是需审查的负面维度,但在权力视角的省略上做得不够深。**批判理论**(Frankfurt School)、**葛兰西文化霸权**(Cultural Hegemony)、**福柯知识-权力论**指出:**主流话语本身就是通过系统性省略特定群体的声音而构建的**——省略不是个别作者的选择,是结构性产物。
+
+例:经济学教科书省略了"女性无偿家务劳动"数十年——不是某位作者不诚实,是整个学科范式不把其视为"经济活动"。**Marilyn Waring** 的《If Women Counted》专门揭示此类结构性省略。
+
+本章未处理**结构性省略**——读者追问作者"你省略了什么",作者给出清单后读者以为补全了,但整个学科的前提就排除了某些视角。此类省略需要**范式批判**工具(Kuhn)、**意识形态分析**工具(Althusser)、**话语分析**工具(Foucault,Fairclough),超出了本章清单可及范围。
+
+## 局限 7:追问省略的"社交代价"未讨论
+
+本章教读者追问省略,但在社交实践中**追问省略常有代价**:
+
+- 会议中追问老板"你还省略了什么?"——可能被视为挑战权威
+- 聚会上追问朋友推荐产品"负面效果呢?"——显得不合群
+- 面试中追问面试官"公司的负面方面是什么?"——可能被扣分
+- 学术研讨会追问演讲者"对手立场呢?"——显得咄咄逼人
+
+**批判性思维的社交场景性**是一个重要维度——不是所有场合都适合直接追问省略。本章未处理"何时追问""如何追问""如何让追问不伤关系"——这些是**批判性思维的社交能力**,在实战中往往比识别省略本身更难。**Daniel Kahneman** 在《思考,快与慢》中提到"批判思考需要耗费心理能量",但社交能量成本与心理能量成本同等关键,本章单一技术化处理,未触及这一现实维度。
+
+## 局限 8:"反方立场"的独立获取难题
+
+本章建议查找反方立场以识别省略。但在高度**极化的信息环境**中,反方立场本身可能:
+- 被算法过滤,读者根本接触不到
+- 被主流话语污名化,看起来"不严肃"
+- 用完全不同的术语体系表达,读者**看不懂**反方立场的内部逻辑
+- 已经被稻草人化,读者以为接触了反方立场,实际接触的是主流对反方的歪曲
+
+**Cass Sunstein** 的"信息茧房"研究、**Francesca Tripodi** 的"媒体操纵"研究显示:在当代数字环境中,读者**即使主动寻找反方**也很难获得不受扭曲的版本。追问"反方立场如何"在技术上是正确的,但在现实获取上**比本章暗示的困难得多**。
+
+## 局限 9:省略审查的"疲劳阈值"
+
+本章的 9 类清单全部执行一次需要 10-30 分钟,与 ch11 的 6 条线索叠加后,读者面对每一篇文章都要做**大量元认知工作**。**认知心理学**中的**ego depletion**(自我损耗,Baumeister)研究显示,持续的控制性认知活动会消耗心理资源,导致后续判断质量下降。
+
+换言之:**过度使用批判性阅读工具可能让读者的判断质量反而下降**——前 3 篇文章审查严谨,之后的审查变粗糙,但读者不自知。这是本章工具的**使用频率悖论**——用多了反而损害批判质量,用少了又被信息操纵。**判断在什么级别的信息上投入多少审查预算**,本章未提供决策框架。
+
+## 局限 10:数据时代的"反向省略"——信息过载
+
+本章隐含一个前提:省略是问题,披露是好事。但在**信息过载**的当代环境中,**过度披露反而成为一种新型省略**:
+
+- 金融产品说明书几十页,关键条款被隐藏在长文本中——**披露即隐藏**
+- 用户协议数千字,99% 读者跳过点同意——**披露即失效**
+- 科学论文方法部分详尽但超出读者可读性——**详细即不可审**
+- AI 生成报告信息量大但重点模糊——**信息多即无信息**
+
+**Cass Sunstein** 的 *Nudge* 指出:设计良好的**简化披露**比完整披露更能保护消费者。但"简化"本身涉及大量省略决策——到底保留什么?本章的"披露即负责"伦理在这一场景中需要升级为"**有效披露**"的更复杂伦理框架。
+
+## 局限 11:"省略"与"立场"的张力未充分厘清
+
+任何论证都有立场,立场必然带来选择性呈现——这是**修辞学**的常识。本章在"省略是欺骗"和"任何论证不完整正常"之间摇摆,未明确划线**"合理立场呈现" vs "欺骗性省略"**的边界。
+
+- 作者主张支持建新学校,强调正面效果,未充分谈负面——这是**选择性呈现**(立场驱动),还是**省略欺骗**(不诚实)?
+- 一份支持气候变化的科学报告,未提及怀疑派的研究——是**有意省略**还是**对不严肃怀疑派的合理排除**?
+- 一本家长教育书籍,只讲"积极管教",不讲"惩戒式管教"——是**价值观立场**还是**片面证据**?
+
+这些灰色地带在本章的二元框架下难以处理。**Habermas** 的交往理性、**Rawls** 的公共理性、**Toulmin** 的论证分析等提供了更精细的工具,本章未涉及。读者容易把**合理立场**误判为**欺骗性省略**,反而丧失对作者善意的理解。
+
+## 核心盲点:把"省略审查"等同于"完整真相追求"
+
+贯穿以上 11 条局限,最深的盲点是:**本章把省略审查隐含定位为追求完整真相的工具**——似乎只要查出所有省略,就能接近客观真相。
+
+但更现代的**建构主义认识论**认为:**根本不存在"无省略的完整呈现"**——每一次表达都是对无限现实的**有限选择**,省略是表达的本质,不是表达的缺陷。**Richard Rorty** 的《偶然、反讽与团结》、**Thomas Kuhn** 的《科学革命的结构》、**Bruno Latour** 的行动者网络理论都从不同角度论证:事实是被**构造的**,不是被**发现的**。
+
+在这一认识论下,"省略审查"的目标应调整为:**"这个省略服务于什么目的?这个目的是否值得支持?"**——不再追求"完整"这一乌托邦,而是追求**"有意识地选择性相信**"。本章未触及这一更深层的认识论转变。
+
+## 综合评价:从"查漏补缺"到"立场地图"
+
+本章作为"信息省略"的入门教程,9 类清单实用、负面效果专题清晰、现实应对态度成熟,是**批判性思维工具箱中不可缺少的一环**。它最大的贡献是**训练读者系统性扫描论证的空白处**,而不是只对作者说出的内容做反应。
+
+但对于需要处理**跨学科复杂议题、数字时代信息环境、结构性话语权力、成年人社交场景**的读者,本章工具需要**向外拓展**:加入**算法素养**(对抗无主体省略)、**决策理论**(处理无限后退)、**范式批判**(识别结构性省略)、**社交能力训练**(降低追问代价)、**建构主义认识论**(接受省略的本质性)。
+
+本章最合适的位置是**批判性阅读的"中级台阶"**——让读者告别"只看作者说了什么"的初级阅读,但尚未达到"接受所有呈现都是立场的"的高级阅读。读者掌握本章后,下一步应走向**立场地图式阅读**——不是查"真相 vs 省略",而是画"这个作者站在哪个立场说话、省略了哪些立场的声音、我需要哪些立场的声音来形成自己的判断"。本章是这一能力的**必要铺垫**,不是终点。
+
+  </script>
+  <script type="text/markdown" id="md-q4">
+# Q4 · 隐含前提
+
+本章在"识别信息省略"之下预设了若干**未明言的结构性前提**。这些前提是作者建立审查框架的认知基础,也是读者使用本章工具时需要警觉的"工具本身的边界"。
+
+## 前提 1:"完整呈现"在概念上可设想
+
+本章所有审查操作——追问反驳论证、定义、价值观、事实来源、程序细节、数据、结果、预测失败——都假设存在一个**"完整论证"的概念参照点**:一份理想的论证呈现了所有相关信息,读者可以据此判断实际论证缺了什么。但这一完整参照点是**可操作的吗?**
+
+- 任何论证要"完整",需包含:反驳 + 定义 + 价值观 + 来源 + 程序 + 替代方案 + 所有正反面结果 + 预测失败率——**长度可能达到原论证的 10 倍以上**
+- 读者无法完整阅读,作者无法完整写作
+- **"完整"本身是乌托邦**,不是实践参照
+
+这一前提的代价是:**读者可能把"不完整"等同于"有意省略",忽略"不完整是表达的本质"**。本章未明确给出"哪些不完整是合理的"与"哪些不完整是可批判的"的区分标准。
+
+## 前提 2:读者有能力识别"重要"省略
+
+作者定义**重要省略 = 影响推理的信息**。但判断某信息是否影响推理,**本身需要推理**——这是循环。读者如何**事先**知道哪些是重要省略?这一能力依赖:
+
+- **领域知识**:医学广告省略什么重要,只有医学背景的人能判断
+- **认识水平**:抽象的价值观省略只有哲学训练者能敏锐识别
+- **经验积累**:见过类似套路的人才能预测常见省略
+- **元认知**:知道自己的知识边界在哪里
+
+本章的工具对**无领域基础、无元认知训练的读者**收益有限——他们会扫描清单,但判断不出重要性。**批判性阅读的元问题是认知分层的**——高水平读者用得越好,低水平读者用了也效果一般。
+
+## 前提 3:作者有省略的意图或结构可追问
+
+本章把作者视为**可追问主体**——你可以找作者问,你可以更换信息源。但这一前提在多个场景不成立:
+
+- **算法推荐**:无作者,无法追问
+- **AI 生成**:作者是大模型,不知自己省略什么
+- **结构性省略**:整个学科的范式省略,无个体作者负责
+- **已故作者**:历史文本,追问不了
+- **匿名作者**:网络评论、匿名报告
+- **官方声明**:发言人代表机构,机构的"作者意图"本就分散
+
+对这些**无主体信息源**,本章的"追问作者"工具失效。作者未处理"无主体信息"如何审查——这在数字时代是越来越大的比例。
+
+## 前提 4:省略的反面是"补全"
+
+本章的审查逻辑是:**发现省略 → 要求补充 → 得到更完整版本 → 做出更好判断**。这一线性补全逻辑隐含两个假设:
+
+**假设 4a:补全后的信息可以"综合"**——读者拿到反面论证、替代方案、负面效果后,能把它们与原论证整合为综合判断。但**认知心理学**显示,人脑在面对**矛盾信息**时常无法综合,反而依赖情绪或既定立场选择站队。补全不等于综合。
+
+**假设 4b:补全是有限的**——读者追问几轮后可以停。但如 Q3 所述,省略可无限后退——补一层,新省略暴露。本章未给停机标准。
+
+这一前提让读者容易陷入**"查漏补缺"的完美主义陷阱**——总觉得自己没审查够,焦虑而决策瘫痪。
+
+## 前提 5:9 类省略类型可涵盖大多数情况
+
+作者给出 9 类清单,隐含**"这 9 类构成合理的操作起点"**的假设。但这 9 类背后有一个更深的假设:**论证是可以被这样分层拆解的——反驳、定义、价值观、事实、程序、数据、结果、预测是独立的审查维度**。
+
+然而:
+- **跨维度的省略**:一个省略可能同时是"反驳 + 价值观 + 数据"的复合(如省略某群体的声音,既是立场也是数据也是反驳)
+- **元省略**:"省略的可能性本身"这一元信息被省略——作者不告诉读者"我还省略了什么",读者难以追问
+- **动态省略**:信息在时间中会变,原本完整的呈现可能在一年后变成有效省略(新研究出现)
+- **受众省略**:信息呈现因受众不同而选择不同,省略是"对这一受众的选择",不是"绝对的省略"
+
+本章的类型清单是**静态 + 绝对 + 拆解**的框架,未处理**动态 + 相对 + 复合**的省略。
+
+## 前提 6:负面效果有可能被充分列出
+
+作者对负面效果做专题强调,暗含**"负面效果可以被列出"**的假设。但:
+
+- **未知的未知**(unknown unknowns):负面效果可能在未来才显现,当下根本无法预测
+- **系统性涌现**:复杂系统的负面效果可能来自多因素交互,不在单一维度清单上
+- **时间延迟**:核能的负面效果在数十年后显现,当代评估无法纳入
+- **链式反应**:某一负面效果引发后续负面效果,一级列表不够
+
+Taleb 的"**黑天鹅**"概念直接挑战这一前提——最重要的负面效果常常是**事前不可想象**的。本章的"新学校 4 维负面"示范只处理了**可预料的负面效果**,未触及**不可预料的系统风险**。
+
+## 前提 7:作者/读者的二元关系
+
+本章假设信息流是**作者 → 读者**的二元关系——作者呈现,读者审查,读者识别省略,读者判断。但现代信息环境是**多元关系**:
+
+- **作者 ↔ 编辑 ↔ 出版 ↔ 算法 ↔ 读者**——每层都有省略介入
+- **作者 ↔ 同行评审 ↔ 学术期刊 ↔ 媒体简化 ↔ 读者**——科学信息的多层传递
+- **作者 ↔ 官方宣传 ↔ 翻译 ↔ 本地转载 ↔ 读者**——跨语境信息的多次省略
+
+每一次中介都引入新的省略。读者以为追问的是"作者",实际遇到的是**多轮中介后的文本**,追问对象错位。本章的二元模型简化了现实的信息生态。
+
+## 前提 8:批判性追问是低成本行为
+
+本章的 9 类清单与负面效果扫描都默认读者**可以自由追问**——时间上、认知上、社交上都有空间。但追问的实际成本:
+
+- **时间成本**:完整审查一次需要 10-30 分钟
+- **认知成本**:持续的批判思考消耗心理资源(ego depletion)
+- **社交成本**:在会议、聚会、家庭中追问可能受阻
+- **情感成本**:对信任者追问会带来关系紧张
+- **机会成本**:花时间审查一则信息意味着无法审查其他信息
+
+本章未处理**批判性追问的预算分配**——读者有限的审查能力应如何分配到不同信息上?这一问题本章缺位。
+
+## 前提 9:"省略"是信息处理问题,不是权力问题
+
+本章把省略视为**技术性信息问题**——作者选择了呈现什么、省略什么,读者审查之。但**省略在现实中常是权力问题**:
+
+- 谁被允许发声?谁被排除在话语之外?
+- 谁的知识被视为权威?谁的知识被视为轶事?
+- 谁的故事被纳入历史?谁的故事被省略?
+- 谁定义了"合理的讨论"?谁的议题被排除为"不合理"?
+
+这些**结构性省略**是权力运作的结果,不是单一作者的决定。**批判理论、后殖民研究、女性主义、Foucault 话语分析**都处理这一维度,但本章未触及。读者可能掌握了 9 类清单,却对**更大的结构性沉默**无感。
+
+## 前提 10:读者目标是"更好的判断",非其他目标
+
+本章默认读者追问省略的目标是**更好的判断**——更接近真相、更理性的决策。但真实阅读的目标多样:
+
+- **娱乐**:看小说、散文,不需要审查省略
+- **情感共鸣**:读散文、诗歌,作者省略什么是艺术选择,非欺骗
+- **快速了解**:看新闻摘要,审查省略会打断体验
+- **学习**:读教科书,相信作者已做权威筛选
+- **关系维护**:朋友推荐的文章,追问省略会破坏关系
+
+**不同目标下,哪些省略需要追问、哪些可容忍,判断标准不同**。本章的"普适追问"风格未教读者**按目标调整审查强度**,读者可能把娱乐阅读也变成审问模式,让阅读本身失去乐趣。
+
+---
+
+## 综合评价:工具完备但哲学预设需升级
+
+这 10 条前提合起来指向一个判断:**本章给出了一套出色的"省略识别工具",但未充分处理省略问题背后的哲学与现实复杂性**。
+
+工具在**作者清晰可追问、读者有领域基础、信息源单一、阅读目标是判断真相**的场景下最有效。超出这些边界——算法环境、结构性权力、复杂系统、娱乐阅读、跨文化传播——本章工具的收益递减。
+
+**最关键的前提 1** 暴露了根本问题:**"完整"本身不是可达的参照**。所有表达都是对无限的有限选择,"省略"是表达的本质,不是表达的缺陷。本章工具最适合的用法不是追求"完整真相",而是**"有意识的选择性相信"**——知道作者站在什么立场、省略了哪些立场的声音、我需要主动补上哪些立场的信息才能形成自己的判断。
+
+**前提 9 是最具现实张力**的:**省略常是权力问题**。读者掌握本章后,需要进一步意识到**谁说话、谁沉默本身就是权力结构的体现**——批判性阅读的终点不是"识破作者",而是"识别话语权力的地图"。
+
+**前提 10 是最常被忽视的**:**读者目标的多样性**要求审查强度的灵活调整。本章工具应被嵌入"**目标—审查预算—工具选择**"的更大框架中,而不是作为一套"任何场景都适用"的清单。批判性阅读不是一种义务,是一种**有判断的选择**。
+
+  </script>
+  <script type="text/markdown" id="md-q5">
+# Q5 · 与其他章节的关系
+
+本章(ch12)是**评价工具链的第 6 章**,也是**视角翻转章**——从前面所有章节的"审查作者说了什么"翻转为"审查作者没说什么"。在 ch07 谬误、ch08-ch09 证据、ch10 因果、ch11 数据之后,本章把批判性阅读的焦点从**前景的论证**扩展到**背景的空白**,为 ch13 多结论铺设认知基础。
+
+## 与 ch07-ch11 的关系:视角的结构性翻转
+
+从 ch07 到 ch11,所有批判性阅读工具都在**审查作者呈现的内容**:
+
+- ch07:这个论证使用了谬误吗?
+- ch08-ch09:这个证据可靠吗?
+- ch10:这个原因是唯一的吗?
+- ch11:这个数据公平呈现了吗?
+
+**本章是第一次让读者把目光从"呈现的内容"转向"未呈现的内容"**——所有前面的审查都是"拿着作者给的东西挑毛病",本章是"审视作者没给的东西"。这一视角翻转是**质的跃迁**,不是量的积累。
+
+作者本人在本章开篇也意识到这一翻转:"通过追问前面几章里我们学习的那些问题,诸如那些涉及歧义、假设和证据之类的问题,你就能找出许多非常重要的省略信息。"——**前面的工具本已部分触及省略**(如 ch11 的"数据省略"套路 4),但本章把省略从子问题升级为**独立的关键问题**。
+
+## 承接 ch11:数据省略 → 全面省略
+
+ch11 的**套路 4(省略数据也是欺骗)**已经系统处理了"数据层"的省略——缺绝对数值、缺比率、缺比较基准、缺历史基准、缺同类参照。本章把这一审查**从数据扩展到全方位**:
+
+| ch11 的数据省略 | 本章扩展 |
+|---------------|---------|
+| 缺比较基准 | 缺反驳论证(1 类) |
+| 缺历史对照 | 缺程序细节(5 类) |
+| 缺同类参照 | 缺其他收集技巧(6 类) |
+| 缺绝对/相对 | 缺数据(7 类)+ 缺结果(8 类) |
+
+可以把本章看作 ch11"数据省略工具"的**全面化升级**——如果 ch11 训练了读者对数字层面的缺失敏感,本章训练读者对**任何信息形式**的缺失敏感。
+
+## 与 ch10 的关系:替代原因 vs 省略信息
+
+ch10 让读者识别**作者给出的原因之外的替代原因**——作者说 A 导致 B,可能实际是 C 导致 B,或 A、B 都由 D 引起。本章的**9 类清单中的反驳论证(1 类)**与替代原因有**方法论上的重叠**——都要求读者**主动构造作者未提供的信息**。
+
+两者的区别:
+- **ch10** 专注**因果结构的替代**——针对特定的因果断言
+- **本章** 专注**全面信息的缺失**——针对任何论证
+
+但精神上高度一致——都反对"读者被动接受作者的单一叙事",都要求读者**主动构造对立面**。这是全书从 ch10 开始的**"建设性批判"**精神的延续——不只识别错误,还要主动构造替代可能。
+
+## 与 ch05-ch06(假设)的关系:隐藏信息 vs 隐藏假设
+
+ch05-ch06 处理**价值观假设和描述性假设**——作者没说出来的信念。本章处理**信息省略**——作者没说出来的事实、证据、替代方案。两者都关注"作者没说的",但性质不同:
+
+- **假设**:作者默认为真的信念(常是价值观)
+- **信息省略**:作者选择不呈现的事实(常是证据或视角)
+
+两者在审查时常常**叠合出现**——作者省略了"某群体的视角",既是**信息省略**(未听到该群体的陈述),也是**价值观假设**(默认该群体视角不重要)。本章的**第 3 类"遗漏的价值观偏向或视角"**直接呼应了 ch05-ch06——这 3 章合起来构成对**"作者未明言的东西"**的完整审查。
+
+## 承接 ch13(第 12 章 能得出哪些合理的结论):为多结论铺路
+
+ch13 处理"合理结论不唯一"——同一论证可以推出多种结论。本章的**价值观/视角省略(3 类)**和**反驳论证省略(1 类)**已为多结论做了认知准备:
+
+- 本章让读者意识到"作者省略了其他视角"
+- ch13 让读者意识到"其他视角会导出其他结论"
+
+两者的关系类似"**意识到空白** → **填充空白**"的递进。读者在本章学会**扫描省略**,在 ch13 学会**用省略的内容构造替代结论**。本章的**马眼罩**比喻与 ch13 的**多视角**理论直接连通——马眼罩让人看不见某些东西(本章主题),而不同马站在不同位置,于是看见不同风景(ch13 主题)。
+
+## 在全书批判性阅读生命周期的位置
+
+把全书的批判性阅读训练画为一个**从外到内、从反应到建设**的生命周期:
+
+```
+阶段 1:识别论题与结论(ch03)
+  ↓
+阶段 2:识别理由(ch04)
+  ↓
+阶段 3:识别假设(ch05-ch06)                      ← 内化语义层
+  ↓
+阶段 4:识别论证错误(ch07 谬误)                  ← 技术审查
+  ↓
+阶段 5:评估证据(ch08-ch09)                      ← 实证审查
+  ↓
+阶段 6:评估因果(ch10)                           ← 推理审查
+  ↓
+阶段 7:评估数据(ch11)                           ← 量化审查
+  ↓
+★ 阶段 8:识别省略(本章)                         ← 背景审查(翻转)
+  ↓
+阶段 9:构造多种合理结论(ch13)                   ← 主动重构
+```
+
+本章在这一链条中是**从审查走向重构的过渡点**——阶段 1-7 都是对作者已说内容的审查,本章开始让读者**走出作者的框架**,看到"还有什么没被说",ch13 则让读者**主动构造替代框架**。
+
+## 对全书论证素养的贡献:从"挑错者"到"立场构造者"
+
+全书对"论证素养"(argumentation literacy)的培养,本章是一次**身份升级**——读者从**"作者的审查者"**升级为**"立场的构造者"**。
+
+前面章节的读者角色:
+- ch07 谬误:**找错者**——找出论证中的逻辑错误
+- ch08-ch09 证据:**审证者**——审查证据的可靠性
+- ch10 因果:**替代者**——提出替代原因
+- ch11 数据:**解码者**——解码数据的真实含义
+
+本章的读者角色:
+- **填空者**——主动填充论证中被省略的部分
+
+这一身份升级在 ch13 达到顶点:
+- **重构者**——用完整信息构造多种合理结论
+
+**读者从被动评价升级为主动建设**,这是全书最重要的教育成果。本章是这一成果的**关键过渡点**——教会读者"作者没说的,我可以主动想"。
+
+## 与数字时代阅读能力的关系:本章的时代价值
+
+在信息爆炸、算法推荐、社交媒体、AI 生成内容的当代环境中,本章的**省略审查工具**有特殊时代价值:
+
+- **信息茧房**:算法系统性地省略你不同意的观点——本章工具让你意识到**feed 不等于完整**
+- **新闻简化**:短视频、推文、推送标题大量省略——本章工具让你对"1 分钟看懂某事"保持警觉
+- **AI 综合**:AI 回答综合了大量信息但省略了来源与异议——本章工具让你追问"AI 没告诉你什么"
+- **广告营销**:社交媒体上的种草文、测评帖省略了利益关系和负面体验——本章工具让你识别营销稿
+
+**"有什么被省略了"**可能是数字时代读者最常需要问的问题,使用频率远高于本书前面的任何单一问题。
+
+## 与 ch07 谬误的呼应:"省略"本身可能是一种谬误
+
+ch07 列出的谬误(乱扣帽子、诉诸可疑权威、诉诸情感等)大多是**表达方式的错误**——作者说了什么不对的话。但 ch07 其实已经隐含"**省略型谬误**"——如:
+
+- **滑坡谬误**:省略了滑坡中间的可能干预措施
+- **虚假二分**:省略了第三种可能
+- **片面辩护**:省略了反面理由
+
+本章把这一隐含维度**显化为独立的审查问题**——这是对 ch07 的**系统化补充**。
+
+## 小结
+
+本章是**评价工具链的翻转章**,从审查"作者说了什么"转向审查"作者没说什么"。它承接 ch11 的数据省略,扩展到全方位省略;与 ch05-ch06 的假设审查共同处理"作者未明言的内容";为 ch13 的多结论构造做认知铺垫。
+
+本章的独特价值是让读者**身份升级**——从论证的审查者变为论证的填空者,为 ch13 进一步的"立场构造者"做准备。在数字时代,本章工具的使用频率可能超过全书任何其他章节——因为**省略是 21 世纪最普遍、最隐蔽、最有政治经济性的信息操纵形式**。读者完成本章后,应自然产生"面对任何信息都扫描空白处"的新阅读默认态度——这是本章对长期阅读生命周期的最大贡献。
+
+  </script>
+  <script type="text/markdown" id="md-q6">
+# Q6 · 我如何实践
+
+**读者身份锚定**:知识工作者,追求系统化的学习与工作方法。在日常工作中,读者每天面对海量信息——老板的战略邮件、下属的项目汇报、咨询公司的建议、行业报告、新闻推送、供应商的方案、社交媒体的行业动态。**省略是这些信息中最常见的操纵形式**——比数据欺骗更隐蔽,比谬误更难识别。把本章工具内化为日常工作习惯,需要让"扫描空白"成为阅读的**条件反射**,而不是额外动作。
+
+## 实践 1:建立"空白扫描 4 问"嵌入日常阅读
+
+原理:本章的 9 类清单完整执行需要 10-20 分钟,在秒级的阅读场景中不可行。但**把最关键的 4 类压缩为速查问题**,可以让空白扫描时间降到 30 秒,嵌入每一次重要阅读。
+
+**空白扫描 4 问**:
+
+1. **反方:这个论证的反方会说什么?谁会反对?**(对应清单 1)
+2. **代价:这个方案的负面效果是什么?谁受损?**(对应清单 8)
+3. **来源:这些事实从哪来?谁做的研究?什么方法?**(对应清单 4+5)
+4. **遗漏:这个话题还有哪些关键维度没被提到?**(通用追问)
+
+**操作流程**:每次读到**影响决策的信息**(项目提案、商业方案、外部报告、新闻热点)时,读完先停 30 秒,默背这 4 问,强制自己给出答案或意识到"不知道"。
+
+**阈值设定**:
+- 决策关联度高的信息 → 4 问全扫
+- 日常阅读 → 只扫第 4 问(通用遗漏)
+- 娱乐阅读 → 不扫
+
+**工具化建议**:把 4 问做成浏览器书签或笔记模板,读长文章时在笔记中预填这 4 行,阅读过程中把答案填进去。读完后这 4 个答案就是你的**空白清单**——这是你做后续决策时应主动补上的部分。
+
+## 实践 2:"负面效果 5 人提问法"——决策会议的标配环节
+
+原理:本章对负面效果的专题强调(建新学校案例)提示了一个关键认知——**任何重要决策都应专门花时间扫描其负面效果**。在团队决策场景中,读者作为知识工作者往往参与多种决策讨论(产品方向、团队结构、供应商选择、预算分配)。建立**"负面效果 5 人提问法"**,可以把本章工具嵌入集体决策流程。
+
+**5 个固定提问**(在决策讨论接近尾声、即将拍板前,由主持人或指定"负面扫描人"统一问):
+
+1. **如果这个方案失败,最可能的失败场景是什么?**
+2. **这个方案落地后,哪些人会受损?他们的声音被听到了吗?**
+3. **在未来 12 个月内,这个方案可能出现哪些未预料的副作用?**
+4. **除了我们讨论过的正面效果,这个方案是否牺牲了其他的机会?**
+5. **如果 3 年后回看,我们最可能后悔的是什么?**
+
+**操作时机**:决策讨论至少 80% 时间应花在"方案优劣"上,但**最后 20% 必须专门扫描负面效果**——即便已经达成共识、即便会延长会议、即便看起来扫兴。
+
+**团队嵌入方式**:
+- 让 5 问变成每次决策会议的默认流程
+- 设定一个"负面扫描人"角色,轮流担任——负责在会议末尾强制问这 5 问
+- 把 5 问的答案记录到决策文档,作为日后复盘的输入
+
+**长期效果**:6 个月后,团队的决策质量会明显提升——不是因为每次都能发现致命问题,而是**系统性地把"隐藏代价"纳入讨论**。决策不再是"选择最看好的方案",而是"选择经过正反扫描的方案"。你作为推行者会因此在团队中建立"稳健决策者"的形象,长期收益远超 5 分钟的会议延长。
+
+## 实践 3:信息源多样性审计——季度做一次"我的 feed 扫描"
+
+原理:本章的**反驳论证省略**(清单 1)和**价值观视角省略**(清单 3)在个人层面最大的表现是**自己的信息源是否多样化**。如果你的 feed 只来自同一类信息源,你就系统性地接受了一种视角,省略了其他视角——即使你自己主动阅读,依然处在信息茧房中。**季度扫描**自己的信息输入,可以对抗这一结构性省略。
+
+**季度审计清单**:
+
+**第一步:列出近 3 个月的主要信息源**
+- 订阅的公众号/newsletter
+- 主要看的社交媒体账号
+- 常看的新闻网站
+- 常读的行业报告来源
+- 常咨询的人
+
+**第二步:对每个信息源做"视角标签"**
+- 价值立场(左/右/中,自由/保守)
+- 文化背景(中/美/欧/日)
+- 行业视角(实业/投资/学术/技术/政策)
+- 时间尺度(日常/季度/长期)
+- 语言(中文/英文)
+
+**第三步:识别省略的视角**
+- 哪些价值立场我从未接触?
+- 哪些文化视角我从未接触?
+- 哪些行业我的信息盲区是什么?
+- 哪些时间尺度我看得少?
+
+**第四步:主动补入 2-3 个反向信息源**
+- 添加一个与你主流立场对立的媒体
+- 添加一个跨文化的视角源(如英文财经媒体)
+- 添加一个跨行业的视角源
+
+**操作频率**:每季度做一次,半天时间。年底综合一次,评估信息源组合的多样性提升。
+
+**长期效果**:坚持 2 年,你对行业与社会的判断会显著比同行更立体——因为你有**跨视角的信息输入**,能看到同一事件在不同叙事框架下的不同面貌。这是对抗算法过滤最可靠的方式——主动造一个跨茧房的信息源组合。
+
+## 实践 4:写作时的"反方预审"——给自己的观点找对手
+
+原理:本章**写作伦理部分**的核心是"如果读者知道这个信息,会怎样影响他们对你论证的反应"——影响度决定披露度。作为知识工作者,你也在大量产出观点(报告、方案、分享、文章)。建立**"反方预审"**习惯,可以让你的写作经得起读者的空白扫描。
+
+**写作前的反方预审流程**:
+
+**第一步:列出你的核心论点**(一句话)
+
+**第二步:为这一论点找 3 个反方立场**
+- 行业内不同意你的人会怎么说?
+- 跨行业的人会怎么看?
+- 你的下属/上级/客户会怎么看?
+
+**第三步:列出 3 个反方最有力的论据**
+- 不是稻草人(弱化反方的版本)
+- 而是**最强版本的反方**(即你最难反驳的论据)
+
+**第四步:决策该如何处理反方**
+- **合并**:在文中主动引入反方,并给出回应(上策)
+- **承认**:在文中承认反方的合理性,但说明你的立场基于不同优先级
+- **限定**:限定你的论点适用范围,排除反方主导的场景
+- **默认**:不提反方,但心里清楚——只用于非重要写作
+
+**操作时间**:重要报告/方案/提案,写作前额外花 15-30 分钟做这一预审。
+
+**长期效果**:3 个月后,你的写作会显著比同行更**有说服力**——不是因为你论证更华丽,而是因为**你的论证已经经过了反方的压力测试**。读者在阅读时的"空白扫描"会发现你已经处理过——这是对读者智商的尊重,也是对自己论证的严谨。这种尊严会转化为长期的专业信誉。
+
+## 实践 5:"空白日记"——每周记录发现的省略
+
+原理:本章工具要长期内化,需要**积累训练样本**。建立一个"空白日记",每周记录 1-3 个你主动识别出的信息省略,长期积累后会形成个人独特的"省略感知库"——你在阅读时的直觉会显著强化。
+
+**空白日记的格式**:
+
+```
+日期:
+信息源:
+原始陈述:"..."(一句话复述)
+我识别的省略:
+省略类型(参考 9 类清单):
+补上省略后,我的判断有什么变化?
+```
+
+**每周 3 条最低配额**,可以来自任何阅读场景——广告、新闻、工作汇报、朋友推荐、行业报告。
+
+**进阶:季度盘点**
+
+每 3 个月回看过去 12 周的空白日记,找规律:
+- 我最常遇到的省略类型是什么?(可能是我所在行业的结构性省略)
+- 我最不容易识别的省略类型是什么?(需要专门训练)
+- 哪些信息源有系统性的省略模式?(可以标签化或降低信任度)
+
+**长期效果**:2 年后,你会形成**对本行业信息生态的结构性理解**——你知道某类信息源常省略什么、某类表达形式常隐藏什么、某种场景常有什么样的利益冲突。这是同行很少有的**"信息生态学"知识**,会让你在跨部门协作、对外谈判、战略判断时有显著优势。
+
+**团队版本**:如果团队里有其他成员愿意一起做,可以建立共享的"空白日记"——把团队内部流传的重要文档、外部报告、供应商方案的省略记录在一起,形成团队的**集体记忆**。
+
+---
+
+## 整体判断
+
+本章的 9 类清单 + 负面效果专题 + 现实应对态度,是知识工作者最**高使用频率**的批判性阅读工具——因为"省略"是职场信息最普遍的操纵形式。但内化这一工具的关键不是记清单,而是建立**条件反射式的"扫描空白"习惯**——读到重要信息自动停 30 秒、参加决策会议自动提负面效果、订阅信息源自动平衡视角、写作时自动做反方预审。
+
+5 条实践的优先级建议:
+
+- **1-3 个月**:实践 1(空白 4 问)起步——操作最简单、收益最直接
+- **3-6 个月**:加入实践 4(写作反方预审)——影响你的输出质量
+- **6-12 个月**:扩展到实践 2(负面效果 5 问)——影响你的团队决策
+- **1 年后**:加入实践 3(信息源审计)和实践 5(空白日记)——长期视角升级
+
+**本章工具的长期复利**:三年坚持会让你具备**"生态学阅读能力"**——不再把每一份信息当作独立文本,而是把它放进信息生态中看——谁在说?说给谁听?哪些声音被系统性排除?你从此会比同行更**完整地理解信息世界**——知道表面之下,还有多少结构性的沉默。这是批判性思维对认知成熟度的最深层贡献,也是对职业判断力最根本的长期赋能。
+
+  </script>
+
+  <script>
+    window.__SIX_TABS__ = [{"id": "Q1", "label": "作者说了什么", "chars": "2,972", "desc": "本章核心主张的整体复述,看清作者究竟在主张什么、用怎样的论证骨架。"}, {"id": "Q2", "label": "论据是什么", "chars": "3,039", "desc": "把核心主张拆为多个论点,每个论点附作者原书中的论据(逻辑/案例/方法论)。"}, {"id": "Q3", "label": "反例与局限", "chars": "3,530", "desc": "本章工具的边界、反例、与学术界的对照——看清作者没说但应该被知道的局限。"}, {"id": "Q4", "label": "隐含前提", "chars": "2,703", "desc": "本章未明说但隐藏的前提——作者依赖什么默认才让工具成立。"}, {"id": "Q5", "label": "与其他章节的关系", "chars": "2,191", "desc": "本章如何承接前序章节、又为后续章节铺路——在全书工具链中的位置。"}, {"id": "Q6", "label": "我如何实践", "chars": "2,748", "desc": "针对知识工作者的具体实践——把本章工具嵌入日常工作流的可执行路径。"}];
+  </script>
+</body>
+</html>

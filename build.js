@@ -1,447 +1,511 @@
 #!/usr/bin/env node
 // ═══════════════════════════════════════════════════════════════
-// Immersive Book Engine — Build Script
-// Merges engine + book data into single-file HTML per book
-// Auto-generates bookshelf homepage from book metadata
-// Zero dependencies — uses only Node.js built-in modules
+// 智识图书馆 · 统一构建脚本
+//   - 跑 v1 build(archive/v1/build.js)生成所有 v1 老书的 single-file HTML
+//   - 把 v2 books/{slug}/reader/ 复制到 dist/{slug}/ 形成多文件 reader
+//   - 生成统一图书馆首页(v1 旧书 + v2 新书)
 // ═══════════════════════════════════════════════════════════════
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
-const SRC = path.join(__dirname, 'src');
-const DIST = path.join(__dirname, 'dist');
+const ROOT = __dirname;
+const DIST = path.join(ROOT, 'dist');
+const V1_DIR = path.join(ROOT, 'archive', 'v1');
+const V1_DIST = path.join(V1_DIR, 'dist');
+const V2_BOOKS_DIR = path.join(ROOT, 'books');
 
-// Read engine files
-const template = fs.readFileSync(path.join(SRC, 'engine', 'template.html'), 'utf8');
-const engineCSS = fs.readFileSync(path.join(SRC, 'engine', 'engine.css'), 'utf8');
-const engineJS = fs.readFileSync(path.join(SRC, 'engine', 'engine.js'), 'utf8');
-const componentsJS = fs.readFileSync(path.join(SRC, 'engine', 'components.js'), 'utf8');
+// --- 工具 ---
+function copyDir(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const e of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, e.name);
+    const d = path.join(dest, e.name);
+    if (e.isDirectory()) copyDir(s, d);
+    else fs.copyFileSync(s, d);
+  }
+}
+function hanziCount(t) { return (t.match(/[一-鿿]/g) || []).length; }
+function htmlEscape(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
-// Ensure dist exists
+console.log('\n智识图书馆 · 统一构建开始\n');
+
+// --- 清理 dist ---
+fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(DIST, { recursive: true });
 
-// Process each book
-const booksDir = path.join(SRC, 'books');
-const books = fs.readdirSync(booksDir).filter(f =>
-  fs.statSync(path.join(booksDir, f)).isDirectory()
-);
+// ═══════════════════════════════════════════════════════════════
+// PHASE 1 · 跑 v1 build(归档的老引擎)
+// ═══════════════════════════════════════════════════════════════
+console.log('▶ Phase 1 · 构建 v1 老书(archive/v1/build.js)');
 
-console.log(`\n📚 Building ${books.length} book(s)...\n`);
+const v1Books = [];
+if (fs.existsSync(path.join(V1_DIR, 'build.js'))) {
+  try {
+    execSync('node build.js', { cwd: V1_DIR, stdio: 'inherit' });
 
-// Collect book metadata for homepage generation
-const booksMeta = [];
-
-books.forEach(bookSlug => {
-  const bookDir = path.join(booksDir, bookSlug);
-  const dataPath = path.join(bookDir, 'data.js');
-
-  if (!fs.existsSync(dataPath)) {
-    console.log(`⏭  Skipping ${bookSlug}/ (no data.js)`);
-    return;
-  }
-
-  const dataJS = fs.readFileSync(dataPath, 'utf8');
-  const customPath = path.join(bookDir, 'custom.js');
-  const customJS = fs.existsSync(customPath)
-    ? fs.readFileSync(customPath, 'utf8')
-    : '// No custom components';
-
-  // Extract metadata from data.js using regex
-  const extract = (key) => {
-    const m = dataJS.match(new RegExp(`${key}:\\s*'([^']*)'`));
-    return m ? m[1] : null;
-  };
-
-  const title = extract('title') || bookSlug;
-  const titleEn = extract('titleEn') || '';
-  const author = extract('author') || '';
-  const authorEn = extract('authorEn') || '';
-
-  // Extract shelf config
-  const shelfBlock = dataJS.match(/shelf:\s*\{([\s\S]*?)\}/);
-  let shelf = { emoji: '📕', gradient: 'linear-gradient(135deg, #333 0%, #666 100%)', description: '', stats: [] };
-  if (shelfBlock) {
-    const emojiM = shelfBlock[1].match(/emoji:\s*'([^']*)'/);
-    const gradientM = shelfBlock[1].match(/gradient:\s*'([^']*)'/);
-    const descM = shelfBlock[1].match(/description:\s*'([^']*)'/);
-    const statsM = shelfBlock[1].match(/stats:\s*\[([\s\S]*?)\]/);
-    if (emojiM) shelf.emoji = emojiM[1];
-    if (gradientM) shelf.gradient = gradientM[1];
-    if (descM) shelf.description = descM[1];
-    if (statsM) {
-      shelf.stats = statsM[1].match(/'([^']*)'/g)?.map(s => s.replace(/'/g, '')) || [];
+    // copy archive/v1/dist/{slug}/ → dist/{slug}/  (skip v1 index.html)
+    if (fs.existsSync(V1_DIST)) {
+      for (const entry of fs.readdirSync(V1_DIST, { withFileTypes: true })) {
+        if (entry.name === 'index.html') continue; // 跳过 v1 旧首页
+        const s = path.join(V1_DIST, entry.name);
+        const d = path.join(DIST, entry.name);
+        if (entry.isDirectory()) {
+          copyDir(s, d);
+          // 读 v1 书的 meta(尝试从 src/books/{slug}/data.js 提取)
+          v1Books.push(readV1BookMeta(entry.name));
+        } else {
+          fs.copyFileSync(s, d);
+        }
+      }
+      console.log(`  ✓ ${v1Books.length} 本 v1 书已复制到 dist/`);
     }
+  } catch (err) {
+    console.error('  ✗ v1 build 失败:', err.message);
   }
-
-  booksMeta.push({ slug: bookSlug, title, titleEn, author, authorEn, shelf });
-
-  // Build HTML
-  // NOTE: Use function replacement to avoid $', $&, $` special patterns
-  // in content strings being misinterpreted as replacement directives.
-  let html = template
-    .replace('<!-- BOOK_TITLE -->', () => `${title} · 沉浸式深度导读`)
-    .replace('<!-- ENGINE_CSS -->', () => engineCSS)
-    .replace('<!-- COMPONENTS_JS -->', () => componentsJS)
-    .replace('<!-- ENGINE_JS -->', () => engineJS)
-    .replace('<!-- BOOK_DATA -->', () => dataJS)
-    .replace('<!-- BOOK_CUSTOM -->', () => customJS);
-
-  // Write output
-  const outDir = path.join(DIST, bookSlug);
-  fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(path.join(outDir, 'index.html'), html);
-
-  const sizeKB = (Buffer.byteLength(html) / 1024).toFixed(0);
-  console.log(`  ✅ dist/${bookSlug}/index.html (${sizeKB} KB)`);
-});
+} else {
+  console.log('  (无 archive/v1/build.js,跳过 v1)');
+}
 
 // ═══════════════════════════════════════════════════════════════
-// Auto-generate bookshelf homepage
+// PHASE 2 · 复制 v2 books/{slug}/reader/ → dist/{slug}/
 // ═══════════════════════════════════════════════════════════════
+console.log('\n▶ Phase 2 · 部署 v2 交互式 reader');
 
-function generateHomepage(booksMeta) {
-  const bookCards = booksMeta.map((b, i) => `
-  <a class="book-card" href="./${b.slug}/" style="animation-delay: ${0.6 + i * 0.2}s;">
-    <div class="book-card-banner" style="background: ${b.shelf.gradient};">
-      <span class="book-card-emoji">${b.shelf.emoji}</span>
-      <div style="text-align:center;">
-        <div class="book-card-part">${b.titleEn}</div>
-        <div class="book-card-banner-title">${b.title}</div>
-      </div>
-    </div>
-    <div class="book-card-body">
-      <div class="book-card-title">${b.title}</div>
-      <div class="book-card-author">${b.author}${b.authorEn ? ' · ' + b.authorEn : ''}</div>
-      <p class="book-card-desc">${b.shelf.description}</p>
-      <div class="book-card-meta">
-        ${b.shelf.stats.map(s => `<span class="book-card-tag">${s}</span>`).join('\n        ')}
-      </div>
-    </div>
-    <div class="book-card-arrow">→</div>
-  </a>`).join('\n');
+const v2Books = [];
+if (fs.existsSync(V2_BOOKS_DIR)) {
+  for (const slug of fs.readdirSync(V2_BOOKS_DIR)) {
+    const bookDir = path.join(V2_BOOKS_DIR, slug);
+    if (!fs.statSync(bookDir).isDirectory()) continue;
 
-  const comingSoon = `
-  <div class="book-card coming-soon" style="animation-delay: ${0.6 + booksMeta.length * 0.2}s;">
-    <div class="book-card-banner" style="background: linear-gradient(135deg, #333 0%, #666 100%);">
-      <div style="text-align:center;">
-        <div class="book-card-part">COMING SOON</div>
-        <div class="book-card-banner-title">即将上线</div>
-      </div>
-    </div>
-    <div class="book-card-body">
-      <div class="book-card-title">更多书籍，敬请期待</div>
-      <div class="book-card-author">持续更新中</div>
-      <p class="book-card-desc">每一本改变认知的经典，都将被重建为沉浸式的交互体验。如果你有想看的书，欢迎提出建议。</p>
-      <div class="book-card-meta">
-        <span class="book-card-tag">? 场景</span>
-        <span class="book-card-tag">待定</span>
-      </div>
-    </div>
-  </div>`;
+    const readerDir = path.join(bookDir, 'reader');
+    if (!fs.existsSync(readerDir)) {
+      console.log(`  跳过 ${slug}(无 reader/)`);
+      continue;
+    }
+
+    const metaPath = path.join(bookDir, 'meta.json');
+    const meta = fs.existsSync(metaPath)
+      ? JSON.parse(fs.readFileSync(metaPath, 'utf8'))
+      : { slug, title: slug, author: '' };
+
+    const chapterFiles = fs.readdirSync(readerDir).filter(f => /^ch\d+\.html$/.test(f));
+    let totalChars = 0;
+    const chaptersDir = path.join(bookDir, 'chapters');
+    if (fs.existsSync(chaptersDir)) {
+      for (const ch of fs.readdirSync(chaptersDir)) {
+        const ins = path.join(chaptersDir, ch, 'insights.md');
+        if (fs.existsSync(ins)) totalChars += hanziCount(fs.readFileSync(ins, 'utf8'));
+      }
+    }
+
+    const destDir = path.join(DIST, slug);
+    copyDir(readerDir, destDir);
+
+    v2Books.push({
+      slug,
+      title: meta.title || slug,
+      author: meta.author || '',
+      chapters: chapterFiles.length,
+      totalChars,
+      url: `./${slug}/index.html`,
+      version: 'v2'
+    });
+    console.log(`  ✓ ${slug}(${chapterFiles.length} 章 · ${totalChars.toLocaleString()} 汉字 · 交互式 reader)`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 3 · 生成统一首页 dist/index.html(v1 + v2)
+// ═══════════════════════════════════════════════════════════════
+console.log('\n▶ Phase 3 · 生成统一图书馆首页');
+
+const allBooks = [...v2Books, ...v1Books];
+const homepage = renderHomepage(v2Books, v1Books);
+fs.writeFileSync(path.join(DIST, 'index.html'), homepage);
+console.log(`  ✓ dist/index.html(${v2Books.length} 本 v2 交互式 + ${v1Books.length} 本 v1 沉浸式 = ${allBooks.length} 本)`);
+
+console.log(`\n构建完成 → ${DIST}\n`);
+
+// ═══════════════════════════════════════════════════════════════
+// 辅助:从 v1 data.js 抽取书 meta
+// ═══════════════════════════════════════════════════════════════
+function readV1BookMeta(slug) {
+  const dataPath = path.join(V1_DIR, 'src', 'books', slug, 'data.js');
+  let title = slug, author = '', subtitle = '';
+  if (fs.existsSync(dataPath)) {
+    const code = fs.readFileSync(dataPath, 'utf8');
+    const tm = code.match(/title:\s*['"`]([^'"`]+)['"`]/);
+    const am = code.match(/author:\s*['"`]([^'"`]+)['"`]/);
+    const sm = code.match(/subtitle:\s*['"`]([^'"`]+)['"`]/);
+    if (tm) title = tm[1];
+    if (am) author = am[1];
+    if (sm) subtitle = sm[1];
+  }
+  return { slug, title, author, subtitle, url: `./${slug}/index.html`, version: 'v1' };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 图书馆统一首页 HTML
+// ═══════════════════════════════════════════════════════════════
+function renderHomepage(v2Books, v1Books) {
+  const v2Cards = v2Books.map((b, i) => `
+      <a href="${b.url}" class="book-card v2">
+        <div class="book-badge">V2 · INTERACTIVE</div>
+        <div class="book-num">${String(i + 1).padStart(2, '0')}</div>
+        <div class="book-meta">
+          <h3 class="book-title">${htmlEscape(b.title)}</h3>
+          <p class="book-author">${htmlEscape(b.author)}</p>
+          <div class="book-stats">
+            <span>${b.chapters} 章</span>
+            <span class="dot">·</span>
+            <span>${b.totalChars.toLocaleString()} 汉字深度产出</span>
+            <span class="dot">·</span>
+            <span>交互式 · 双主题</span>
+          </div>
+        </div>
+        <div class="book-cta">进入阅读 →</div>
+      </a>`).join('');
+
+  const v1Cards = v1Books.map((b, i) => `
+      <a href="${b.url}" class="book-card v1">
+        <div class="book-badge v1-badge">V1 · IMMERSIVE</div>
+        <div class="book-num">${String(i + 1).padStart(2, '0')}</div>
+        <div class="book-meta">
+          <h3 class="book-title">${htmlEscape(b.title)}</h3>
+          <p class="book-author">${htmlEscape(b.author || b.subtitle || '—')}</p>
+          <div class="book-stats">
+            <span>滚动式沉浸阅读</span>
+          </div>
+        </div>
+        <div class="book-cta">进入阅读 →</div>
+      </a>`).join('');
 
   return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>沉浸式深度导读 · Immersive Book Engine</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #F5F0E8;
-  --fg: #1A1A1A;
-  --fg-secondary: #5C5546;
-  --accent: #B8860B;
-  --accent-dim: rgba(184,134,11,0.08);
-  --border: rgba(0,0,0,0.06);
-  --serif: 'Noto Serif SC', 'Songti SC', Georgia, serif;
-  --sans: 'Noto Sans SC', 'Inter', system-ui, -apple-system, sans-serif;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-}
+  <script>
+    (function(){var s=localStorage.getItem('reader-theme');if(s==='light'||s==='dark'){document.documentElement.setAttribute('data-theme',s);}else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}})();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智识图书馆</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root, :root[data-theme="dark"] {
+      --bg-primary: #0f0e0a; --bg-secondary: #181612; --bg-card: #1f1c17;
+      --bg-card-hover: #28241e; --border: #2e2a23;
+      --text-primary: #e8e2d4; --text-secondary: #a8a195; --text-tertiary: #6b6558;
+      --accent-amber: #f59e0b; --accent-amber-soft: #fbbf24;
+      --accent-rose: #f43f5e; --accent-violet: #8b5cf6;
+      --shadow-card: 0 0 0 transparent;
+    }
+    :root[data-theme="light"] {
+      --bg-primary: #fbf8f1; --bg-secondary: #f3eee3; --bg-card: #ffffff;
+      --bg-card-hover: #faf6ec; --border: #e6dcc7;
+      --text-primary: #2a2620; --text-secondary: #5a544a; --text-tertiary: #968f80;
+      --accent-amber: #b45309; --accent-amber-soft: #c2410c;
+      --accent-rose: #be123c; --accent-violet: #6d28d9;
+      --shadow-card: 0 1px 2px rgba(42, 38, 32, 0.04);
+    }
+    * { -webkit-font-smoothing: antialiased; box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; transition: background 0.4s, color 0.4s; }
+    body {
+      font-family: 'Noto Serif SC', 'Songti SC', serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.8;
+      letter-spacing: 0.02em;
+      min-height: 100vh;
+    }
+    .font-sans { font-family: 'Inter', 'PingFang SC', sans-serif; letter-spacing: -0.01em; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    ::selection { background: rgba(180, 83, 9, 0.2); }
+    [data-theme="dark"] ::selection { background: rgba(245, 158, 11, 0.3); }
 
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    .site-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      backdrop-filter: blur(12px);
+      background: rgba(251, 248, 241, 0.85);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    [data-theme="dark"] .site-header { background: rgba(15, 14, 10, 0.85); }
+    .site-logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Inter', sans-serif; }
+    .site-logo .badge {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(180, 83, 9, 0.12); border: 1px solid rgba(180, 83, 9, 0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px; color: var(--accent-amber);
+    }
+    [data-theme="dark"] .site-logo .badge { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.3); }
+    .site-logo .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-tertiary); }
+    .site-logo .name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); margin-top: 2px; }
+    .theme-toggle {
+      width: 38px; height: 38px; border-radius: 999px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-secondary); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all 0.3s;
+    }
+    .theme-toggle:hover { color: var(--accent-amber); border-color: var(--accent-amber); }
+    .theme-toggle .moon { display: inline; }
+    .theme-toggle .sun { display: none; }
+    [data-theme="light"] .theme-toggle .moon { display: none; }
+    [data-theme="light"] .theme-toggle .sun { display: inline; }
 
-html {
-  -webkit-font-smoothing: antialiased;
-  font-size: 16px;
-}
+    .hero {
+      padding: 8rem 2rem 4rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .hero .glow {
+      position: absolute; top: -100px; right: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(180, 83, 9, 0.06), transparent 60%);
+      pointer-events: none;
+    }
+    [data-theme="dark"] .hero .glow { background: radial-gradient(circle, rgba(245, 158, 11, 0.15), transparent 60%); }
+    .hero-tag {
+      display: inline-block;
+      padding: 4px 12px; border-radius: 999px;
+      background: rgba(180, 83, 9, 0.1);
+      border: 1px solid rgba(180, 83, 9, 0.3);
+      color: var(--accent-amber);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    [data-theme="dark"] .hero-tag { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
+    .hero h1 {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 900;
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+    .hero h1 .accent { color: var(--accent-amber); }
+    .hero-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 700px;
+      line-height: 1.7;
+      margin-bottom: 3rem;
+    }
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1.5rem;
+      max-width: 800px;
+    }
+    .stat { border-left: 2px solid rgba(180, 83, 9, 0.3); padding-left: 1rem; }
+    [data-theme="dark"] .stat { border-left-color: rgba(245, 158, 11, 0.3); }
+    .stat-num { font-family: 'JetBrains Mono', monospace; font-size: 2rem; color: var(--accent-amber); margin-bottom: 4px; }
+    .stat-label { font-family: 'Inter', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); }
 
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--fg);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+    .books-section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3rem 2rem 4rem;
+    }
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      max-width: 600px;
+      margin: 0 auto 3rem;
+    }
+    .section-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+    .section-title {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 800;
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+    .section-title .accent { color: var(--accent-amber); }
+    .section-sub {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+    }
+    .book-grid { display: grid; gap: 1rem; }
+    .book-card {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.5rem 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0.875rem;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-card);
+      position: relative; overflow: hidden;
+    }
+    .book-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent-amber), transparent);
+      transform: scaleY(0); transform-origin: top;
+      transition: transform 0.5s;
+    }
+    .book-card.v1::before { background: linear-gradient(180deg, var(--accent-violet), transparent); }
+    .book-card:hover { background: var(--bg-card-hover); border-color: rgba(180, 83, 9, 0.4); transform: translateY(-2px); }
+    [data-theme="dark"] .book-card:hover { border-color: rgba(245, 158, 11, 0.4); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    [data-theme="light"] .book-card:hover { box-shadow: 0 6px 20px rgba(42, 38, 32, 0.08); }
+    .book-card:hover::before { transform: scaleY(1); }
+    .book-card.v1:hover { border-color: rgba(109, 40, 217, 0.4); }
+    [data-theme="dark"] .book-card.v1:hover { border-color: rgba(139, 92, 246, 0.4); }
+    .book-badge {
+      position: absolute; top: 1rem; right: 1.5rem;
+      font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--accent-amber);
+      background: rgba(180, 83, 9, 0.08);
+      border: 1px solid rgba(180, 83, 9, 0.25);
+      padding: 2px 8px; border-radius: 4px;
+    }
+    [data-theme="dark"] .book-badge { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
+    .book-badge.v1-badge { color: var(--accent-violet); background: rgba(109, 40, 217, 0.08); border-color: rgba(109, 40, 217, 0.25); }
+    [data-theme="dark"] .book-badge.v1-badge { background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); }
+    .book-num {
+      font-family: 'Inter', sans-serif;
+      font-weight: 200; font-size: 2.75rem; line-height: 1;
+      color: var(--accent-amber); opacity: 0.45;
+    }
+    .book-card.v1 .book-num { color: var(--accent-violet); }
+    .book-title {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 700; font-size: 1.25rem;
+      color: var(--text-primary); margin-bottom: 0.35rem; line-height: 1.3;
+    }
+    .book-author {
+      font-family: 'Inter', sans-serif; font-size: 0.82rem;
+      color: var(--text-secondary); margin-bottom: 0.6rem;
+    }
+    .book-stats {
+      font-family: 'Inter', sans-serif; font-size: 0.72rem;
+      color: var(--text-tertiary);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem;
+    }
+    .book-stats .dot { opacity: 0.5; }
+    .book-cta {
+      font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 600;
+      color: var(--accent-amber); transition: transform 0.3s;
+      white-space: nowrap;
+    }
+    .book-card.v1 .book-cta { color: var(--accent-violet); }
+    .book-card:hover .book-cta { transform: translateX(4px); }
 
-::selection { background: var(--accent); color: #fff; }
+    @media (max-width: 720px) {
+      .book-card { grid-template-columns: 48px 1fr; padding: 1.25rem 1.25rem; gap: 1rem; }
+      .book-num { font-size: 2rem; }
+      .book-title { font-size: 1.05rem; }
+      .book-badge { font-size: 0.55rem; padding: 2px 6px; top: 0.6rem; right: 0.75rem; }
+      .book-cta { grid-column: 2; padding-top: 0.25rem; }
+    }
 
-/* ── Header ── */
-.header {
-  text-align: center;
-  padding: clamp(4rem, 12vw, 8rem) 2rem clamp(2rem, 6vw, 4rem);
-  max-width: 700px;
-}
-
-.header-overline {
-  font-family: var(--sans);
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 1.5rem;
-  opacity: 0;
-  animation: fadeUp 0.8s var(--ease-out) 0.2s forwards;
-}
-
-.header-title {
-  font-family: var(--serif);
-  font-size: clamp(2.2rem, 7vw, 4rem);
-  font-weight: 900;
-  line-height: 1.2;
-  margin-bottom: 1rem;
-  opacity: 0;
-  animation: fadeUp 0.8s var(--ease-out) 0.4s forwards;
-}
-
-.header-sub {
-  font-size: 0.85rem;
-  color: var(--fg-secondary);
-  line-height: 1.9;
-  max-width: 500px;
-  margin: 0 auto;
-  opacity: 0;
-  animation: fadeUp 0.8s var(--ease-out) 0.6s forwards;
-}
-
-.header-count {
-  display: inline-block;
-  margin-top: 1.5rem;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  color: var(--accent);
-  padding: 0.4rem 1rem;
-  background: var(--accent-dim);
-  border-radius: 20px;
-  opacity: 0;
-  animation: fadeUp 0.8s var(--ease-out) 0.7s forwards;
-}
-
-/* ── Book Grid ── */
-.book-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 2rem;
-  max-width: 900px;
-  width: 100%;
-  padding: 0 2rem 6rem;
-}
-
-.book-card {
-  position: relative;
-  border-radius: 16px;
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid var(--border);
-  transition: transform 0.5s var(--ease-out), box-shadow 0.5s var(--ease-out);
-  text-decoration: none;
-  color: var(--fg);
-  opacity: 0;
-  animation: fadeUp 0.8s var(--ease-out) forwards;
-}
-
-.book-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-}
-
-.book-card-banner {
-  height: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.book-card-banner::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 40px;
-  background: linear-gradient(to top, #fff, transparent);
-}
-
-.book-card-emoji {
-  font-size: 4rem;
-  filter: saturate(0.7);
-  opacity: 0.15;
-  position: absolute;
-  right: 1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.book-card-part {
-  font-family: var(--sans);
-  font-size: 0.55rem;
-  font-weight: 700;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: #fff;
-  opacity: 0.8;
-  position: relative;
-  z-index: 1;
-}
-
-.book-card-banner-title {
-  font-family: var(--serif);
-  font-size: 1.8rem;
-  font-weight: 900;
-  color: #fff;
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding: 0 2rem;
-  line-height: 1.3;
-}
-
-.book-card-body {
-  padding: 1.5rem 1.8rem 1.8rem;
-}
-
-.book-card-title {
-  font-family: var(--serif);
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 0.3rem;
-}
-
-.book-card-author {
-  font-size: 0.7rem;
-  color: var(--fg-secondary);
-  margin-bottom: 1rem;
-}
-
-.book-card-desc {
-  font-size: 0.78rem;
-  line-height: 1.85;
-  color: var(--fg-secondary);
-  margin-bottom: 1.2rem;
-}
-
-.book-card-meta {
-  display: flex;
-  gap: 1.2rem;
-  font-size: 0.65rem;
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.book-card-tag {
-  padding: 0.25rem 0.6rem;
-  background: var(--accent-dim);
-  border-radius: 4px;
-}
-
-.book-card-arrow {
-  position: absolute;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--accent-dim);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent);
-  font-size: 0.9rem;
-  transition: all 0.3s var(--ease-out);
-}
-
-.book-card:hover .book-card-arrow {
-  background: var(--accent);
-  color: #fff;
-  transform: translateX(3px);
-}
-
-/* ── Coming Soon ── */
-.book-card.coming-soon {
-  opacity: 0;
-  animation: fadeUp 0.8s var(--ease-out) forwards;
-}
-.book-card.coming-soon:hover { transform: none; box-shadow: none; }
-.book-card.coming-soon .book-card-banner { opacity: 0.5; }
-.book-card.coming-soon .book-card-body { opacity: 0.5; }
-.book-card.coming-soon .book-card-arrow { display: none; }
-.book-card.coming-soon { pointer-events: none; }
-
-/* ── Footer ── */
-.shelf-footer {
-  text-align: center;
-  padding: 2rem;
-  font-size: 0.65rem;
-  color: var(--fg-secondary);
-  opacity: 0.4;
-  line-height: 2;
-}
-
-/* ── Animations ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-@media (max-width: 600px) {
-  .book-grid {
-    grid-template-columns: 1fr;
-    padding: 0 1rem 4rem;
-  }
-}
-</style>
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: var(--text-tertiary);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+    }
+    .site-footer a { color: var(--accent-amber); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
 
-<header class="header">
-  <div class="header-overline">Immersive Book Engine</div>
-  <h1 class="header-title">沉浸式深度导读</h1>
-  <p class="header-sub">将经典书籍拆解为沉浸式的滚动体验——<br>不是摘要，不是书评，而是完整的逻辑链重建。<br>每一本书，都值得被这样阅读。</p>
-  <div class="header-count">已收录 ${booksMeta.length} 本书</div>
-</header>
+  <header class="site-header">
+    <div class="site-logo">
+      <div class="badge">∞</div>
+      <div>
+        <div class="label">智识图书馆</div>
+        <div class="name">Intellectual Reading Library</div>
+      </div>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="切换主题">
+      <svg class="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+  </header>
 
-<main class="book-grid">
-${bookCards}
-${comingSoon}
-</main>
+  <section class="hero">
+    <div class="glow"></div>
+    <div class="hero-tag">智识图书馆 · INTELLECTUAL READING LIBRARY</div>
+    <h1>把每本书读到<span class="accent">原子层面</span></h1>
+    <p class="hero-sub">
+      两代阅读引擎共存:<strong>V2 交互式阅读</strong>(每章六问深度产出 + 双主题切换 + 完整就地展开)与 <strong>V1 沉浸式滚动</strong>(将书拆为逻辑链重建的故事场景),按你的偏好选择进入方式。
+    </p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">${v2Books.length + v1Books.length}</div><div class="stat-label">本书</div></div>
+      <div class="stat"><div class="stat-num">${v2Books.length}</div><div class="stat-label">V2 交互式</div></div>
+      <div class="stat"><div class="stat-num">${v1Books.length}</div><div class="stat-label">V1 沉浸式</div></div>
+      <div class="stat"><div class="stat-num">${(v2Books.reduce((s,b)=>s+b.totalChars,0)/1000).toFixed(0)}K+</div><div class="stat-label">V2 深度汉字</div></div>
+    </div>
+  </section>
 
-<footer class="shelf-footer">
-  沉浸式深度导读 · Immersive Book Engine<br>
-  用交互重建逻辑，用滚动取代翻页
-</footer>
+  ${v2Books.length > 0 ? `
+  <div class="section-divider"></div>
+  <section class="books-section">
+    <div class="section-tag">V2 · INTERACTIVE READER</div>
+    <h2 class="section-title">交互式<span class="accent">深度阅读</span></h2>
+    <p class="section-sub">每本书都是一个独立的交互应用——双主题(浅色护眼 / 深色夜读)、章节金句、关键概念、完整六问就地展开。</p>
+    <div class="book-grid">${v2Cards}\n    </div>
+  </section>` : ''}
 
+  ${v1Books.length > 0 ? `
+  <div class="section-divider"></div>
+  <section class="books-section">
+    <div class="section-tag">V1 · IMMERSIVE SCROLL</div>
+    <h2 class="section-title">沉浸式<span class="accent">滚动叙事</span></h2>
+    <p class="section-sub">将经典书籍拆解为滚动场景体验——不是摘要,而是完整的逻辑链重建。每一本书,都值得被这样阅读。</p>
+    <div class="book-grid">${v1Cards}\n    </div>
+  </section>` : ''}
+
+  <footer class="site-footer">
+    智识图书馆 · <a href="https://github.com/learnpracticebuild-lang/sapiens-immersive" target="_blank">GitHub</a> · V1 + V2 双引擎
+  </footer>
+
+  <script>
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('reader-theme', next); } catch(e) {}
+    }
+  </script>
 </body>
-</html>`;
+</html>
+`;
 }
-
-const homepageHTML = generateHomepage(booksMeta);
-fs.writeFileSync(path.join(DIST, 'index.html'), homepageHTML);
-console.log(`  ✅ dist/index.html (auto-generated bookshelf · ${booksMeta.length} books)`);
-
-console.log(`\n✨ Build complete!\n`);

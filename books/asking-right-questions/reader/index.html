@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <script>
+    (function(){var s=localStorage.getItem('reader-theme');if(s==='light'||s==='dark'){document.documentElement.setAttribute('data-theme',s);}else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}})();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学会提问(原书第10版)· 交互式阅读</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/reader.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="./assets/reader.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body x-data="indexApp()" x-init="init()">
+
+  <!-- Top bar -->
+  <header class="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-[#0a0a0f]/70 border-b border-[#2a2a38]/50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+          <span class="font-sans-modern text-xs font-bold text-amber-400">∞</span>
+        </div>
+        <div class="text-xs font-sans-modern text-[#a8a5a0]">
+          <div class="text-[#6b6b73] uppercase tracking-widest text-[0.65rem]">智识图书馆 V2</div>
+          <div class="text-white">学会提问 · 第 10 版</div>
+        </div>
+      </div>
+      <button class="theme-toggle" @click="toggleTheme()" :title="theme === 'light' ? '切换到深色' : '切换到浅色'">
+        <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="relative min-h-screen flex flex-col justify-center px-6 lg:px-16 pt-24 pb-32 overflow-hidden">
+    <div class="absolute -top-40 -right-40 w-[800px] h-[800px] glow-amber rounded-full"></div>
+    <div class="absolute -bottom-40 -left-40 w-[600px] h-[600px] glow-rose rounded-full opacity-40"></div>
+    <div class="relative max-w-6xl mx-auto w-full z-10">
+      <div class="hint-tag bg-amber-500/10 text-amber-400 border border-amber-500/30 mb-8">ASKING THE RIGHT QUESTIONS · 10TH EDITION</div>
+      <h1 class="hero-cn text-5xl md:text-7xl lg:text-8xl mb-8 max-w-5xl text-white leading-tight">
+        学会<span class="text-amber-400">提问</span>
+      </h1>
+      <p class="font-sans-modern text-lg md:text-xl text-[#a8a5a0] max-w-3xl mb-12 leading-relaxed">
+        Neil Browne &amp; Stuart Keeley · 第 10 版 · 30+ 年持续迭代<br>
+        把"批判性思维"拆解为<strong class="text-white">一套环环相扣的关键问题</strong>——12 章工具链、181,051 汉字深度产出。
+      </p>
+      <div class="grid md:grid-cols-4 gap-6 max-w-4xl mb-16">
+        <div class="border-l border-amber-500/30 pl-4">
+          <div class="font-mono text-3xl text-amber-400 mb-1">12</div>
+          <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">章节</div>
+        </div>
+        <div class="border-l border-amber-500/30 pl-4">
+          <div class="font-mono text-3xl text-amber-400 mb-1">10</div>
+          <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">关键问题</div>
+        </div>
+        <div class="border-l border-amber-500/30 pl-4">
+          <div class="font-mono text-3xl text-amber-400 mb-1">13</div>
+          <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">类常见谬误</div>
+        </div>
+        <div class="border-l border-amber-500/30 pl-4">
+          <div class="font-mono text-3xl text-amber-400 mb-1">181K</div>
+          <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">深度汉字</div>
+        </div>
+      </div>
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 pulse">
+        <div class="font-sans-modern text-xs text-[#6b6b73] uppercase tracking-widest mb-2 text-center">向下查看 12 章</div>
+        <svg class="mx-auto" width="20" height="32" viewBox="0 0 20 32" fill="none">
+          <rect x="1" y="1" width="18" height="30" rx="9" stroke="#6b6b73" stroke-width="1"/>
+          <circle cx="10" cy="10" r="2" fill="currentColor" style="color:var(--accent-amber)">
+            <animate attributeName="cy" values="10;20;10" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOL-CHAIN MAP (4 stages) -->
+  <section class="px-6 lg:px-16 py-24 max-w-7xl mx-auto reveal">
+    <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§ 全书架构</div>
+    <h2 class="hero-cn text-3xl md:text-5xl mb-4 text-white">12 章 · <span class="text-amber-400">四阶段工具链</span></h2>
+    <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-12">从精神底色到主动建设——批判性思维的完整路径。</p>
+    <div class="grid md:grid-cols-4 gap-4">
+      <div class="card rounded-xl p-5">
+        <div class="stage-badge stage-1 mb-3">阶段 1</div>
+        <h3 class="hero-cn text-lg text-white mb-2">精神底色</h3>
+        <p class="text-xs text-[#a8a5a0] leading-relaxed">海绵 vs 淘金、强势 vs 弱势——工具进场前的思维校准。</p>
+        <div class="mt-3 font-mono text-xs text-[#6b6b73]">CH 01</div>
+      </div>
+      <div class="card rounded-xl p-5">
+        <div class="stage-badge stage-2 mb-3">阶段 2</div>
+        <h3 class="hero-cn text-lg text-white mb-2">识别论证</h3>
+        <p class="text-xs text-[#a8a5a0] leading-relaxed">论题 / 结论 / 理由 / 词义 / 假设——看清作者究竟说了什么。</p>
+        <div class="mt-3 font-mono text-xs text-[#6b6b73]">CH 02 – 05</div>
+      </div>
+      <div class="card rounded-xl p-5">
+        <div class="stage-badge stage-3 mb-3">阶段 3</div>
+        <h3 class="hero-cn text-lg text-white mb-2">评价质量</h3>
+        <p class="text-xs text-[#a8a5a0] leading-relaxed">谬误 / 证据 / 因果 / 数据——把论证拆到原子层面审查。</p>
+        <div class="mt-3 font-mono text-xs text-[#6b6b73]">CH 06 – 10</div>
+      </div>
+      <div class="card rounded-xl p-5">
+        <div class="stage-badge stage-4 mb-3">阶段 4</div>
+        <h3 class="hero-cn text-lg text-white mb-2">主动建设</h3>
+        <p class="text-xs text-[#a8a5a0] leading-relaxed">省略 / 多结论——从被动审查升级为主动构造判断。</p>
+        <div class="mt-3 font-mono text-xs text-[#6b6b73]">CH 11 – 12</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- TOC GRID -->
+  <section class="px-6 lg:px-16 py-24 max-w-7xl mx-auto reveal">
+    <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§ 目录</div>
+    <h2 class="hero-cn text-3xl md:text-5xl mb-4 text-white"><span class="text-amber-400">12 章</span>交互阅读</h2>
+    <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-12">每一章一个独立的阅读体验,含核心主张、关键概念、章节金句和完整的六问深度产出(平均 1.5 万汉字)。</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <a href="./ch02.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">01</span>
+          <span class="stage-badge stage-1">精神底色</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">学会提出好问题</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">How to Ask Good Questions</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">海绵 vs 淘金 / 强势 vs 弱势 — 工具进场前的精神扭转。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            11,136 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch03.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">02</span>
+          <span class="stage-badge stage-2">识别论证</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">论题和结论是什么</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Issue & Conclusion</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">识别作者究竟在争什么、要你接受什么 — 评价的起点。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            11,874 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch04.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">03</span>
+          <span class="stage-badge stage-2">识别论证</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">理由是什么</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Reasons</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">理由 + 结论 = 论证 — 没有理由的断言只是裸奔。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            8,325 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch05.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">04</span>
+          <span class="stage-badge stage-2">识别论证</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">哪些词语意思不明确</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Ambiguous Words</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">词越抽象,越容易藏歧义 — 不澄清就不评价。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            10,648 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch06.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">05</span>
+          <span class="stage-badge stage-2">识别论证</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">什么是价值观假设和描述性假设</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Value & Descriptive Assumptions</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">连接理由与结论的隐藏黏合剂 — 价值观与事实假设。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            13,036 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch07.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">06</span>
+          <span class="stage-badge stage-3">评价质量</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">推理过程中有没有谬误</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Fallacies in Reasoning</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">13 种把推理伪装成有理的常见手段 — 不必背名字,会问就行。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            15,509 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch08.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">07</span>
+          <span class="stage-badge stage-3">评价质量</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">证据效力(一):直觉 / 经历 / 案例 / 证词 / 专家</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Evidence I</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">我为什么要相信它? — 五类常见证据的可靠性分级。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            15,901 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch09.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">08</span>
+          <span class="stage-badge stage-3">评价质量</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">证据效力(二):个人观察 / 研究报告 / 类比</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Evidence II</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">观察从来不是纯粹的,科学方法是最佳但不绝对。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            20,098 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch10.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">09</span>
+          <span class="stage-badge stage-3">评价质量</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">有没有替代原因</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Rival Causes</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">因果不只一种解释 — 找到多个替代,信心成反比下降。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            19,280 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch11.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">10</span>
+          <span class="stage-badge stage-3">评价质量</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">数据有没有欺骗性</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Deceptive Statistics</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">数据能、而且经常在撒谎 — 任何统计都是基于事实的估计。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            16,006 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch12.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">11</span>
+          <span class="stage-badge stage-4">主动建设</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">有什么重要信息被省略了</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Omitted Information</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">所有论证都是不完整的 — 真正自主必须扫描空白。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            18,483 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+      <a href="./ch13.html" class="toc-card group">
+        <div class="flex items-start justify-between mb-4">
+          <span class="toc-num">12</span>
+          <span class="stage-badge stage-4">主动建设</span>
+        </div>
+        <h3 class="hero-cn text-lg md:text-xl mb-2 text-white leading-snug">能得出哪些合理的结论</h3>
+        <p class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">Reasonable Conclusions</p>
+        <p class="text-sm text-[#a8a5a0] leading-relaxed mb-4 min-h-[3em]">同一理由几乎从不只导出一个合理结论 — 全书的智识自由顶点。</p>
+        <div class="flex items-center justify-between text-xs font-sans-modern text-[#6b6b73] pt-3 border-t border-[#2a2a38]">
+          <span class="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            20,755 汉字
+          </span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">阅读 →</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="px-6 lg:px-16 py-16 border-t border-[#2a2a38] mt-24">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">书籍</div>
+          <h3 class="hero-cn text-xl text-white mb-2">学会提问(原书第 10 版)</h3>
+          <p class="text-sm text-[#a8a5a0]">Asking the Right Questions, 10th Ed.</p>
+        </div>
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">作者</div>
+          <p class="text-[#d4d2cf]">Neil Browne · Stuart Keeley</p>
+          <p class="text-sm text-[#a8a5a0] mt-1">30+ 年迭代 · 至第 10 版</p>
+        </div>
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">原始产出</div>
+          <p class="text-sm text-[#a8a5a0] font-mono">book_skeleton.md / book_essence.md</p>
+          <p class="text-sm text-[#a8a5a0] font-mono">chapters/chXX/insights.md</p>
+        </div>
+      </div>
+      <div class="text-center text-xs font-sans-modern text-[#6b6b73] tracking-widest">
+        智识图书馆 V2 · 阅读体验 · 全书 181,051 汉字深度产出
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

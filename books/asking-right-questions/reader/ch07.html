@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <script>
+    // Theme bootstrap — runs immediately to avoid FOUC
+    (function() {
+      try {
+        var saved = localStorage.getItem('reader-theme');
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', saved);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch(e) { /* default light */ }
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第 6 章 · 推理过程中有没有谬误 | 学会提问</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    /* === DARK THEME (default fallback) === */
+    :root, :root[data-theme="dark"] {
+      --bg-primary: #0f0e0a;
+      --bg-secondary: #181612;
+      --bg-card: #1f1c17;
+      --bg-card-hover: #28241e;
+      --border: #2e2a23;
+      --text-primary: #e8e2d4;
+      --text-secondary: #a8a195;
+      --text-tertiary: #6b6558;
+      --accent-amber: #f59e0b;
+      --accent-amber-soft: #fbbf24;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --accent-violet: #8b5cf6;
+      --accent-sky: #0ea5e9;
+      --shadow-card: 0 0 0 transparent;
+      --grain-opacity: 0.4;
+    }
+
+    /* === LIGHT THEME (warm paper, eye-friendly) === */
+    :root[data-theme="light"] {
+      --bg-primary: #fbf8f1;
+      --bg-secondary: #f3eee3;
+      --bg-card: #ffffff;
+      --bg-card-hover: #faf6ec;
+      --border: #e6dcc7;
+      --text-primary: #2a2620;
+      --text-secondary: #5a544a;
+      --text-tertiary: #968f80;
+      --accent-amber: #b45309;
+      --accent-amber-soft: #c2410c;
+      --accent-emerald: #047857;
+      --accent-rose: #be123c;
+      --accent-violet: #6d28d9;
+      --accent-sky: #0369a1;
+      --shadow-card: 0 1px 2px rgba(42, 38, 32, 0.04);
+      --grain-opacity: 0.08;
+    }
+
+    html { transition: background-color 0.4s ease, color 0.4s ease; }
+
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Serif SC', 'Songti SC', serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.85;
+      letter-spacing: 0.02em;
+    }
+
+    .font-sans-modern {
+      font-family: 'Inter', 'PingFang SC', -apple-system, sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Hero typography */
+    .hero-title {
+      font-family: 'Inter', 'PingFang SC', sans-serif;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+    }
+
+    .hero-cn {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+
+    /* Subtle grain texture */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1; opacity: 0.4;
+    }
+
+    /* Glow accents */
+    .glow-amber { background: radial-gradient(circle at center, rgba(245, 158, 11, 0.18), transparent 60%); }
+    .glow-rose { background: radial-gradient(circle at center, rgba(244, 63, 94, 0.15), transparent 60%); }
+    .glow-violet { background: radial-gradient(circle at center, rgba(139, 92, 246, 0.15), transparent 60%); }
+
+    /* Card */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(245, 158, 11, 0.4);
+      transform: translateY(-2px);
+    }
+
+    /* Mechanism color tags */
+    .mech-assumption { color: var(--accent-amber); border-color: rgba(245, 158, 11, 0.3); }
+    .mech-distraction { color: var(--accent-rose); border-color: rgba(244, 63, 94, 0.3); }
+    .mech-circular { color: var(--accent-violet); border-color: rgba(139, 92, 246, 0.3); }
+
+    .mech-bg-assumption { background: rgba(245, 158, 11, 0.08); }
+    .mech-bg-distraction { background: rgba(244, 63, 94, 0.08); }
+    .mech-bg-circular { background: rgba(139, 92, 246, 0.08); }
+
+    /* Fallacy card flip */
+    .flip-card { perspective: 1000px; min-height: 220px; }
+    .flip-card-inner {
+      position: relative;
+      width: 100%; height: 100%;
+      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+    .flip-face {
+      position: absolute; inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: flex; flex-direction: column;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+    .flip-back {
+      transform: rotateY(180deg);
+      background: var(--bg-card-hover);
+    }
+
+    /* Quote styling */
+    .pull-quote {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 300;
+      font-style: italic;
+      position: relative;
+    }
+    .pull-quote::before {
+      content: '"';
+      position: absolute;
+      left: -3rem; top: -2rem;
+      font-size: 8rem;
+      color: rgba(245, 158, 11, 0.15);
+      font-family: serif;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    /* Progress reading bar */
+    .read-progress {
+      position: fixed; top: 0; left: 0;
+      height: 2px; background: var(--accent-amber);
+      z-index: 100; transition: width 0.1s ease-out;
+    }
+
+    /* Smooth scroll appear */
+    .reveal {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Diagnostic input */
+    .diag-input {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      transition: border-color 0.2s;
+    }
+    .diag-input:focus {
+      outline: none;
+      border-color: var(--accent-amber);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .diag-hit {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.04));
+      border-left: 2px solid var(--accent-amber);
+    }
+
+    /* Nav */
+    .side-nav {
+      position: fixed; right: 2rem; top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex; flex-direction: column;
+      gap: 0.75rem;
+    }
+    .side-nav a {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+      opacity: 0.4;
+      transition: all 0.3s;
+    }
+    .side-nav a:hover, .side-nav a.active {
+      opacity: 1;
+      background: var(--accent-amber);
+      transform: scale(1.6);
+    }
+
+    /* Big chapter number */
+    .chapter-num {
+      font-family: 'Inter', sans-serif;
+      font-weight: 200;
+      font-size: clamp(8rem, 22vw, 20rem);
+      line-height: 0.85;
+      letter-spacing: -0.06em;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(245, 158, 11, 0.2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* Mechanism intro card */
+    .mech-block {
+      position: relative; overflow: hidden;
+      border-radius: 1rem;
+      padding: 2.5rem 2rem;
+      transition: all 0.4s ease;
+    }
+    .mech-block:hover { transform: translateY(-4px); }
+
+    /* Reading meter for cards */
+    .filter-pill {
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .filter-pill[data-active="true"] {
+      background: var(--accent-amber);
+      color: var(--bg-primary);
+      border-color: var(--accent-amber);
+    }
+
+    /* Fade-in */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+    /* Section divider */
+    .section-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+
+    /* Hover hint */
+    .hint-tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+    }
+
+    /* Quote section */
+    .quote-block {
+      background: linear-gradient(135deg, rgba(26, 26, 38, 0.6), rgba(20, 20, 29, 0.8));
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Author voice */
+    .author-voice {
+      border-left: 3px solid var(--accent-amber);
+      background: rgba(245, 158, 11, 0.04);
+    }
+
+    /* Related chapter card */
+    .related-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+    .related-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-amber);
+      transform: translateY(-3px);
+    }
+
+    /* Click hint pulse */
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+
+    /* Selection */
+    ::selection { background: rgba(245, 158, 11, 0.3); color: var(--text-primary); }
+
+    /* Six-question prose styling */
+    .prose-six {
+      color: var(--text-primary);
+      font-family: 'Noto Serif SC', 'Songti SC', serif;
+      font-size: 17px;
+      line-height: 1.95;
+    }
+    .prose-six > *:first-child { margin-top: 0; }
+    .prose-six h1 {
+      display: none; /* hide the original Q1·... heading since we have tabs */
+    }
+    .prose-six h2 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      color: #fbbf24;
+      padding-left: 1rem;
+      border-left: 3px solid var(--accent-amber);
+      letter-spacing: 0.02em;
+    }
+    .prose-six h3 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: #fff;
+    }
+    .prose-six p { margin: 1.1rem 0; color: #d4d2cf; }
+    .prose-six ul, .prose-six ol { margin: 1rem 0; padding-left: 1.5rem; color: #d4d2cf; }
+    .prose-six ul { list-style: none; }
+    .prose-six ul li { position: relative; padding-left: 1.2rem; margin: 0.6rem 0; }
+    .prose-six ul li::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0.85em;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-amber);
+      opacity: 0.6;
+    }
+    .prose-six ol { list-style: decimal; }
+    .prose-six ol li { margin: 0.6rem 0; padding-left: 0.5rem; }
+    .prose-six ol li::marker { color: var(--accent-amber); font-weight: 600; }
+    .prose-six strong {
+      color: #fbbf24;
+      font-weight: 600;
+    }
+    .prose-six em {
+      color: #e8e6e3;
+      font-style: italic;
+    }
+    .prose-six code {
+      background: var(--bg-secondary);
+      padding: 0.15em 0.45em;
+      border-radius: 0.3em;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85em;
+      color: var(--accent-amber);
+      border: 1px solid var(--border);
+    }
+    .prose-six blockquote {
+      border-left: 3px solid var(--accent-amber);
+      padding: 0.6rem 1.5rem;
+      margin: 1.5rem 0;
+      background: rgba(245, 158, 11, 0.05);
+      color: #c4c2bf;
+      font-style: italic;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+    .prose-six table {
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      width: 100%;
+      font-size: 0.9rem;
+    }
+    .prose-six th, .prose-six td {
+      border: 1px solid var(--border);
+      padding: 0.6rem 0.85rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    .prose-six th {
+      background: var(--bg-secondary);
+      color: var(--accent-amber);
+      font-weight: 600;
+    }
+    .prose-six hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2.5rem 0;
+    }
+    .prose-six a { color: var(--accent-amber); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Tab sticky bar */
+    .tab-bar {
+      position: sticky;
+      top: 60px;
+      z-index: 30;
+      backdrop-filter: blur(12px);
+      background: rgba(10, 10, 15, 0.85);
+      padding: 0.75rem 0;
+      margin: 0 -1rem;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Tab smooth fade */
+    .tab-content {
+      animation: tabFade 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes tabFade {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Body gets variable-driven base */
+    body { background: var(--bg-primary); color: var(--text-primary); }
+    body::before { opacity: var(--grain-opacity); }
+
+    /* === LIGHT THEME OVERRIDES (target hardcoded Tailwind classes) === */
+    [data-theme="light"] body { background: var(--bg-primary); color: var(--text-primary); }
+
+    /* Backgrounds */
+    [data-theme="light"] .bg-\[\#0a0a0f\] { background-color: var(--bg-primary) !important; }
+    [data-theme="light"] .bg-\[\#0a0a0f\]\/70 { background-color: rgba(251, 248, 241, 0.85) !important; }
+    [data-theme="light"] .bg-\[\#0a0a0f\]\/80 { background-color: rgba(251, 248, 241, 0.92) !important; }
+    [data-theme="light"] .bg-\[\#0a0a0f\]\/60 { background-color: rgba(251, 248, 241, 0.75) !important; }
+    [data-theme="light"] .bg-\[\#1a1a26\] { background-color: var(--bg-card) !important; }
+    [data-theme="light"] .bg-\[\#14141d\] { background-color: var(--bg-secondary) !important; }
+    [data-theme="light"] .bg-\[\#0a0a0f\]\/85 { background-color: rgba(251, 248, 241, 0.92) !important; }
+
+    /* Text */
+    [data-theme="light"] .text-\[\#e8e6e3\] { color: var(--text-primary) !important; }
+    [data-theme="light"] .text-\[\#d4d2cf\] { color: var(--text-primary) !important; }
+    [data-theme="light"] .text-\[\#a8a5a0\] { color: var(--text-secondary) !important; }
+    [data-theme="light"] .text-\[\#6b6b73\] { color: var(--text-tertiary) !important; }
+    [data-theme="light"] .text-white { color: var(--text-primary) !important; }
+
+    /* Amber recolor */
+    [data-theme="light"] .text-amber-400 { color: var(--accent-amber) !important; }
+    [data-theme="light"] .text-amber-300 { color: var(--accent-amber-soft) !important; }
+    [data-theme="light"] .text-amber-400\/60 { color: rgba(180, 83, 9, 0.6) !important; }
+    [data-theme="light"] .text-amber-400\/80 { color: rgba(180, 83, 9, 0.85) !important; }
+    [data-theme="light"] .bg-amber-500 { background-color: var(--accent-amber) !important; }
+    [data-theme="light"] .bg-amber-400 { background-color: var(--accent-amber-soft) !important; }
+    [data-theme="light"] .hover\:bg-amber-400:hover { background-color: var(--accent-amber-soft) !important; }
+    [data-theme="light"] .bg-amber-500\/10 { background-color: rgba(180, 83, 9, 0.08) !important; }
+    [data-theme="light"] .bg-amber-500\/5 { background-color: rgba(180, 83, 9, 0.04) !important; }
+    [data-theme="light"] .border-amber-500 { border-color: var(--accent-amber) !important; }
+    [data-theme="light"] .border-amber-500\/30 { border-color: rgba(180, 83, 9, 0.3) !important; }
+    [data-theme="light"] .border-amber-500\/40 { border-color: rgba(180, 83, 9, 0.4) !important; }
+    [data-theme="light"] .border-amber-500\/50 { border-color: rgba(180, 83, 9, 0.5) !important; }
+    [data-theme="light"] .border-amber-500\/20 { border-color: rgba(180, 83, 9, 0.2) !important; }
+    [data-theme="light"] .hover\:border-amber-500\/50:hover { border-color: rgba(180, 83, 9, 0.5) !important; }
+    [data-theme="light"] .hover\:border-amber-500\/40:hover { border-color: rgba(180, 83, 9, 0.4) !important; }
+    [data-theme="light"] .hover\:border-amber-500:hover { border-color: var(--accent-amber) !important; }
+    [data-theme="light"] .hover\:bg-amber-500\/10:hover { background-color: rgba(180, 83, 9, 0.08) !important; }
+    [data-theme="light"] .hover\:text-amber-400:hover { color: var(--accent-amber) !important; }
+    [data-theme="light"] .hover\:text-amber-300:hover { color: var(--accent-amber-soft) !important; }
+
+    /* Rose recolor */
+    [data-theme="light"] .text-rose-400 { color: var(--accent-rose) !important; }
+    [data-theme="light"] .border-rose-500\/30 { border-color: rgba(190, 18, 60, 0.3) !important; }
+    [data-theme="light"] .border-rose-500\/20 { border-color: rgba(190, 18, 60, 0.2) !important; }
+    [data-theme="light"] .bg-rose-500\/10 { background-color: rgba(190, 18, 60, 0.06) !important; }
+
+    /* Violet recolor */
+    [data-theme="light"] .text-violet-400 { color: var(--accent-violet) !important; }
+    [data-theme="light"] .border-violet-500\/30 { border-color: rgba(109, 40, 217, 0.3) !important; }
+    [data-theme="light"] .border-violet-500\/20 { border-color: rgba(109, 40, 217, 0.2) !important; }
+    [data-theme="light"] .bg-violet-500\/10 { background-color: rgba(109, 40, 217, 0.06) !important; }
+
+    /* Emerald recolor */
+    [data-theme="light"] .text-emerald-400 { color: var(--accent-emerald) !important; }
+    [data-theme="light"] .border-emerald-500\/30 { border-color: rgba(4, 120, 87, 0.3) !important; }
+    [data-theme="light"] .border-emerald-500\/20 { border-color: rgba(4, 120, 87, 0.2) !important; }
+    [data-theme="light"] .bg-emerald-500\/10 { background-color: rgba(4, 120, 87, 0.06) !important; }
+    [data-theme="light"] .bg-emerald-500\/5 { background-color: rgba(4, 120, 87, 0.03) !important; }
+
+    /* Borders */
+    [data-theme="light"] .border-\[\#2a2a38\] { border-color: var(--border) !important; }
+    [data-theme="light"] .border-\[\#2a2a38\]\/50 { border-color: rgba(230, 220, 199, 0.6) !important; }
+
+    /* Card visual: light cards get subtle shadow instead of dark border */
+    [data-theme="light"] .card {
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: var(--shadow-card);
+    }
+    [data-theme="light"] .card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(180, 83, 9, 0.4);
+      box-shadow: 0 6px 16px rgba(42, 38, 32, 0.08);
+    }
+    [data-theme="light"] .related-card { background: var(--bg-card); box-shadow: var(--shadow-card); }
+    [data-theme="light"] .related-card:hover { background: var(--bg-card-hover); box-shadow: 0 6px 16px rgba(42, 38, 32, 0.08); }
+
+    /* Quote block */
+    [data-theme="light"] .quote-block {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(243, 238, 227, 0.6));
+      border-color: var(--border);
+    }
+    [data-theme="light"] .author-voice { background: rgba(180, 83, 9, 0.04); }
+
+    /* Glow accents — much subtler in light */
+    [data-theme="light"] .glow-amber { background: radial-gradient(circle at center, rgba(180, 83, 9, 0.06), transparent 60%); }
+    [data-theme="light"] .glow-rose { background: radial-gradient(circle at center, rgba(190, 18, 60, 0.04), transparent 60%); }
+    [data-theme="light"] .glow-violet { background: radial-gradient(circle at center, rgba(109, 40, 217, 0.04), transparent 60%); }
+
+    /* Hero chapter number gradient */
+    [data-theme="light"] .chapter-num {
+      background: linear-gradient(135deg, rgba(180, 83, 9, 0.65), rgba(180, 83, 9, 0.12));
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+
+    /* Pull-quote big quote mark */
+    [data-theme="light"] .pull-quote::before { color: rgba(180, 83, 9, 0.18); }
+
+    /* Mech color tags */
+    [data-theme="light"] .mech-assumption { color: var(--accent-amber); border-color: rgba(180, 83, 9, 0.35); }
+    [data-theme="light"] .mech-distraction { color: var(--accent-rose); border-color: rgba(190, 18, 60, 0.35); }
+    [data-theme="light"] .mech-circular { color: var(--accent-violet); border-color: rgba(109, 40, 217, 0.35); }
+    [data-theme="light"] .mech-bg-assumption { background: rgba(180, 83, 9, 0.05); }
+    [data-theme="light"] .mech-bg-distraction { background: rgba(190, 18, 60, 0.04); }
+    [data-theme="light"] .mech-bg-circular { background: rgba(109, 40, 217, 0.04); }
+
+    /* Flip card faces */
+    [data-theme="light"] .flip-face { background: var(--bg-card); border-color: var(--border); box-shadow: var(--shadow-card); }
+    [data-theme="light"] .flip-back { background: var(--bg-card-hover); }
+
+    /* Diagnostic input */
+    [data-theme="light"] .diag-input {
+      background: var(--bg-card);
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+    [data-theme="light"] .diag-input:focus { border-color: var(--accent-amber); box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.12); }
+    [data-theme="light"] .diag-hit { background: linear-gradient(90deg, rgba(180, 83, 9, 0.1), rgba(180, 83, 9, 0.03)); }
+
+    /* Tab bar */
+    [data-theme="light"] .tab-bar {
+      backdrop-filter: blur(12px);
+      background: rgba(251, 248, 241, 0.92);
+      border-bottom-color: var(--border);
+    }
+
+    /* Six-prose adjustments for light */
+    [data-theme="light"] .prose-six { color: var(--text-primary); }
+    [data-theme="light"] .prose-six h2 { color: var(--accent-amber); border-left-color: var(--accent-amber); }
+    [data-theme="light"] .prose-six h3 { color: var(--text-primary); }
+    [data-theme="light"] .prose-six p,
+    [data-theme="light"] .prose-six ul,
+    [data-theme="light"] .prose-six ol { color: var(--text-primary); }
+    [data-theme="light"] .prose-six strong { color: var(--accent-amber); }
+    [data-theme="light"] .prose-six em { color: var(--text-primary); }
+    [data-theme="light"] .prose-six code {
+      background: var(--bg-secondary);
+      color: var(--accent-amber);
+      border-color: var(--border);
+    }
+    [data-theme="light"] .prose-six blockquote {
+      background: rgba(180, 83, 9, 0.04);
+      border-left-color: var(--accent-amber);
+      color: var(--text-secondary);
+    }
+    [data-theme="light"] .prose-six th {
+      background: var(--bg-secondary);
+      color: var(--accent-amber);
+    }
+    [data-theme="light"] .prose-six th, [data-theme="light"] .prose-six td { border-color: var(--border); }
+    [data-theme="light"] .prose-six hr { border-top-color: var(--border); }
+    [data-theme="light"] .prose-six ul li::before { background: var(--accent-amber); }
+
+    /* Side nav dots in light */
+    [data-theme="light"] .side-nav a { background: var(--text-tertiary); }
+    [data-theme="light"] .side-nav a:hover, [data-theme="light"] .side-nav a.active { background: var(--accent-amber); }
+
+    /* Reading progress */
+    [data-theme="light"] .read-progress { background: var(--accent-amber); }
+
+    /* Theme toggle btn */
+    .theme-toggle {
+      width: 38px; height: 38px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .theme-toggle:hover {
+      color: var(--accent-amber);
+      border-color: var(--accent-amber);
+      background: rgba(180, 83, 9, 0.06);
+    }
+    [data-theme="dark"] .theme-toggle:hover { background: rgba(245, 158, 11, 0.08); }
+    .theme-toggle .icon-sun { display: none; }
+    .theme-toggle .icon-moon { display: inline; }
+    [data-theme="light"] .theme-toggle .icon-sun { display: inline; }
+    [data-theme="light"] .theme-toggle .icon-moon { display: none; }
+
+    /* Selection in light */
+    [data-theme="light"] ::selection { background: rgba(180, 83, 9, 0.2); color: var(--text-primary); }
+  </style>
+</head>
+<body x-data="readerApp()" x-init="init()">
+
+  <!-- Reading progress bar -->
+  <div class="read-progress" :style="`width: ${readProgress}%`"></div>
+
+  <!-- Side nav dots -->
+  <nav class="side-nav hidden lg:flex">
+    <a href="#hero" :class="activeSection === 'hero' ? 'active' : ''" @click="activeSection='hero'" title="开篇"></a>
+    <a href="#core" :class="activeSection === 'core' ? 'active' : ''" @click="activeSection='core'" title="核心主张"></a>
+    <a href="#mechanisms" :class="activeSection === 'mechanisms' ? 'active' : ''" @click="activeSection='mechanisms'" title="三机制"></a>
+    <a href="#fallacies" :class="activeSection === 'fallacies' ? 'active' : ''" @click="activeSection='fallacies'" title="13 类谬误"></a>
+    <a href="#diagnostic" :class="activeSection === 'diagnostic' ? 'active' : ''" @click="activeSection='diagnostic'" title="诊断器"></a>
+    <a href="#quotes" :class="activeSection === 'quotes' ? 'active' : ''" @click="activeSection='quotes'" title="金句"></a>
+    <a href="#related" :class="activeSection === 'related' ? 'active' : ''" @click="activeSection='related'" title="关联"></a>
+    <a href="#deep-six" :class="activeSection === 'deep-six' ? 'active' : ''" @click="activeSection='deep-six'" title="完整六问"></a>
+  </nav>
+
+  <!-- Top bar -->
+  <header class="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-[#0a0a0f]/70 border-b border-[#2a2a38]/50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="./index.html" class="flex items-center gap-3 hover:opacity-80 transition">
+        <div class="w-8 h-8 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+          <span class="font-sans-modern text-xs font-bold text-amber-400">06</span>
+        </div>
+        <div class="text-xs font-sans-modern text-[#a8a5a0]">
+          <div class="text-[#6b6b73] uppercase tracking-widest text-[0.65rem]">学会提问 · 第 10 版</div>
+          <div class="text-white">第 6 章 · 推理过程中有没有谬误</div>
+        </div>
+      </a>
+      <div class="flex items-center gap-4 font-sans-modern text-xs text-[#a8a5a0]">
+        <a href="./index.html" class="hidden md:flex items-center gap-1 hover:text-amber-400 transition">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          <span>目录</span>
+        </a>
+        <div class="hidden md:flex items-center gap-2">
+          <span class="text-[#6b6b73]">阅读进度</span>
+          <span class="text-amber-400 font-mono" x-text="`${Math.round(readProgress)}%`"></span>
+        </div>
+        <button class="theme-toggle" @click="toggleTheme()" :title="theme === 'light' ? '切换到深色(夜间模式)' : '切换到浅色(护眼模式)'">
+          <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section id="hero" class="relative min-h-screen flex flex-col justify-center px-6 lg:px-16 pt-24 pb-32 overflow-hidden">
+    <div class="absolute -top-40 -right-40 w-[600px] h-[600px] glow-amber rounded-full"></div>
+    <div class="absolute -bottom-40 -left-40 w-[500px] h-[500px] glow-rose rounded-full opacity-40"></div>
+
+    <div class="relative max-w-6xl mx-auto w-full z-10">
+      <div class="fade-up">
+        <div class="hint-tag bg-amber-500/10 text-amber-400 border border-amber-500/30 mb-8">CHAPTER VI · 谬误识别</div>
+        <div class="flex items-baseline gap-8 mb-8">
+          <div class="chapter-num">06</div>
+          <div class="hidden md:block flex-1">
+            <div class="text-xs font-sans-modern uppercase tracking-[0.3em] text-[#6b6b73] mb-3">FALLACIES</div>
+            <div class="font-sans-modern text-base text-[#a8a5a0] leading-relaxed max-w-md">
+              13 种把推理伪装成有理的常见手段——以及为什么你不必背它们的名字。
+            </div>
+          </div>
+        </div>
+
+        <h1 class="hero-cn text-5xl md:text-7xl lg:text-8xl mb-12 max-w-5xl">
+          推理过程中<br>
+          <span class="text-amber-400">有没有谬误</span>?
+        </h1>
+
+        <div class="grid md:grid-cols-3 gap-6 max-w-4xl">
+          <div class="border-l border-amber-500/30 pl-4">
+            <div class="font-mono text-3xl text-amber-400 mb-1">3</div>
+            <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">成因机制</div>
+            <div class="text-sm text-[#a8a5a0] mt-2">所有谬误归结为三种结构</div>
+          </div>
+          <div class="border-l border-rose-500/30 pl-4">
+            <div class="font-mono text-3xl text-rose-400 mb-1">13</div>
+            <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">常见类型</div>
+            <div class="text-sm text-[#a8a5a0] mt-2">从人身攻击到循环论证</div>
+          </div>
+          <div class="border-l border-violet-500/30 pl-4">
+            <div class="font-mono text-3xl text-violet-400 mb-1">∞</div>
+            <div class="font-sans-modern text-xs text-[#a8a5a0] uppercase tracking-wider">变体</div>
+            <div class="text-sm text-[#a8a5a0] mt-2">为何不必死记硬背</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 pulse">
+        <div class="font-sans-modern text-xs text-[#6b6b73] uppercase tracking-widest mb-2 text-center">向下滚动开始</div>
+        <svg class="mx-auto" width="20" height="32" viewBox="0 0 20 32" fill="none">
+          <rect x="1" y="1" width="18" height="30" rx="9" stroke="#6b6b73" stroke-width="1"/>
+          <circle cx="10" cy="10" r="2" fill="#f59e0b">
+            <animate attributeName="cy" values="10;20;10" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORE CLAIM -->
+  <section id="core" class="relative px-6 lg:px-16 py-24 max-w-7xl mx-auto">
+    <div class="reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§1 · 核心主张</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-12 max-w-4xl leading-tight">
+        识别谬误,<br>
+        <span class="text-[#a8a5a0]">不必死记硬背。</span>
+      </h2>
+
+      <div class="grid lg:grid-cols-2 gap-8 max-w-6xl">
+        <div class="card rounded-xl p-8">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-sans-modern font-bold text-amber-400">!</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-lg text-white mb-3">谬误的定义</h3>
+              <p class="text-[#d4d2cf] leading-relaxed">
+                <span class="text-amber-400 font-medium">谬误</span>是推理中的<strong class="text-white">欺骗性手段</strong>——作者用它们来说服你接受其结论。它不是"说错话",而是结构性的、说服性的、可被识别的推理破绽。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card rounded-xl p-8">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+              <span class="font-sans-modern font-bold text-emerald-400">?</span>
+            </div>
+            <div>
+              <h3 class="font-sans-modern font-bold text-lg text-white mb-3">反清单主义</h3>
+              <p class="text-[#d4d2cf] leading-relaxed">
+                你<strong class="text-white">不需要</strong>背下所有谬误名称。只要学会问三个关键问题——<span class="text-emerald-400">假设是否可疑、注意力是否被转移、结论是否在自证</span>——就能识别绝大多数谬误,叫不出名字也无所谓。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THREE MECHANISMS -->
+  <section id="mechanisms" class="relative px-6 lg:px-16 py-24">
+    <div class="absolute top-1/2 left-0 w-[400px] h-[400px] glow-violet rounded-full opacity-30"></div>
+    <div class="max-w-7xl mx-auto reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§2 · 三大成因机制</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4">所有谬误的<span class="text-amber-400">三种结构</span></h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-16">
+        作者把所有谬误的成因归结为三类——这是本章<strong class="text-white">最可复用的诊断框架</strong>。
+      </p>
+
+      <div class="grid lg:grid-cols-3 gap-6 mb-12">
+        <!-- Mechanism 1 -->
+        <div class="mech-block mech-bg-assumption border border-amber-500/20">
+          <div class="flex items-start justify-between mb-6">
+            <div class="font-mono text-amber-400 text-sm">M-01</div>
+            <div class="w-12 h-12 rounded-lg border border-amber-500/30 flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5">
+                <path d="M12 9v4M12 17h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/>
+              </svg>
+            </div>
+          </div>
+          <h3 class="hero-cn text-2xl text-amber-400 mb-3">错误假设</h3>
+          <p class="font-sans-modern text-xs uppercase tracking-widest text-[#a8a5a0] mb-4">FAULTY ASSUMPTION</p>
+          <p class="text-[#d4d2cf] leading-relaxed mb-4">
+            推理需要明显错误的、或让人不能接受的假设才能成立。
+          </p>
+          <div class="text-xs font-sans-modern text-[#a8a5a0] border-t border-amber-500/20 pt-4">
+            <strong class="text-amber-400">7 种谬误</strong>属于此机制 →
+          </div>
+        </div>
+
+        <!-- Mechanism 2 -->
+        <div class="mech-block mech-bg-distraction border border-rose-500/20">
+          <div class="flex items-start justify-between mb-6">
+            <div class="font-mono text-rose-400 text-sm">M-02</div>
+            <div class="w-12 h-12 rounded-lg border border-rose-500/30 flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="1.5">
+                <path d="M21 12c-1 0-3-1-3-3s2-3 3-3M3 12c1 0 3-1 3-3s-2-3-3-3M12 21c0-1 1-3 3-3s3 2 3 3M12 3c0 1-1 3-3 3s-3-2-3-3"/>
+              </svg>
+            </div>
+          </div>
+          <h3 class="hero-cn text-2xl text-rose-400 mb-3">注意力转移</h3>
+          <p class="font-sans-modern text-xs uppercase tracking-widest text-[#a8a5a0] mb-4">DISTRACTION</p>
+          <p class="text-[#d4d2cf] leading-relaxed mb-4">
+            把那些和结论无关的信息弄得好像和结论有关,以此分散你的注意力。
+          </p>
+          <div class="text-xs font-sans-modern text-[#a8a5a0] border-t border-rose-500/20 pt-4">
+            <strong class="text-rose-400">4 种谬误</strong>属于此机制 →
+          </div>
+        </div>
+
+        <!-- Mechanism 3 -->
+        <div class="mech-block mech-bg-circular border border-violet-500/20">
+          <div class="flex items-start justify-between mb-6">
+            <div class="font-mono text-violet-400 text-sm">M-03</div>
+            <div class="w-12 h-12 rounded-lg border border-violet-500/30 flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5">
+                <path d="M21 12c0 5-4 9-9 9s-9-4-9-9 4-9 9-9c2.5 0 5 1 7 3M21 4v5h-5"/>
+              </svg>
+            </div>
+          </div>
+          <h3 class="hero-cn text-2xl text-violet-400 mb-3">结论自证</h3>
+          <p class="font-sans-modern text-xs uppercase tracking-widest text-[#a8a5a0] mb-4">CIRCULAR REASONING</p>
+          <p class="text-[#d4d2cf] leading-relaxed mb-4">
+            看似为结论找证据,但证据算数的前提取决于结论本身已成立。
+          </p>
+          <div class="text-xs font-sans-modern text-[#a8a5a0] border-t border-violet-500/20 pt-4">
+            <strong class="text-violet-400">2 种谬误</strong>属于此机制 →
+          </div>
+        </div>
+      </div>
+
+      <!-- Three-question diagnostic -->
+      <div class="quote-block rounded-xl p-8 max-w-4xl">
+        <div class="font-sans-modern text-xs uppercase tracking-widest text-amber-400 mb-3">三问诊断法</div>
+        <h3 class="hero-cn text-xl md:text-2xl mb-6">看到任何论证,依次问:</h3>
+        <div class="space-y-4">
+          <div class="flex items-start gap-4">
+            <div class="font-mono text-amber-400 text-2xl">①</div>
+            <div class="flex-1">
+              <div class="text-white font-medium mb-1">这一步推理需要哪些假设?这些假设可信吗?</div>
+              <div class="text-sm text-[#a8a5a0] font-sans-modern">→ 命中 M-01 错误假设类</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="font-mono text-rose-400 text-2xl">②</div>
+            <div class="flex-1">
+              <div class="text-white font-medium mb-1">注意力是否被引向无关信息?</div>
+              <div class="text-sm text-[#a8a5a0] font-sans-modern">→ 命中 M-02 注意力转移类</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="font-mono text-violet-400 text-2xl">③</div>
+            <div class="flex-1">
+              <div class="text-white font-medium mb-1">证据是否其实就是结论本身?</div>
+              <div class="text-sm text-[#a8a5a0] font-sans-modern">→ 命中 M-03 结论自证类</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- 13 FALLACIES -->
+  <section id="fallacies" class="relative px-6 lg:px-16 py-24">
+    <div class="max-w-7xl mx-auto reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§3 · 13 类谬误图谱</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4">谬误<span class="text-amber-400">卡片墙</span></h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-8">
+        点击任意卡片翻面,看具体示例。颜色按三机制编码。
+      </p>
+
+      <!-- Filters -->
+      <div class="flex flex-wrap gap-2 mb-10">
+        <button class="filter-pill px-4 py-2 rounded-full border border-[#2a2a38] text-sm font-sans-modern text-[#d4d2cf]"
+                @click="activeFilter = 'all'" :data-active="activeFilter === 'all'">
+          全部 13 类
+        </button>
+        <button class="filter-pill px-4 py-2 rounded-full border border-amber-500/30 text-sm font-sans-modern text-amber-400"
+                @click="activeFilter = 'assumption'" :data-active="activeFilter === 'assumption'">
+          错误假设(7)
+        </button>
+        <button class="filter-pill px-4 py-2 rounded-full border border-rose-500/30 text-sm font-sans-modern text-rose-400"
+                @click="activeFilter = 'distraction'" :data-active="activeFilter === 'distraction'">
+          注意力转移(4)
+        </button>
+        <button class="filter-pill px-4 py-2 rounded-full border border-violet-500/30 text-sm font-sans-modern text-violet-400"
+                @click="activeFilter = 'circular'" :data-active="activeFilter === 'circular'">
+          结论自证(2)
+        </button>
+      </div>
+
+      <!-- Cards grid -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <template x-for="(f, idx) in fallacies" :key="idx">
+          <div class="flip-card"
+               x-show="activeFilter === 'all' || activeFilter === f.mech"
+               x-transition:enter="transition ease-out duration-500"
+               x-transition:enter-start="opacity-0 transform scale-95"
+               x-transition:enter-end="opacity-100 transform scale-100"
+               :class="flipped[idx] ? 'flipped' : ''"
+               @click="flipped[idx] = !flipped[idx]">
+            <div class="flip-card-inner cursor-pointer">
+
+              <!-- Front -->
+              <div class="flip-face">
+                <div class="flex items-start justify-between mb-4">
+                  <div class="font-mono text-xs"
+                       :class="`mech-${f.mech}`"
+                       x-text="f.code"></div>
+                  <div class="hint-tag border"
+                       :class="`mech-${f.mech}`"
+                       x-text="f.mechLabel"></div>
+                </div>
+                <h3 class="hero-cn text-2xl mb-3 text-white" x-text="f.name"></h3>
+                <p class="font-sans-modern text-xs uppercase tracking-wider text-[#6b6b73] mb-4" x-text="f.en"></p>
+                <p class="text-[#d4d2cf] text-sm leading-relaxed flex-1" x-text="f.def"></p>
+                <div class="text-xs font-sans-modern text-[#6b6b73] mt-4 flex items-center gap-2">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0zM12 8v4M12 16h.01"/>
+                  </svg>
+                  <span>点击看示例</span>
+                </div>
+              </div>
+
+              <!-- Back -->
+              <div class="flip-face flip-back">
+                <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">典型案例</div>
+                <div class="space-y-3 flex-1">
+                  <template x-for="ex in f.examples">
+                    <div class="text-sm text-[#d4d2cf] italic border-l-2 pl-3"
+                         :class="`mech-${f.mech}`"
+                         x-text="'「' + ex + '」'"></div>
+                  </template>
+                </div>
+                <div class="mt-4 pt-3 border-t border-[#2a2a38]">
+                  <div class="font-sans-modern text-xs text-amber-400/80 mb-1">如何破解</div>
+                  <div class="text-xs text-[#a8a5a0]" x-text="f.crack"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- DIAGNOSTIC TOOL -->
+  <section id="diagnostic" class="relative px-6 lg:px-16 py-24">
+    <div class="absolute -top-40 right-0 w-[500px] h-[500px] glow-amber rounded-full opacity-40"></div>
+    <div class="max-w-5xl mx-auto reveal relative z-10">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§4 · 实战诊断器</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4">把工具<span class="text-amber-400">用起来</span></h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-10">
+        粘贴一段你怀疑的论证,我用三问框架扫描,提示可能命中的谬误类型。<span class="text-[#6b6b73]">(关键词级别的演示——真正的诊断仍需你的判断)</span>
+      </p>
+
+      <!-- Quick examples -->
+      <div class="flex flex-wrap gap-2 mb-6">
+        <span class="text-xs font-sans-modern text-[#6b6b73]">一键试:</span>
+        <template x-for="ex in presetExamples">
+          <button class="text-xs font-sans-modern px-3 py-1 rounded-md border border-[#2a2a38] hover:border-amber-500/50 text-[#a8a5a0] hover:text-amber-400 transition"
+                  @click="diagText = ex.text; diagnose()" x-text="ex.label"></button>
+        </template>
+      </div>
+
+      <textarea
+        class="diag-input w-full rounded-xl p-5 text-[#d4d2cf] leading-relaxed min-h-[140px] resize-none mb-4"
+        placeholder="例:'99% 的人都用 X 牌手机,你不用就 out 了。'"
+        x-model="diagText"
+        @input.debounce.500ms="diagnose()"></textarea>
+
+      <button @click="diagnose()"
+              class="font-sans-modern text-sm bg-amber-500 hover:bg-amber-400 text-[#0a0a0f] font-bold px-6 py-3 rounded-lg transition">
+        诊断
+      </button>
+
+      <!-- Results -->
+      <div x-show="diagResults.length > 0" x-transition class="mt-8 space-y-3">
+        <div class="font-sans-modern text-xs uppercase tracking-widest text-amber-400 mb-3">
+          检测到 <span x-text="diagResults.length"></span> 个可疑信号
+        </div>
+        <template x-for="r in diagResults">
+          <div class="diag-hit rounded-lg p-4">
+            <div class="flex items-start justify-between mb-2">
+              <div class="font-medium text-white" x-text="r.name"></div>
+              <span class="hint-tag border" :class="`mech-${r.mech}`" x-text="r.mechLabel"></span>
+            </div>
+            <div class="text-sm text-[#a8a5a0] mb-2" x-text="`触发关键词:${r.trigger}`"></div>
+            <div class="text-sm text-[#d4d2cf]" x-text="r.def"></div>
+          </div>
+        </template>
+      </div>
+
+      <div x-show="diagText && diagResults.length === 0 && !diagLoading"
+           class="mt-8 p-5 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
+        <div class="font-sans-modern text-emerald-400 text-sm mb-2">未检测到典型关键词</div>
+        <div class="text-sm text-[#a8a5a0]">这不代表论证没问题——本工具只能识别有显式语言标记的谬误。**真正的诊断需要你完整应用三问框架**:这一步推理需要哪些假设?注意力是否被转移?证据是否就是结论本身?</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- DEEPEST INSIGHT -->
+  <section class="relative px-6 lg:px-16 py-24">
+    <div class="max-w-5xl mx-auto reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§5 · 本章最深的认知洞察</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-12">乱扣帽子:<br><span class="text-amber-400">用命名代替解释</span></h2>
+
+      <div class="quote-block rounded-2xl p-8 md:p-12 mb-8">
+        <div class="pull-quote text-xl md:text-2xl leading-loose text-[#e8e6e3] pl-6">
+          当我们被要求解释为什么特定的行为会发生时,我们常常受到诱惑,想要<span class="text-amber-400 not-italic font-medium">隐藏我们对很多复杂因果关系的无知</span>,干脆给那种行为贴上个标签或套上个名字,然后我们错误地假设——因为我们知道那个标签或名字,我们就知道事情的起因。
+        </div>
+        <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mt-8 text-right">— Browne &amp; Keeley</div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <div class="card rounded-xl p-6">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-rose-400 mb-3">看似在解释</div>
+          <div class="space-y-2 text-[#d4d2cf]">
+            <div class="text-sm">"他这么做是因为他<strong class="text-white">自恋</strong>"</div>
+            <div class="text-sm">"公司倒闭是因为管理层<strong class="text-white">短视</strong>"</div>
+            <div class="text-sm">"年轻人不结婚是因为太<strong class="text-white">自私</strong>"</div>
+            <div class="text-sm">"市场下跌是因为<strong class="text-white">非理性恐慌</strong>"</div>
+          </div>
+        </div>
+        <div class="card rounded-xl p-6 border-amber-500/30">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-amber-400 mb-3">实际上只是命名</div>
+          <p class="text-[#d4d2cf] text-sm leading-relaxed">
+            这些"解释"看似有力,实则只是<strong class="text-white">为无知贴上学术化标签</strong>。它们没有揭示行为背后的具体机制,只是把"我不知道为什么"翻译成"听起来很专业的术语"。
+          </p>
+          <div class="mt-4 pt-4 border-t border-[#2a2a38]">
+            <div class="font-sans-modern text-xs text-amber-400 mb-2">自查问句</div>
+            <p class="text-sm text-[#d4d2cf]">"我是真的解释了原因,还是只是给现象换了个时髦名字?"</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTHOR QUOTES -->
+  <section id="quotes" class="relative px-6 lg:px-16 py-24">
+    <div class="absolute top-0 left-0 w-[400px] h-[400px] glow-amber rounded-full opacity-30"></div>
+    <div class="max-w-5xl mx-auto reveal relative z-10">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§6 · 作者原声</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-12">五条<span class="text-amber-400">章节金句</span></h2>
+
+      <div class="space-y-6">
+        <template x-for="(q, i) in quotes" :key="i">
+          <div class="author-voice rounded-r-xl p-6 md:p-8 hover:bg-amber-500/10 transition">
+            <div class="flex items-start gap-6">
+              <div class="font-mono text-3xl text-amber-400/60 flex-shrink-0" x-text="`0${i+1}`"></div>
+              <div class="flex-1">
+                <div class="text-lg md:text-xl text-[#e8e6e3] leading-loose mb-4 pull-quote pl-4" x-text="q.text"></div>
+                <div class="text-sm text-[#a8a5a0] font-sans-modern" x-text="q.note"></div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- RELATED CHAPTERS -->
+  <section id="related" class="relative px-6 lg:px-16 py-24">
+    <div class="max-w-7xl mx-auto reveal">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§7 · 章节关联</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4">本章如何<span class="text-amber-400">连接全书</span></h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-12">
+        谬误识别不是孤立技术。它向上承接论证识别(ch03-ch06),向下接入证据评估(ch08-ch11)与多结论建设(ch13)。
+      </p>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <a class="related-card rounded-xl p-6 block">
+          <div class="font-mono text-xs text-[#6b6b73] mb-3">CH 05 · 上游</div>
+          <h3 class="hero-cn text-lg text-white mb-2">价值观假设与描述性假设</h3>
+          <p class="text-sm text-[#a8a5a0]">本章 M-01"错误假设类"谬误的根基——只有先识别假设,才能判定其是否"明显错误"。</p>
+        </a>
+        <a class="related-card rounded-xl p-6 block">
+          <div class="font-mono text-xs text-[#6b6b73] mb-3">CH 09 · 下游</div>
+          <h3 class="hero-cn text-lg text-white mb-2">替代原因</h3>
+          <p class="text-sm text-[#a8a5a0]">"过度简化因果关系谬误"在本章已点名,ch10 把它升级为系统性的因果替代审查工具。</p>
+        </a>
+        <a class="related-card rounded-xl p-6 block">
+          <div class="font-mono text-xs text-[#6b6b73] mb-3">CH 12 · 终章</div>
+          <h3 class="hero-cn text-lg text-white mb-2">能得出哪些合理的结论</h3>
+          <p class="text-sm text-[#a8a5a0]">"虚假两难选择"在本章作为单一谬误,ch13 把它扩展为对整个二分思维的系统批判。</p>
+        </a>
+      </div>
+
+      <div class="mt-12 p-6 rounded-xl border border-amber-500/20 bg-amber-500/5 flex items-start gap-4">
+        <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+        </div>
+        <div class="flex-1">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-amber-400 mb-1">向下继续</div>
+          <div class="text-[#d4d2cf]">下一节就是<strong class="text-white">完整六问深度产出</strong>(15,509 汉字)——反例、前提、学术对照、章节关系、个人实践,全部就地展开,无需跳转。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-line max-w-6xl mx-auto"></div>
+
+  <!-- §8 · COMPLETE SIX QUESTIONS (INLINED) -->
+  <section id="deep-six" class="relative px-6 lg:px-16 py-24">
+    <div class="absolute -top-40 left-0 w-[600px] h-[600px] glow-violet rounded-full opacity-30 pointer-events-none"></div>
+    <div class="max-w-6xl mx-auto reveal relative z-10">
+      <div class="hint-tag bg-[#1a1a26] text-[#a8a5a0] border border-[#2a2a38] mb-6">§8 · 完整六问深度产出</div>
+      <h2 class="hero-cn text-3xl md:text-5xl mb-4">15,509 汉字<span class="text-amber-400">就地展开</span></h2>
+      <p class="font-sans-modern text-[#a8a5a0] text-lg max-w-3xl mb-10">
+        反例分析、隐含前提、章节关系、学术对照、个人实践——本章六问完整产出,无需跳转,在此就地阅读。点击下方 tab 切换。
+      </p>
+
+      <!-- Tab bar (sticky) -->
+      <div class="tab-bar mb-10 rounded-xl border border-[#2a2a38] bg-[#0a0a0f]/60">
+        <div class="flex flex-wrap gap-2">
+          <template x-for="(t, i) in sixTabs" :key="i">
+            <button
+              class="filter-pill flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-sans-modern transition-all"
+              :class="activeQ === t.id ? 'border-amber-500 bg-amber-500/10 text-amber-400' : 'border-[#2a2a38] text-[#d4d2cf] hover:border-amber-500/40 hover:text-amber-400'"
+              @click="setActiveQ(t.id)">
+              <span class="font-mono text-xs opacity-80" x-text="t.id"></span>
+              <span class="font-medium" x-text="t.label"></span>
+              <span class="text-xs opacity-60 hidden md:inline" x-text="`· ${t.chars}字`"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Q description hint -->
+      <div class="mb-8 p-4 rounded-lg bg-[#14141d] border border-[#2a2a38]">
+        <div class="flex items-start gap-3">
+          <div class="font-mono text-amber-400 text-xs flex-shrink-0 pt-0.5" x-text="currentTab.id"></div>
+          <div>
+            <div class="font-sans-modern font-medium text-white mb-1" x-text="currentTab.label"></div>
+            <div class="text-sm text-[#a8a5a0]" x-text="currentTab.desc"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rendered content -->
+      <article class="prose-six tab-content"
+               :key="activeQ"
+               x-html="renderedQ"></article>
+
+      <!-- Footer of section -->
+      <div class="mt-16 pt-8 border-t border-[#2a2a38] flex flex-wrap items-center justify-between gap-4">
+        <div class="text-xs font-sans-modern text-[#6b6b73]">
+          数据源:<span class="font-mono text-amber-400">chapters/ch07/six_q/</span>
+          <span class="text-[#6b6b73]">·</span>
+          所有六问独立落盘,严格按纪律 1 执行
+        </div>
+        <button @click="scrollToTop()"
+                class="font-sans-modern text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          回到章节顶部
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAPTER NAV -->
+  <section class="px-6 lg:px-16 py-16">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-4">
+        <a href="./ch06.html" class="block rounded-xl border border-[#2a2a38] hover:border-amber-500 bg-[#1a1a26] hover:bg-[#22222f] p-6 transition">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73]">← 上一章</div>
+          <div class="font-mono text-amber-400 text-sm mt-2">CH 05</div>
+          <div class="text-white font-medium mt-1">什么是价值观假设和描述性假设</div>
+        </a>
+        <a href="./ch08.html" class="block rounded-xl border border-[#2a2a38] hover:border-amber-500 bg-[#1a1a26] hover:bg-[#22222f] p-6 transition text-right">
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73]">下一章 →</div>
+          <div class="font-mono text-amber-400 text-sm mt-2">CH 07</div>
+          <div class="text-white font-medium mt-1">证据效力(一):直觉 / 经历 / 案例 / 证词 / 专家</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="px-6 lg:px-16 py-16 border-t border-[#2a2a38] mt-24">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">本章</div>
+          <h3 class="hero-cn text-xl text-white mb-2">推理过程中有没有谬误</h3>
+          <p class="text-sm text-[#a8a5a0]">学会提问 · 第 10 版 · 第 6 章</p>
+        </div>
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">作者</div>
+          <p class="text-[#d4d2cf]">Neil Browne · Stuart Keeley</p>
+          <p class="text-sm text-[#a8a5a0] mt-1">30+ 年迭代 · 至第 10 版</p>
+        </div>
+        <div>
+          <div class="font-sans-modern text-xs uppercase tracking-widest text-[#6b6b73] mb-3">数据源</div>
+          <p class="text-sm text-[#a8a5a0] font-mono">chapters/ch07/insights.md</p>
+          <p class="text-sm text-[#a8a5a0] font-mono">chapters/ch07/quotes.md</p>
+        </div>
+      </div>
+      <div class="text-center text-xs font-sans-modern text-[#6b6b73] tracking-widest">
+        智识图书馆 V2 · 阅读体验原型 · ch07
+      </div>
+    </div>
+  </footer>
+
+  <!-- Embedded markdown source for §8 -->
+  <script type="text/markdown" id="md-q1">
+# Q1 · 作者说了什么
+
+本章在全书推进中标志着**第二阶段**正式开启。前 5 章教你**看清论证的骨架**——论题、结论、理由、关键词含义、两类假设——那是**理解**。本章开始的后续章节教你**评价骨架能否承重**——这是**判断**。作者用一个比喻把两阶段切开:前面是从淘金盘里挑出相关矿石(理解论证结构),本章开始是要分辨哪些是**真金**、哪些是**破铜烂铁**(评价论证强弱)。本章引入全书第 5 个关键问题——"推理过程中有没有谬误?",把评价工作从"找假设"延伸到"找欺骗性推理手段"。
+
+## 谬误的本质定义
+
+作者把**谬误(fallacy)**定义为:**推理中的欺骗手段**——作者可能利用它来让你采纳其结论。谬误不是"说错话",而是**一套会让读者误入论证陷阱的推理机制**。它的破坏力不在于浮面的修辞华丽,而在于**结构性**地让读者无法靠正常的逻辑审查识别问题。
+
+作者把所有谬误收纳到**三种常见形式**下——这是本章最核心的分类框架,远比记忆十几个谬误名称重要:
+
+1. **错误假设型**:推理需要**明显错误或不能接受的假设**才能成立,假设一旦被揭穿,理由和结论就失去联系。
+2. **分散注意力型**:把**本来和结论无关的信息**伪装成相关,让读者把注意力投到那个无关信息上,放过真正相关的薄弱环节。
+3. **结论自证型**:看似为结论找证据,但**证据算数的前提本身就是结论已经成立**——也就是循环论证。
+
+这三类对应三个诊断提问:(a)它依赖的假设是否可疑?(b)它是否转移了我的注意力?(c)它是否在用结论自证?作者的核心方法论主张是——**不必死记硬背所有谬误名称,只要学会这三问,就能识别绝大多数推理谬误**。
+
+## 具体谬误清单与归类
+
+虽然原则上三问就够,作者还是系统地介绍了**十三种最常见的谬误**,按所属类型归档。读者应把它们当作"三问"在实战中的具体参考样本:
+
+**错误假设型(大类一)**:
+- **人身攻击谬误**:不回应论证本身,攻击论证者的身份、品格或利益(如把参议员斯彭道贴上"自由派民主党人,动不动就提议增税"的标签)。
+- **滑坡谬误**:假设采取某行动会引发一系列不可控的连锁反应,但现实中有多种程序可阻止连锁发生(如"禁酒类广告会导致糖果/牛奶也被禁")。
+- **追求完美解决方案谬误**:因为方案不能彻底消除问题就否定方案(如"添安保系统没用,小偷总有办法")。
+- **偷换概念谬误**:关键词在同一论证中意思被悄悄更换(如"共识"从"科研人员共识"切换到"民意调查共识")。
+- **诉诸公众谬误**:用"多数人这么想"证明结论(如"73% 民意支持,所以医用大麻应合法")。
+- **诉诸可疑权威谬误**:引用对该论题**没有特别专门知识**的权威证明结论(如用加州艾滋病协会支持医用大麻)。
+- **诉诸感情谬误**:用强烈感情色彩的语言让情绪反应替代理由审查(常见于广告、政治、法庭)。**恶语中伤**(name-calling)是其常见形式,如把对方称为"自以为是的鼓吹家"。
+- **稻草人谬误**:歪曲对方的立场使它容易攻击,然后打这个稻草(如把儿童发展项目描绘为"将儿童从母亲身边夺走")。
+- **虚假的两难选择谬误**:把多于两种选择的情境强行陈述为"非此即彼"(如"世界上只有两种人——表演者与观看者""你要么支持入侵伊拉克,要么恨美国")。
+- **乱扣帽子谬误**:用命名**代替**解释(如"他行为古怪是因为他是个混球""爸爸酗酒是因为中年危机""朋友怕被说坏话是因为妄想症")——贴上标签就自以为理解了因果。
+
+**分散注意力型(大类二)**:
+- **光环效应谬误**:堆叠"民主""爱心""和平""繁荣""自由"等**美德词汇**替代具体政策立场审查。它是恶语中伤的镜像——一个通过负面联想让人反对、一个通过正面联想让人支持,两者都让读者绕过理由直接投票给情绪。
+- **转移话题谬误**:把讨论焦点从论题 A 转到无关的论题 B,然后任 A 被遗忘(如"医药公司修改止痛药数据"的话题被转成"还有成千上万人受益""妈妈问女儿为何撒谎"被转成"你总挑我错儿")。
+
+**结论自证型(大类三)**:
+- **循环论证谬误**:理由只是结论的换词重复(如"退学不可取,因为它不好""传统教材效果好,因为以教材形式展现非常有利于学习"——"教材"本就指传统教材形式)。当推理本应**证明**结论,却**假设**了结论,就是在回避问题而非回答问题。
+
+作者还预告一条会留到后续章节的谬误:**一厢情愿谬误**(wishful thinking fallacy)——混淆"是什么"与"该是什么",用"应该如此"代替"事实如此"。
+
+## 权威与公众意见的谨慎态度
+
+作者对"诉诸权威"和"诉诸公众"给出了**关键的分寸教导**:它们**不一定都是谬误**。判断的标准是——
+- **该权威对这一论题是否拥有特别专门知识**?(如国内多数医生坚持慢跑锻炼,对"慢跑是否有益健康"就是有价值的信息)
+- **该公众意见是否建立在充分研究之上**?(如果公众对论题根本没做过深入研究,多数人的看法就不能自动转化为证据)
+
+这一分寸是本章的**反极端操作**——不要把"看到权威/公众就喊谬误"当成自动反应,而要具体评估权威的专门性和公众的研究深度。第 7 章会专题展开"专家意见"的评价。
+
+## 写作与口头论辩中的谬误应用
+
+作者把本章的阅读工具同时**反向指向写作者自己**:
+- 写作时手边备一份谬误清单,细查自己引用的每条理由。
+- 具体阐述论题的利弊,不要用美德词汇糊过去。
+- 检查自己的假设是否明显错误或需要别人难以接受的支撑。
+
+在**口头论辩**中发现对方犯了谬误后,作者主张建设性的做法是——**询问对方有没有更好的理由来证实其结论**,而不是立即终止对话。这保留了双方深入探讨的可能,把批判性思维从"胜负式"修正为"建设式"。
+
+## 本章在全书坐标系中的位置
+
+本章承接前 5 章的假设识别工具(ch06 的价值观/描述性假设直接转化为本章"错误假设型"谬误的诊断基础),并为后续 ch08-ch13 的证据评价工具(专家意见、个人经历、研究报告、因果、数据、省略)提供**通用的错误模式扫描器**。三类谬误机制——错误假设、注意力分散、结论自证——将在每一类证据评价中以具体形式反复出现。本章教的是**一把万能的推理扫描枪**,后续章节教的是**针对特定证据类型的专门扫描器**。
+  </script>
+
+  <script type="text/markdown" id="md-q2">
+# Q2 · 论据是什么
+
+## 论点 1:谬误可以归结为三种通用机制
+
+- 【逻辑推理】三种形式划分:作者把所有推理谬误归结为**错误假设型 / 注意力分散型 / 结论自证型**三类。三问诊断(假设是否可疑、注意力是否被转移、结论是否在自证)覆盖绝大多数常见谬误。
+- 【逻辑推理】与 ch06 假设识别的衔接:"如果你已经能找到假设(见第 5 章),特别是描述性假设,那你就已经具备了判断可疑的假设和发现谬误的主要技能"——谬误识别不是全新工具,而是假设识别的应用化。
+- 【方法论】反死记策略:作者明确反对背谬误名录,主张"只要你问出恰当的问题,就能找到推理谬误,就算你叫不出它们的名字也无所谓"。名称是交流方便,不是识别门槛。
+
+## 论点 2:人身攻击谬误是最常见的错误假设型谬误
+
+- 【历史案例】致编辑信:"参议员先生自然喜欢增税这一套了,一个自由派民主党人,动不动就提议增加税收和支出"——对斯彭道施加人身攻击,完全忽略增税理由。作者以"攻击送信的人而非信息"(attacking the messenger, not the message)的比喻说明其结构。
+- 【历史案例】桑迪 vs 朱莉:"你当然那样说,反正联谊会都不收你""你就是个输不起的人"——朋友间的人身攻击演示,说明其不需要政治舞台就能随时出现。
+- 【逻辑推理】为什么属于谬误:"进行论证的个人品格或者兴趣如何通常和其作出的论证的质量毫无关系"——拉丁文 ad hominem 意为"针对个人",属于典型的注意力转移 + 错误假设混合机制。
+
+## 论点 3:滑坡谬误与追求完美解决方案谬误是配对的"机制性"错误假设
+
+- 【历史案例】禁酒类广告信:"如果允许联邦通讯委员会禁酒类广告,就会禁糖果、牛奶、鸡蛋广告"——滑坡示例,忽略法律体系内部的预防程序。作者反论:"我们相信法律体系中有很多步骤可以用来预防类似行动,如果这些行动没有正当的理由"。
+- 【历史案例】同一篇信的第二理由:"联邦政府行动不可能完全消除酒类消费"——追求完美解决方案示例。作者反论:"禁止播放酒类广告的一个更可能的目标是减少酒类消费,不是消除"——目标设定错误导致的驳斥失效。
+- 【历史案例】家庭安保系统:"添安保系统是浪费,贼总有办法进来"——追求完美解决方案的日常版。作者反论:"能提出特定的解决方案比起一筹莫展、束手无策来可能要高明百倍"。
+- 【逻辑推理】两者共同的错误假设:都要求读者接受"不完美 = 不可采"或"一旦允许就无法阻止"这类极端假设——本章揭示这类假设一旦被摊开,推理即破。
+
+## 论点 4:偷换概念 / 诉诸公众 / 诉诸可疑权威三者常在一个论证中叠加出现
+
+- 【历史案例】医用大麻论证:"社会共识支持使用大麻,73% 民意支持,加州艾滋病治疗协会也支持"——一个论证同时犯三种谬误。
+  - 偷换概念:"共识"被从"科研人员共识"偷换到"民意调查共识"。
+  - 诉诸公众:73% 被当作结论的支撑,但"公众常常没有对问题做出足够研究"。
+  - 诉诸可疑权威:加州协会不一定对大麻药理有特别专门知识。
+- 【历史案例】朗妲 vs 艾伦对话:"柯蒂斯不是个男人"(指胆小)vs"他二头肌那么发达"(指体格)——偷换概念的精简演示,说明"男人"在两句话中的含义不同。
+- 【逻辑推理】关键词重复警示:"一旦你看到一个关键词或短语在论证中不止一次出现,检查一下看看其意思有没有发生改变"——这条操作性提示把偷换概念的识别方法化。
+- 【方法论】权威的"分寸判断":作者反复强调"不要自然而然地就驳斥依赖诉诸于权威或者大众认可观点的那些推理论证",而是"小心谨慎地评价",评价的两条标准是专门知识和研究深度。
+
+## 论点 5:稻草人和虚假两难是一对"误重构"谬误
+
+- 【历史案例】儿童发展项目批评文:"自以为是的鼓吹家""通用计划的试验品""将儿童从母亲身边夺走"——诉诸感情 + 恶语中伤 + 稻草人(把项目描绘成完全取代家庭)同时出现。
+- 【历史案例】布兰妮·斯皮尔斯《马戏团》:"世界上只有两种人——表演者与观看者"——虚假两难的娱乐版演示。
+- 【历史案例】"你为什么要恨美国"反问政客:市民说"美国入侵伊拉克是错的",政客立刻把论题简化为"爱/恨美国"的二元选择——虚假两难在政治话语中的典型武器化。
+- 【历史案例】儿童发展项目:"要么父母有权塑造子女的性格,要么国家有权"——虚假两难的政策版,作者明确指出"有没有可能既让儿童发展项目存在,同时又让家人施加重要影响?"
+- 【逻辑推理】虚假两难的语言标志:"不是…就是…""唯一的选择""两种选择分别是""因为甲不起作用,那只有乙能"——这些词出现时要自动警觉(但不等于自动判定)。
+
+## 论点 6:乱扣帽子是"解释错觉"谬误,最隐蔽
+
+- 【历史案例】室友对话:丹问查克为什么行为古怪,凯文回"他就是个混球"——标签代替因果解释。
+- 【历史案例】妈妈解释爸爸酗酒:"他正在经历中年危机"——作者明确指出实际需要考虑基因、工作压力、夫妻争吵、锻炼习惯等复杂内因外因。
+- 【历史案例】心理学家解释朋友担心:"他有妄想症"——专业化包装的乱扣帽子,但仍然只是**命名**而非**解释**。
+- 【逻辑推理】作者的诊断逻辑:"命名欺骗了我们,让我们相信自己找出了那个人有什么特点或是什么样,这样也就使他有了相应的行为,斯人有斯事也"——把"贴标签"与"解释因果"的概念分隔做清楚。
+- 【逻辑推理】危害:乱扣帽子"阻碍我们找到更富有洞察力的理解",把注意力和好奇心从真正的因果链上撤离。
+
+## 论点 7:光环效应与转移话题是分散注意力型的两种主要变体
+
+- 【历史案例】古德哈特政治演说:"民主""爱心""和平""繁荣""自由"——一连串美德词汇替代具体政策记录。作者把它定义为"恶语中伤的镜像"——一个通过正面联想让人支持,一个通过负面联想让人反对。
+- 【历史案例】止痛药公司修改数据案:论题是"公众是否被误导",被转移到"还有成千上万人受益"。
+- 【历史案例】母女对话:妈妈问"为什么撒谎",女儿回"你总挑我错儿"——转移话题在家庭场景中的微型版。
+- 【逻辑推理】识别方法:"只要你脑子里谨记真正的论题所在,同时牢记解决这一论题所需要的证据,一般而言要找到转移话题谬误并不难"——这条操作要求把 ch03"论题+结论"的识别工作在本章重新调用。
+- 【逻辑推理】结构公式:"(1)甲主题正被讨论;(2)乙主题被介绍进来,好像和甲主题有关,实际上并不相干;(3)甲主题被置之不理"——作者把转移话题谬误写成可逆向追踪的三步骤结构。
+
+## 论点 8:循环论证是结论自证型的典型样式
+
+- 【历史案例】退学:"退学是不可取的,因为它是不好的"——明显版本,结论被稍改措辞后当理由。
+- 【历史案例】传统教材 vs 电子文本:"阅读传统教科书比电子文本在学习效果上要好得多,因为以教材的形式来展现各种材料非常有利于学习"——隐蔽版本,理由中"教材形式"本就指向传统教材,等于"传统教材效果好,因为它传统"。
+- 【历史案例】新闻来源保密两例对比:
+  - (1)"增加了个人提供证据来举报权威人士的概率"——**具体好处**,不是循环论证。
+  - (2)"个人有权向媒体提供信息而不必确认身份,这样做将非常有助于大集体的利益"——只是重复结论,是循环论证。
+- 【逻辑推理】识别标准:"只要结论本应该是通过推理过程被证明出来的,实际上却是被假设出来的,结论先行就在所难免"——检查理由是否只是结论的换词重复。
+
+## 论点 9:口头论辩中发现谬误后的建设性应对
+
+- 【方法论】不终止对话:"在口头论辩中出现的那些谬误,你想要深入交谈的最有效措施就是问一下犯了逻辑谬误的对方有没有更好的理由来证实其结论。"
+- 【历史案例】应用场景:如果一个转移话题谬误发生,问对方可不可以回到原来那个论题。
+- 【逻辑推理】背后的精神:批判性思维的目的不是"把对方打倒",而是"让论证更扎实"——这是延续 ch02 弱势 / 强势批判性思维的分野,把强势思维的"善意假设"(施惠原则)在本章继续贯彻。
+
+## 论点 10:写作者的自我谬误预防
+
+- 【方法论】四条预防清单:
+  - 手边时时备一份谬误清单。
+  - 细细检查自己的假设。
+  - 记住多数有争议的论题需要具体阐述利弊两面。
+  - 避免诱骗读者同意结论,而要给读者公平的审查机会。
+- 【逻辑推理】与 ch06"作者应主动披露假设"的连续性:本章把写作伦理从"披露假设"延伸到"预防谬误",共同构成诚实写作的两层工序。
+
+## 论据薄弱或缺失之处
+
+- 本章给出的谬误清单虽然丰富,但**判定边界**仍有模糊:权威"有没有特别专门知识"的判断阈值、公众"有没有充分研究"的评估方式,作者只给原则不给操作。
+- "乱扣帽子"与"真正提供解释"之间的边界,作者只给负面反例("他就是混球")而未给正面演示(怎样的说法才是足够的因果解释),读者可能因此把合理的概念化也误判为谬误。
+- "循环论证"的识别在实际阅读中有"轻微程度版本"的灰色地带——比如新闻来源保密两例中的第 (2) 条,作者判定为循环,但替代论证者可能认为它有"大集体利益"这一独立命题。作者的判定依据未被完全展开。
+- "三大类机制"的分类在一些复合谬误(如人身攻击既是错误假设又是注意力分散、光环效应既分散注意力又用模糊感情替代理由)面前**互相重叠**,作者未说明处理交叉时以哪一类作为主解释。
+  </script>
+
+  <script type="text/markdown" id="md-q3">
+# Q3 · 反例与局限
+
+## 1. "三类机制"的分类在复合谬误面前边界模糊
+
+作者把所有谬误归入"错误假设型 / 分散注意力型 / 结论自证型"三类,这一三分法在教学上清晰,但在实战中**多数谬误横跨两类甚至三类**,作者没有说明交叉时的主解释归属。
+
+- **人身攻击谬误**:既属于"错误假设型"(需要假设"论证者的身份决定论证质量"),又属于"分散注意力型"(把焦点从论题转到人)。作者把它安排在"错误假设型"下,但在"分散注意力"一节里又把它当作注意力转移的例子。
+- **诉诸感情谬误**:既有错误假设(假设"强烈情绪=真"),又分散注意力(把理性审查换成情绪反应)。
+- **光环效应**:作者把它放在"分散注意力型",但它同样依赖错误假设——读者愿意把美德词汇当作具体政策立场的等价物。
+- Douglas Walton 在 *Informal Logic: A Pragmatic Approach*(2008)论证谬误应按**对话类型**(persuasion / inquiry / negotiation / deliberation / information-seeking / eristic)分类,而非按"心理机制"分类——同一推理手段在不同对话类型中谬误性不同。本章的三分法在对话语境切换时可能失效。
+
+## 2. "谬误"作为独立范畴的哲学可质疑性
+
+自 Hamblin 的 *Fallacies*(1970)起,非形式逻辑界对"谬误"这一概念本身就有持续质疑。
+
+- **Hamblin 断言**:大部分"谬误名录"自亚里士多德以来被一路抄袭,却没有现代理论的认真重建——本章所列的十三种谬误中,许多直接源于这条被质疑的教学传统。
+- **Pragma-dialectics**(Frans van Eemeren & Rob Grootendorst)主张:谬误不是孤立的"坏推理模式",而是在**批判性讨论规则**中的违反行为。脱离规则谈谬误会让"诉诸权威""诉诸公众"这类推理在某些语境下被误判——作者已经意识到这一点(强调权威需要评估其专门知识),但未上升到理论层。
+- **贝叶斯转向**:Ulrike Hahn 与 Mike Oaksford 在 *The Rationality of Informal Argumentation*(2007)中论证,"诉诸权威""滑坡""诉诸无知"等传统谬误在贝叶斯框架下**大多数情况下是理性的推理**——它们提供的是**似然性更新**而非绝对证明。本章的"谬误"判定在新证据条件下需要重估。
+
+## 3. 滑坡谬误的识别困难
+
+作者以"禁酒类广告 → 会禁糖果/牛奶"为滑坡示例,但**并非所有滑坡论证都是谬误**——这是本章处理比较粗率的一点。
+
+- **经验性滑坡**:在实际政策领域(监管扩张、司法判例、审查范围),许多滑坡**真的发生过**。Eugene Volokh《The Mechanisms of the Slippery Slope》(Harvard Law Review, 2003)系统论证了真实存在的"成本降低滑坡""等同性滑坡""吸引力滑坡""改变态度滑坡"等八类机制,并非全都可以被法律体系的预防程序阻止。
+- 本章的反驳"法律体系中有很多步骤可以用来预防类似行动"本身就是**经验性假设**,并非所有情境都成立。作者把它当成反驳滑坡的通用金牌,容易让读者过度泛化。
+- 区分合理滑坡论证与滑坡谬误的关键是:**连锁步骤的因果概率是否可估**。作者把这个关键判断收缩为单一句话处理,不足以让读者操作。
+
+## 4. "追求完美解决方案"作为谬误的边界问题
+
+作者反对"解决不了全部问题就不用解决"的推理,但这条原则也有**反例**。
+
+- **二级伤害**:某些"部分解决方案"会制造新问题或固化次优均衡——例如临时性减排承诺降低了气候立法的政治动力(policy displacement),使根本解决方案更难推进。这类情境下,反对次优方案不是"追求完美解决方案谬误",而是**博弈层面的战略判断**。
+- **帕累托劣解**:在多目标优化中,一些"部分改善"其实在另一维度劣化,拒绝这类方案并非谬误——作者的"有总比没有好"逻辑在帕累托劣解面前失灵。
+- Ronald Coase 在《The Problem of Social Cost》(1960)指出,比较方案时不能只问"是否改善现状",而要问"与其他可行替代方案相比如何"——本章的"追求完美解决方案"反驳隐含"现状即基线"的框架,容易让读者忽略替代方案比较。
+
+## 5. 偷换概念与"必要的概念演化"难以区分
+
+作者把关键词含义变化一律归入偷换概念谬误,但**概念在论证中的合理演化**与**欺骗性偷换**边界模糊。
+
+- 哲学与科学论证中,关键概念经常在论证过程中被精确化(如 Gettier 案例中"知识"概念被演化出"无运气"子条件),这不是偷换而是**概念澄清**。
+- Wilfrid Sellars、Robert Brandom 的推理主义语义学指出:意义在推理使用中**动态**成立,严格要求"关键词含义固定"会让多数真实论证被误判。
+- 作者唯一的操作线索"关键词在论证中不止一次出现 + 检查意思是否改变"不足以把"合理演化"从"欺骗性偷换"中甄别出来——读者容易陷入误报。
+
+## 6. 稻草人识别依赖的"原立场"可能根本就不唯一
+
+作者要求读者检查作者是否"公正全面地表现了对方立场",暗含"对方立场"是一个明确、唯一、可追溯的对象。
+
+- **立场多元性**:真实的社会论争中,"对方"内部常常有多种立场(如"支持儿童发展项目"的阵营包含自由主义、福利主义、家庭补充论等不同子立场)。批评者攻击其中某子立场是否构成稻草人,取决于他指涉的对象是谁——这是本章未展开的复杂问题。
+- **解释学不对称**:Alasdair MacIntyre《After Virtue》(1981)指出,跨传统的论辩中双方对彼此立场的"正确重构"根本没有共同标准,批评"你的重构不公正"本身可能就是另一个立场霸权——稻草人判定在跨文化跨传统论辩中可能反过来成为压制工具。
+
+## 7. 虚假两难的识别依赖读者的第三路径想象力
+
+作者列出"不是…就是…""唯一的选择""两种选择分别是"等语言标志,但**识别是否真的只有两种选择**需要读者具备第三路径的想象力。
+
+- **想象力的不对称**:某些领域的第三选项需要专业训练才能识别(如政策设计、博弈均衡、生物工程)。普通读者即使警觉"二分语言",也可能无力想象第三条道路,导致"虚假两难"识别在专业领域内失灵。
+- **语义学研究**(Gilles Fauconnier)指出,**非此即彼**的语言结构在某些自然语言使用中是**对比强调**,不是真正的排中选项——本章把语言标志与逻辑选项数等同,在某些语用场景下会误报。
+
+## 8. 乱扣帽子与合理概念化的边界
+
+作者反对"他就是混球""中年危机""妄想症"这类贴标签式解释,但**科学概念化**本身就是用概念包容行为。
+
+- **DSM 诊断**:临床心理学用"抑郁症""焦虑症""强迫症"等概念命名行为模式,这种命名本身就是**诊断 + 治疗的入口**,不是单纯贴标签。本章的"妄想症"例不恰当——如果这是经过临床评估的诊断而非随口标签,就不构成谬误。
+- **社会学概念**:Weber 的"官僚制"、Bourdieu 的"文化资本"等概念是否属于"命名代替解释"? 这取决于概念是否具有**可操作化的因果机制**。作者未给出"命名何时升级为解释"的判断标准,可能让读者过度怀疑社会科学的概念化工作。
+
+## 9. 诉诸权威在专业化社会中的必然性
+
+作者要求读者判断权威是否拥有"特别专门知识",但**专业化社会中非专家无法评估专家的专业性**——这是"权威悖论"。
+
+- **Hardwig 论证**:John Hardwig《Epistemic Dependence》(Journal of Philosophy, 1985)指出,现代知识生产如此分工,大多数知识领域非专家必须信任专家,"自己判断"是不可能的。本章要求读者判断权威专门知识,在医学、法律、核物理等领域根本无法实现。
+- **专家内部分歧**:多位专家在同一论题上意见不一时,读者如何处理? 本章的"小心谨慎地评价"回答在这种情境下仍然空泛。ch08 会展开这一问题,但本章的谬误框架已经在这里出现了无法操作的漏洞。
+
+## 10. 光环效应的边界:正面道德词汇的不可避免
+
+作者要求警惕"民主""爱心""和平"等美德词汇,但**政治和伦理论证中这类词不可避免**。
+
+- **Aristotle 的修辞学**传统认为,诉诸 ethos(人格)和 pathos(情感)是论证的**合法组成部分**,与 logos(逻辑)并列。本章把它们一律归入"分散注意力",可能损失修辞维度的合理性。
+- **Jürgen Habermas 的沟通行动理论**指出,道德话语必须包含规范性词汇,否则无法讨论规范问题。读者若把所有道德词汇当成光环效应,最终会让自己无法参与道德议程。
+- 作者已经主动指出"光环效应是恶语中伤的镜像",但这一镜像类比并未告诉读者如何在修辞与谬误之间划线。
+
+## 11. 作者明示的局限
+
+- 作者在"不用死记硬背"一节中主动放弃穷举谬误的目标,把任务交给三问诊断——这是对"谬误清单无限"的自觉应对。
+- 作者在"使用这个关键问题"一节中主动提醒读者在口头论辩中不要立即终止对话,而应询问对方有没有更好理由——这是对"谬误识别=对方失败"倾向的内置纠偏。
+- 作者在"扩展你关于谬误的知识"一节主动引导读者去读戴默《抨击错误推理》等专门著作——承认本章的处理是入门而非穷尽。
+- 作者在"轮到你自己写时"主动把评价工具反指向写作者自己——继承 ch06 的"诚实作者主动披露"伦理,把谬误预防从他人审查扩展到自我审查。
+
+这些自觉局限都显示作者对本章工具的边界有清醒认识。但本章的操作性实例主要集中在政治和日常对话场景,当这些工具被迁移到学术论证、科学评价、跨文化论辩、法律推理时,需要读者主动补齐本章没有提供的专业判断规则。
+  </script>
+
+  <script type="text/markdown" id="md-q4">
+# Q4 · 隐含前提
+
+## 前提 1:谬误是**可命名、可枚举**的离散推理错误
+
+**作者论证对它的依赖**:本章以"13 种常见谬误"为主要教学内容,暗示谬误世界是一张可被逐条列举、逐项命名的清单——虽然作者明说"不用死记硬背",但清单本身就是教学工具。
+
+**现实可靠性**:
+- Charles Hamblin《Fallacies》(1970)这一现代非形式逻辑的奠基著作断言:自亚里士多德《辩谬篇》以来,"标准谬误清单"是**无理论支撑的教学传统**,几百年间被一路抄袭而不被重新校准。本章的清单(人身攻击、滑坡、追求完美……)继承的正是这一被 Hamblin 质疑的传统。
+- Frans van Eemeren 与 Rob Grootendorst 的"语用辩证法"(Pragma-Dialectics)主张:谬误不是某类"坏推理",而是**违反批判性讨论的规则**。按这一理论,离散命名谬误反而掩盖了规则性质——谬误的定义需要回到讨论规则,而非罗列清单。
+- Ulrike Hahn 与 Mike Oaksford《The Rationality of Informal Argumentation》(Psychological Review, 2007)用贝叶斯框架证明,传统"谬误"清单中的多项推理在概率更新意义上**大多数情况下是理性的**——谬误不是离散的"对/错",而是合理度的连续谱。
+
+作者的离散列举虽是教学便利,但会让读者把"谬误"误当作锐利范畴,忽略推理合理性的连续光谱。
+
+## 前提 2:读者拥有**独立**于所评价论证的推理能力
+
+**作者论证对它的依赖**:全章预设读者能以**外部视角**审视文本中的谬误——读者的推理框架与作者独立。
+
+**现实可靠性**:
+- Dan Kahan 的"身份保护认知"(identity-protective cognition)研究发现:同一组数据被不同政治立场的人解读时,结论系统性地朝各自立场偏移——读者的推理框架并非独立于论证,而是被身份认同预先设定。本章方法论可能在党派论辩中**反向武器化**(双方都用"你犯了谬误"互相攻击)。
+- Hugo Mercier & Dan Sperber《The Enigma of Reason》(2017)提出"论辩理论"(argumentative theory of reasoning):人类推理的进化功能是**为自己的立场辩护、评估他人立场**,而不是中立寻求真理——我们识别他人谬误的能力比识别自己谬误的能力**系统性地更强**(该书中称为"confirmation bias"的功能解释)。本章未处理这种不对称。
+- Emily Pronin《The bias blind spot》(2002)发现:人能识别他人的认知偏差,却系统低估自己被同类偏差影响的程度——ch06 提到过这一点,但本章更严重地依赖读者的独立推理能力,而未建立对称的自审机制。
+
+## 前提 3:"相关性"有稳定、可辨识的标准
+
+**作者论证对它的依赖**:本章多次以"X 和论题不相关"作为谬误判定依据(人身攻击"和其结论根本无关"、转移话题"不相干的事情")。这预设"相关 / 不相关"有清晰、稳定、被双方接受的标准。
+
+**现实可靠性**:
+- **相关性是论证性的**:两个命题是否相关,本身常常是争议的**焦点**而非**前提**。在道德论辩中,"一个人的动机是否相关于其论证质量"(如种族主义者批评种族主义是否无效)就是开放的哲学问题(参见 Miranda Fricker《Epistemic Injustice》, 2007)。
+- Paul Grice 的合作原则"Relevance"是对话规范而非逻辑规范,其**边界依赖共同背景知识**——跨文化跨专业论辩中,"相关"被双方分别定义。
+- Relevance Theory(Sperber & Wilson)证明相关性是**动态建构**的,读者根据当前认知上下文计算,并无绝对标准。作者预设的"相关 / 不相关"二分在认知语言学上不成立。
+
+## 前提 4:"分散注意力"可被读者**主动拒绝**
+
+**作者论证对它的依赖**:"转移话题谬误"和"光环效应谬误"的识别依赖读者能够**意识到自己被分散**,并主动把注意力拉回原论题。
+
+**现实可靠性**:
+- **注意力是稀缺和易被劫持的**:Daniel Kahneman《思考,快与慢》系统论证系统 1 的自动反应极难被系统 2 完全覆盖——光环效应、情绪煽动、标签命名的效果在被意识到之前已经发生了锚定。
+- **情感优先性**:Antonio Damasio《Descartes' Error》(1994)论证情感先于认知评估到达决策中心,读者识别"诉诸感情"后仍然已经被其影响。
+- **数字媒体环境**:社交媒体的算法推荐系统专门强化光环效应 / 恶语中伤 / 转移话题——在这一环境下,"意识到 + 抵抗"的认知成本远超读者的日常能量预算。
+
+作者假设的"意识即可抵抗"在实验心理学和媒介环境下都只是部分成立。
+
+## 前提 5:写作者和读者处于**理性评估**的合作框架中
+
+**作者论证对它的依赖**:本章最后一节"轮到你自己写时"假设写作者愿意预防谬误、给读者"公平机会";"使用这个关键问题"一节假设口头论辩的对方愿意回到论题。
+
+**现实可靠性**:
+- **战略性使用谬误**:政治传播(Frank Luntz 的"Words That Work")、广告业、法庭辩护把谬误当作**战术工具**——制造滑坡恐慌、美化候选人、抹黑对手,不是不慎误用,而是**精心设计**。对这类写作者,"预防谬误"的劝诫无效。
+- **对抗性对话**:法庭交叉质询、竞选辩论、商业谈判中,对方**就是要**让你陷入谬误陷阱。作者的"询问对方有没有更好的理由"在合作性对话中可用,在对抗性对话中会让自己被再次利用。
+- **群体极化**:回音室中的论辩不是"寻找真理"而是"强化身份",本章工具在这类场景中失焦。
+
+作者把阅读场景理想化为合作性理性讨论,把对抗性语境当作例外处理——实际上,本章工具最常被需要的正是对抗性语境。
+
+## 前提 6:谬误识别**不改变**读者对原论题的立场
+
+**作者论证对它的依赖**:作者暗示谬误识别是"过滤器"——把欺骗性推理过滤掉后,读者对论题的**真正判断**仍然独立保持。
+
+**现实可靠性**:
+- **反向启发**:读者识别对方谬误后,常常过度自信地**反向断言**——"他的论证是谬误 → 他的结论是错的"。这是"fallacy fallacy"(the fallacy of fallacies)——把"论证不成立"误读为"结论不成立"。作者在"使用这个关键问题"一节提到要继续询问对方有没有更好理由,但未系统警告反向推断的风险。
+- **心理占位**:一旦把某个论证贴上"谬误"标签,读者的元认知常常就**停止**对该论题的独立思考——把"已识别谬误"当作"已获得结论"。这是批判性思维工具的副作用,作者未处理。
+
+## 前提 7:存在**非谬误性论证**可作为对照基准
+
+**作者论证对它的依赖**:"谬误"概念需要其对立面——"健康论证"——作为参照。否则所有论证都可以被找出某种谬误,评价机制失效。
+
+**现实可靠性**:
+- **健康论证的缺席**:本章大多数演示都是**找出谬误的反例**,没有一个系统化的"完全不含谬误的论证"正面范本。读者学到的是"识别错",没学到"什么是对"——这会让批判性评估工具滑向**纯破坏性**使用。
+- Daniel Kahneman 在 *Thinking, Fast and Slow* 明确指出:教读者识别偏差不足以让他们做出更好判断,必须同时教**正确推理的样板**。本章后续章节(ch08-ch13)会在证据评价维度上部分补齐,但谬误维度上"正面范本"的缺失是本章方法论的内在缺口。
+- Perelman & Olbrechts-Tyteca《The New Rhetoric》(1969)主张合理论证需要从"可接受的听众"标准出发评价,而非单纯的"无谬误"判定——本章未把这一维度纳入。
+
+## 前提 8:阅读时读者拥有**足够的慢思考带宽**
+
+**作者论证对它的依赖**:本章展示的识别步骤(列出结构 → 找假设 → 诊断三类机制 → 参考清单 → 判断相关性)是密集的慢思考活动,假设读者处于"可以坐下来分析一段文字"的认知状态。
+
+**现实可靠性**:
+- **注意力稀缺生态**:社交媒体、短视频、工作消息流中,单文本平均注意时长以秒计。本章工具的认知成本与这一生态不兼容。
+- **认知负荷**:在决策压力、情绪激烈、信息过载中,读者即使掌握工具也无法稳定调用——Dual-task research 显示系统 2 的可用带宽在高负荷下显著收窄。
+- 作者在"扩展你关于谬误的知识"一节建议读戴默等著作,但这是在已有慢阅读带宽的基础上才可能发生的"锦上添花",不解决稀缺生态下的工具启动问题。
+
+本章方法论最适用于**具备足够时间和元认知资源的慢阅读场景**(学术阅读、政策评审、深度研究),在快速信息消费场景下需要被**压缩 / 嵌入工作流**才能实用——这是使用者必须认识的边界。
+  </script>
+
+  <script type="text/markdown" id="md-q5">
+# Q5 · 与其他章节的关系
+
+## (a) 本章承接了前面哪些章节的铺垫
+
+**承接 ch02(第1章 学会提出好问题)**:
+- ch02 奠定的**强势批判性思维 vs 弱势批判性思维**在本章获得一次重要检验:谬误识别最容易滑向弱势思维(只找对方的错、不审视自己的错)。本章"轮到你自己写时"和"使用这个关键问题"两节主动建立对称性——前者把工具反指向写作者自己,后者建议口头论辩中不终止对话而询问对方是否还有更好理由。这是 ch02 核心精神在本章的具体操作化。
+- ch02 的**施惠氛围**在本章继续被要求:识别谬误是为了让论证变扎实,不是为了把对方打倒。作者反复强调"建设性的批判性思维精神",避免批判工具成为论辩武器。
+- ch02 的**自主性**与**谦恭有礼**在"不用死记硬背各种谬误的名称"一节获得回声——作者主动放弃让读者背清单,要求读者用三问判断,这是自主性的尊重。
+
+**承接 ch03(第2章 论题和结论是什么)**:
+- ch03 建立的**结论 / 论题**二元识别是本章识别谬误的先决技能。本章反复强调"脑子里谨记真正的论题所在",谬误识别的起点总是**把论题找回来**——没有 ch03 的工具,转移话题谬误根本无法被诊断。
+- ch03 的**描述性论题 vs 规定性论题**二分在本章通过谬误清单被进一步区分:人身攻击、诉诸感情、虚假两难在规定性论争中尤其频繁;偷换概念、诉诸可疑权威、循环论证在描述性论争中尤其频繁。作者未明说这一分化,但清单本身已经呈现。
+
+**承接 ch04(第3章 理由是什么)**:
+- ch04 的**结论 / 理由**结构是本章谬误识别的操作对象。作者明确指出"你的主要问题是:按照提供的理由来看,这个结论到底在多大程度上可以被接受?"——谬误识别就是**审查理由能否支撑结论**的专项工具。
+- ch04 的**施惠原则**(先假设对方论证最无懈可击)在本章被要求保留——识别谬误不是为了驳倒,而是为了询问对方有没有更好的理由。
+- ch04 把"理由"区分为事实/数据、逻辑推理、历史案例,本章的多数谬误都围绕**逻辑推理**环节展开(滑坡、偷换、两难、循环)——事实/数据的谬误(抽样偏差、测量效度)留给 ch09-ch11 专门处理。
+
+**承接 ch05(第4章 哪些词语意思不明确)**:
+- ch05 的**词义不明确**工具在本章通过**偷换概念谬误**获得专门化:偷换概念是 ch05 歧义问题的典型武器化。作者在识别偷换概念时使用的"关键词重复出现 + 意思变化检查"正是 ch05 的操作化延续。
+- ch05 的**附加感情色彩的词**警告在本章扩展为**诉诸感情谬误 + 恶语中伤 + 光环效应**三种变体——ch05 指出情感词让"思维短路",本章把这种短路的三种常见花样系统展开。
+
+**承接 ch06(第5章 什么是价值观假设和描述性假设)**:
+- ch06 的**描述性假设识别**是本章谬误识别的核心技能。作者在本章开头明言"如果你已经能找到假设(见第5章),特别是描述性假设,那你就已经具备了判断可疑的假设和发现谬误的主要技能"——ch06 的假设识别工具在本章被转化为**三类谬误机制**的诊断发动机,特别是"错误假设型"谬误的识别完全依赖 ch06 的假设审查工序。
+- ch06 的**价值观假设**在本章通过**诉诸感情谬误 + 稻草人谬误 + 虚假两难谬误**获得武器化视角——作者可以通过情绪煽动、立场歪曲、选项压缩来让读者**绕过价值观假设的显式审查**直接接受结论。本章提供的是这类价值观偷渡的识别清单。
+- ch06 强调**"作者应主动披露假设"**的写作伦理,在本章通过"轮到你自己写时"一节延伸为**"作者应主动预防谬误"**——合在一起构成诚实写作的两层工序:披露你依赖什么,预防你靠欺骗。
+
+## (b) 本章为后面哪些章节做准备
+
+**直接后续(证据评价的专门化)**:
+- **ch08《证据的效力(一):直觉、个人经历、典型案例、当事人证词和专家意见》**:本章的**诉诸可疑权威谬误**在 ch08 获得专项工具化——ch08 系统讨论专家意见作为证据的评价标准(专门知识、偏见、研究方法论等),把本章的"原则提醒"转化为"操作规范"。ch08 也进一步处理"个人经历""典型案例"作为证据的效力——本章已预告这些常见于诉诸感情和光环效应中。
+- **ch09《证据的效力(二):个人观察、研究报告和类比》**:本章的**追求完美解决方案 + 滑坡 + 偷换概念**谬误在 ch09 获得因果与研究方法论层面的专门化。ch09 会详细讨论"类比"何时是证据、何时是谬误——这一问题在本章只点到为止。
+- **ch10《有没有替代原因》**:本章的**乱扣帽子谬误**是 ch10"因果推理失误"的入门版——ch10 会系统展开"单因果错觉""因果方向混淆""相关非因果"等专业错误模式,本章已为这类审视打下基础("命名不等于解释"的提醒正是因果探索的起点)。
+- **ch11《数据有没有欺骗性》**:本章的**诉诸公众 + 转移话题**谬误在 ch11 获得定量版展开——民意调查抽样偏差、比率 vs 绝对数、时间窗口选择等专业数据欺骗手段,都是本章通用原理的专业版。
+
+**对省略与结论多元性的铺垫**:
+- **ch12《有什么重要信息被省略了》**:稻草人谬误、光环效应、转移话题谬误都涉及**选择性呈现信息**——ch12 把"省略"作为独立评价维度专门展开,本章的谬误清单已经隐含对省略的审视。
+- **ch13《能得出哪些合理的结论》**:虚假两难谬误是 ch13 多元结论能力的反面——识别虚假两难本身就是生成多元结论的能力。ch13 会把"从同一组理由生成多个合理结论"作为独立工具展开,本章已为这一工具提供了**最重要的诊断反面**。
+
+## 本章在全书坐标系中的角色
+
+ch01-ch06 教的是**理解论证骨架**的工具(论题、结论、理由、词义、假设),从 ch07 开始教的是**评价论证强弱**的工具(谬误、证据、因果、数据、省略、多元结论)。**本章是从"理解阶段"切换到"评价阶段"的枢纽章**——作者在开篇用"淘金盘比喻"明确标识了这次切换:前面是从淘金盘里剔除不相干部分找出矿石,本章开始是要分辨真金和破铜烂铁。
+
+从全书架构看,本章也是**谬误识别**这一通用扫描器与**证据评价**(ch08-ch11)、**因果评价**(ch10)、**数据评价**(ch11)等专项扫描器之间的接口层。本章提供的三类机制(错误假设 / 分散注意力 / 结论自证)在后续每一种证据评价中都会以具体形式反复出现——ch08 的"个人经历不可靠"是错误假设型的一个子集,ch09 的"样本不代表总体"是错误假设型的研究版,ch10 的"相关非因果"是错误假设型的因果版,ch11 的"比率欺骗"是注意力分散型的定量版。
+
+把前 6 章与本章合并看:前 6 章教**"读论证"**——看清结构与前提;本章教**"扫谬误"**——识别欺骗与漏洞。两者合起来才构成批判性阅读的**完整扫描通道**——没有前 6 章,本章的"相关 / 不相关"判断无法展开;没有本章,前 6 章的识别工作会停留在描述层面,评价层面空转。
+  </script>
+
+  <script type="text/markdown" id="md-q6">
+# Q6 · 我如何实践
+
+针对 reader_persona —— **知识工作者,追求系统化的学习与工作方法**。本章把批判性阅读从假设层升级到谬误层,以下五条把"三类机制扫描"嵌入日常工作流。
+
+## 1. "三问诊断卡":遇到关键论证强制跑一轮
+
+**建议是什么**:为所有需要评估的关键论证(内部提案、外部报告、决策备忘录、咨询 deck、政策文件)建立一张固定格式的**三问诊断卡**:
+
+| 论证标题 | Q1 错误假设型:它需要什么可疑假设才能成立? | Q2 注意力分散型:它是否把我拉离真正的论题? | Q3 结论自证型:它的理由是否只是结论的换词? | 结论:强 / 中 / 弱 |
+
+每张卡要求三问**都填**,不能留空。卡一旦填完,把最可疑的一列(通常是某一型机制)作为与论证者对话或反馈的切入口。
+
+**触发场景**:
+- 跨部门提案评审。
+- 咨询公司或外部合作方的"we recommend X"推荐文档。
+- 董事会 / 管理层决策前的关键备忘录审读。
+- 遇到要求你表态的政策类、战略类、合规类文件。
+
+**执行时注意事项**:
+- 三问的**顺序**不要搞反——先问 Q1(假设),再问 Q2(注意力),最后问 Q3(自证)。Q3 最隐蔽也最容易被前两问遗漏,放在最后做扫尾。
+- 填"弱"不等于"推翻"——本章明示,识别谬误后建设性做法是**询问对方有没有更好理由**。在反馈意见中加一栏"建议提供的补强证据",不要把"识别谬误"变成"否决论证"。
+- 如果三问都找不到明显机制,记录下来——**有些论证的确健康**,这比硬找问题更重要(避免"fallacy fallacy"——把"挑到刺"误为"找到真理")。
+
+## 2. "谬误清单预警"——写作前、演讲前、决策前的自审
+
+**建议是什么**:为自己常写的几类文档(周报、提案、战略备忘录、对外汇报)各配一张**谬误清单预警**,在定稿前逐条对照自查:
+
+- **人身攻击**:我是否在论证中提及对立方 / 前任 / 竞争对手的**人而非事**?
+- **滑坡**:我预测的连锁后果,**因果概率**是否可估?是否已考虑中间阻断机制?
+- **追求完美**:我反对某方案时,是否默认"不能完全解决就不用做"?是否比较了可行替代方案?
+- **偷换概念**:我的关键词(增长、创新、效率、成功、风险)在文中各处**含义**是否一致?
+- **诉诸权威**:我引用的权威,在**这个具体论题**上是否有专门知识?
+- **诉诸公众**:我用"大家都这么看""市场共识"做依据时,公众 / 市场是否做过充分研究?
+- **诉诸感情**:我的措辞是否主要通过情绪煽动让读者同意?
+- **稻草人**:我反驳的对方立场,是否与他们**实际主张**一致?(不是简化版)
+- **虚假两难**:我给出的"二选一",是否真的只有两个选项?
+- **乱扣帽子**:我对现象的"命名"(颠覆式创新、数字化转型、组织熵增)是否在**解释**因果,还是只在**贴标签**?
+- **光环效应**:我用"卓越""敏捷""客户至上"等美德词汇时,是否有**具体的政策 / 指标**支撑?
+- **转移话题**:我在回应反方质疑时,是否把论题切换到对我有利的子议题?
+- **循环论证**:我的理由是否只是结论的换词重复?
+
+**触发场景**:
+- 重大决策前的书面推荐 / 反对意见。
+- 对外汇报、客户 deck、媒体采访准备。
+- 内部战略研讨会的开场陈述。
+- 写给老板或董事会的关键邮件。
+
+**执行时注意事项**:
+- 清单不需要每次都跑全部——根据文档类型裁剪。战略备忘录的高危区是诉诸权威、偷换概念、虚假两难;人事决策的高危区是人身攻击、乱扣帽子;财务预测的高危区是诉诸公众、滑坡、循环论证。
+- 自查最有效的时机是**定稿前的最后一次静默阅读**——这时你最疲倦但离提交最近,谬误也最容易显形。
+- 如果某项被标出但你决定保留(例如你故意使用美德词汇以表达价值偏好),在脚注中**主动披露**——这是 ch06"作者应主动披露假设"伦理的延伸。
+
+## 3. "口头论辩三技":面对面场景的即时应对
+
+**建议是什么**:在口头论辩中(会议讨论、客户谈判、面试、媒体采访)常用三招,识别并建设性应对谬误——
+
+- **拉回论题**:"这是一个有趣的角度,但我们原本在讨论的问题是 ___。能不能先把那个问题讨论完再看这里?"——针对转移话题谬误。
+- **具体化要求**:"你说这是'行业共识',能帮我指一下具体是哪些机构 / 研究者持有这种看法,研究依据是什么?"——针对诉诸公众、诉诸可疑权威、光环效应。
+- **扩展选项**:"你提到的这两种选择我都注意到了,除此之外我们还考虑过 ___ 吗?"——针对虚假两难。
+
+每一招都是**疑问句 + 具体化要求**,避免直接说"你犯了 XX 谬误"——那会把对话变成面子保卫战,让论题更难深入。
+
+**触发场景**:
+- 跨部门会议上对方用简化口号推动决策。
+- 面试时候选人用模糊赞美词回避具体事例。
+- 董事会上被要求"二选一"但你觉得有第三路径。
+- 媒体采访中记者用引导性问题暗设虚假两难。
+
+**执行时注意事项**:
+- 作者在本章明言:"你想要深入交谈的最有效措施就是问一下犯了逻辑谬误的对方有没有更好的理由来证实其结论"——这是本章工具的**建设性**原则,不能忘。
+- 疑问句比陈述句更容易推进对话——"你是否考虑过 Y?"胜过"你忽略了 Y"。
+- 不追求当场"揭穿",追求**让论题回到扎实的理由层面**。如果对方不能当场提供更好的理由,给他时间准备,不要逼他当场认错。
+
+## 4. "决策复盘:谬误漂移追踪"——每季度一次
+
+**建议是什么**:每个季度抽 2-3 小时,对自己参与的重大决策做一次**谬误漂移追踪**——
+
+- 取出 1-3 个你**主导或强烈支持**的决策(新业务立项、人事任命、战略转向、重大投资)。
+- 回顾当时你写下或口头提出的**主要理由**。
+- 用谬误清单(见第 2 条)**自审**每条理由——当时是否存在可疑假设、注意力分散、结论自证?
+- 对比**决策结果**与当时的预判,检查:
+  - 如果结果与预判一致 → 是因为理由扎实,还是因为运气?
+  - 如果结果与预判不一致 → 当时的理由中有没有本章所列的谬误?
+- 把识别出的"个人高频谬误"做成清单——例如"我在新业务立项时容易犯追求完美解决方案谬误""我在人事任命时容易犯诉诸可疑权威谬误"——未来决策时优先自审这些高频错。
+
+**触发场景**:
+- 季度或半年度个人复盘。
+- 重大决策失误后的事后分析(post-mortem)。
+- 年末自我评估 / 职业规划阶段。
+- 从一项长期负责转向另一项时的交接反思。
+
+**执行时注意事项**:
+- 复盘必须**落盘**(文字形式),否则系统 1 会默默偷换记忆——这是本章"意识 + 记录"原则的延续。
+- 追踪的目的是**找自己的谬误模式**,不是为了羞辱过去的自己。每个人都有高频谬误,识别它比自责有用。
+- 不要只复盘失败决策——成功决策里也常藏谬误,只是被运气掩盖。如果成功决策的理由其实是谬误,它可能在下一个情境中重演并造成失败。
+
+## 5. "团队共用谬误词汇":让批判性思维成为组织能力
+
+**建议是什么**:在你的团队 / 部门 / 公司内部,把本章 13 种谬误的名称做成**共同词汇**,推行三项实践——
+
+- **用共同语言**:在会议中可以说"这里可能有一个滑坡假设""这是不是一个追求完美解决方案?""'共识'这个词你和对方说的是同一个意思吗?"——把识别动作变成组织内常规语言。
+- **不当贴标签武器**:**严禁**把"你这是谬误"当作攻击对方的标签——一旦成为武器,团队会停止诚实使用这些词汇。作者本章强调的"建设性"精神在组织推行时尤其重要。
+- **定期谬误复盘**:把团队的重要决策文档,每季度抽一份做集体谬误复盘——用共同词汇审查,人人可以指出任何人的谬误(包括领导),但必须跟随"你建议如何补强?"的建设性追问。
+
+**触发场景**:
+- 跨职能团队的战略讨论。
+- 创业公司或新业务单元建立决策文化时。
+- 组织转型期需要提升集体理性时。
+- 培训新员工建立批判性工作习惯。
+
+**执行时注意事项**:
+- 团队推行前,先在**高层会议**试用一到两个季度,让领导先学会建设性使用——否则"谬误识别"会被下级当作讨好上级的告密工具。
+- 建议从**3-5 种**最常见的谬误开始(比如滑坡、诉诸公众、虚假两难、循环论证、诉诸可疑权威)——全部 13 种一次推行会让团队负担过重。
+- 为团队配备一份**正面范本**(见 Q4 前提 7 的批评)——不只指出"这是谬误",还要演示"这是扎实的论证"。让团队看到"对的样子"而不只是"错的样子"。
+
+---
+
+**元原则**:ch07 最深的价值不是让你"记住 13 种谬误",而是让你认识到——**推理中的欺骗大多不靠复杂手段,而靠三类简单机制**(错误假设、注意力转移、结论自证)。当你把这三问内化为阅读与思考的默认反射,你不需要背任何清单。知识工作者的成熟标志之一,就是把**"谬误识别"**从"识破别人的招"升级为**"预防自己的招"**——因为自己用的谬误,你最有机会识破;而你最应该识破的,正是自己的。
+  </script>
+
+  <script>
+    function readerApp() {
+      return {
+        readProgress: 0,
+        activeSection: 'hero',
+        activeFilter: 'all',
+        flipped: {},
+        diagText: '',
+        diagResults: [],
+        diagLoading: false,
+        activeQ: 'Q1',
+        renderedQ: '',
+        theme: document.documentElement.getAttribute('data-theme') || 'light',
+
+        toggleTheme() {
+          this.theme = this.theme === 'light' ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', this.theme);
+          try { localStorage.setItem('reader-theme', this.theme); } catch(e) {}
+        },
+
+        sixTabs: [
+          { id: 'Q1', label: '作者说了什么', chars: '1,706', desc: '本章核心主张:谬误是推理中的欺骗手段,可归结为三种通用机制——错误假设、注意力转移、结论自证。' },
+          { id: 'Q2', label: '论据是什么',   chars: '2,581', desc: '10 大论点 + 历史案例对照——把 13 类谬误放回作者原始论证现场,看每条主张靠什么撑起来。' },
+          { id: 'Q3', label: '反例与局限',   chars: '2,510', desc: '11 条反例与边界——引用 Hamblin / Walton / Pragma-dialectics / Hahn-Oaksford / Volokh / MacIntyre / Hardwig 等,审视本章工具的哲学边界。' },
+          { id: 'Q4', label: '隐含前提',     chars: '2,213', desc: '8 条本章未明说但隐藏的前提——从"谬误可枚举"到"读者拥有独立推理能力"再到"理性合作框架",作者依赖什么才让工具成立。' },
+          { id: 'Q5', label: '与其他章节的关系', chars: '1,860', desc: '本章如何承接 ch02-ch06 的论证识别工具,又如何为 ch08-ch13 的证据/因果/数据/省略/多结论评价开通道路。' },
+          { id: 'Q6', label: '我如何实践',   chars: '2,403', desc: '5 条针对知识工作者的实践——三问诊断卡、谬误清单预警、口头论辩三技、决策复盘谬误漂移追踪、团队共用谬误词汇。' }
+        ],
+
+        get currentTab() {
+          return this.sixTabs.find(t => t.id === this.activeQ) || this.sixTabs[0];
+        },
+
+        setActiveQ(id) {
+          this.activeQ = id;
+          this.renderQ();
+          // smooth scroll to top of section if user changes tabs
+          const sec = document.getElementById('deep-six');
+          if (sec && window.scrollY > sec.offsetTop + 300) {
+            sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        },
+
+        renderQ() {
+          const node = document.getElementById('md-' + this.activeQ.toLowerCase());
+          if (!node) { this.renderedQ = '<p>未找到内容</p>'; return; }
+          const md = node.textContent;
+          this.renderedQ = marked.parse(md, { breaks: false, gfm: true });
+        },
+
+        scrollToTop() {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        fallacies: [
+          // M-01 ASSUMPTION (7)
+          { code: 'F-01', mech: 'assumption', mechLabel: '错误假设',
+            name: '滑坡谬误', en: 'SLIPPERY SLOPE',
+            def: '夸大某举措会引发不可控的连锁反应,把第一步等同于最坏结果。',
+            examples: ['今天禁烟,明天就要禁酒,后天就要禁咖啡','给这个员工加薪,所有人都会要求加薪'],
+            crack: '追问:每一步连锁的概率有多大?有什么机制保证滑下去?'
+          },
+          { code: 'F-02', mech: 'assumption', mechLabel: '错误假设',
+            name: '追求完美解决方案', en: 'PERFECT SOLUTION',
+            def: '因为方案不完美就否定改良,假设"非完美 = 无用"。',
+            examples: ['安装防盗门没用,因为还是会被撬','禁烟禁不绝,所以禁了也白禁'],
+            crack: '追问:改良 vs 现状,是否仍有显著净改善?'
+          },
+          { code: 'F-03', mech: 'assumption', mechLabel: '错误假设',
+            name: '诉诸可疑权威', en: 'QUESTIONABLE AUTHORITY',
+            def: '权威在该论题上无专门知识,却被当作证据。',
+            examples: ['某一线明星代言儿童感冒药','体育明星谈宏观经济'],
+            crack: '追问:此人在这一具体论题上有无受过专门训练?'
+          },
+          { code: 'F-04', mech: 'assumption', mechLabel: '错误假设',
+            name: '诉诸公众', en: 'AD POPULUM',
+            def: '把"很多人这么认为"等同于"对"。',
+            examples: ['99% 的人都用 X,你不用就 out 了','大家都这么做,肯定没错'],
+            crack: '追问:公众意见是基于充分研究还是从众?'
+          },
+          { code: 'F-05', mech: 'assumption', mechLabel: '错误假设',
+            name: '虚假两难选择', en: 'FALSE DILEMMA',
+            def: '把多解问题伪装成两选一,屏蔽中间方案。',
+            examples: ['要么支持这项法案,要么不关心儿童','不和我们站在一起,就是站在恐怖分子那边'],
+            crack: '追问:除了 A 和 B,还有没有 C/D/E?'
+          },
+          { code: 'F-06', mech: 'assumption', mechLabel: '错误假设',
+            name: '乱扣帽子', en: 'EXPLAINING BY NAMING',
+            def: '用命名代替解释,把"我不知道"包装成"我懂个术语"。',
+            examples: ['他这么做是因为自恋','公司倒闭是因为管理层短视'],
+            crack: '追问:这个标签揭示了具体机制吗,还是只是换名字?'
+          },
+          { code: 'F-07', mech: 'assumption', mechLabel: '错误假设',
+            name: '光环效应', en: 'HALO EFFECT',
+            def: '让某个正面联想覆盖具体评价,假设"X 在 A 好 → X 在 B 也好"。',
+            examples: ['他是诺奖得主,他对地缘政治的看法肯定也对','她公司估值高,她的人生建议肯定有用'],
+            crack: '追问:此人的成就领域和当前论题是否相关?'
+          },
+          // M-02 DISTRACTION (4)
+          { code: 'F-08', mech: 'distraction', mechLabel: '注意力转移',
+            name: '人身攻击', en: 'AD HOMINEM',
+            def: '攻击人而非论证本身,把人格瑕疵等同于观点错误。',
+            examples: ['他离过婚,所以他的婚姻建议不能听','她是富二代,她讲奋斗都是空话'],
+            crack: '追问:这个人身缺陷与具体论证的有效性有什么逻辑关系?'
+          },
+          { code: 'F-09', mech: 'distraction', mechLabel: '注意力转移',
+            name: '诉诸感情', en: 'APPEAL TO EMOTION',
+            def: '用恐惧/愤怒/同情/爱国情怀绕过理性推理。',
+            examples: ['想想孩子吧!不通过这个法案就是不爱孩子','质疑这件事就是不爱国'],
+            crack: '追问:剥离情绪后,纯论证本身还成立吗?'
+          },
+          { code: 'F-10', mech: 'distraction', mechLabel: '注意力转移',
+            name: '稻草人', en: 'STRAW MAN',
+            def: '歪曲对方立场为更弱的版本,然后击败那个版本。',
+            examples: ['你说应该调整福利政策——所以你想让穷人饿死?','你支持持枪权——所以你希望小学被屠杀?'],
+            crack: '追问:对方真的这么说了吗?用对方原话核对。'
+          },
+          { code: 'F-11', mech: 'distraction', mechLabel: '注意力转移',
+            name: '转移话题', en: 'RED HERRING',
+            def: '引出无关问题分散注意力,让原话题被遗忘。',
+            examples: ['被问及自己的失误时,大谈对方过去的错误','被问预算超支,转而谈宏观经济'],
+            crack: '追问:这个新话题和原问题有逻辑关联吗?'
+          },
+          // M-03 CIRCULAR (2)
+          { code: 'F-12', mech: 'circular', mechLabel: '结论自证',
+            name: '偷换概念', en: 'EQUIVOCATION',
+            def: '同一词语在论证中前后含义不一致,造成虚假推理链。',
+            examples: ['自然=好(纯天然食品好)→ 毒蘑菇也是自然 → 毒蘑菇好?','法律=正义 → 不违法 = 正义'],
+            crack: '追问:这个词在论证两处的具体含义是同一个吗?'
+          },
+          { code: 'F-13', mech: 'circular', mechLabel: '结论自证',
+            name: '循环论证', en: 'BEGGING THE QUESTION',
+            def: '用结论本身作为支撑结论的前提。',
+            examples: ['圣经是真的,因为圣经里说它是上帝写的','他是个老实人,因为他从来不撒谎(怎么知道他不撒谎?因为他老实)'],
+            crack: '追问:把"前提"和"结论"换位,是不是同一句话?'
+          }
+        ],
+
+        quotes: [
+          { text: '所谓谬误,就是推理中的欺骗手段,作者有可能利用这个欺骗手段来说服你采纳其结论。',
+            note: '本章对"谬误"的核心定义——欺骗性 + 说服性 + 结构性,把"说错话"收紧为可识别的推理破绽。' },
+          { text: '提供的推理需要明显错误的或者让人不能接受的假设才能成立;把那些明明和结论无关的信息弄得好像和结论有关,以此来分散我们的注意力;看似为结论找证据,而证据算数的前提则取决于结论本身已经成立。',
+            note: '所有谬误的三机制总览——错误假设 / 注意力分散 / 结论自证。本章最可复用的诊断框架。' },
+          { text: '推理中的谬误不计其数……幸运的是,你并不需要识记所有这些谬误及其名称才能辨别出它们。只要你问出恰当的问题,就能找到推理谬误,就算你叫不出它们的名字也无所谓。',
+            note: '反清单主义宣言——把谬误识别从"知识记忆题"改造为"三问技能题",这是工具的可迁移性所在。' },
+          { text: '当我们被要求解释为什么特定的行为会发生时,我们常常受到诱惑,想要隐藏我们对很多复杂因果关系的无知,干脆给那种行为贴上个标签或者套上个名字,然后我们错误地假设因为我们知道那个标签或名字,我们就知道事情的起因。',
+            note: '本章最深的认知心理学洞察——"乱扣帽子"作为隐藏无知的认知捷径,对所有职业化术语使用者都是警钟。' },
+          { text: '在口头论辩中出现的那些谬误,你想要深入交谈的最有效措施就是问一下犯了逻辑谬误的对方有没有更好的理由来证实其结论。',
+            note: '本章的建设性精神——识别谬误的目的不是打败对方,而是邀请对方回到扎实理由。批判性思维从胜负式升级为共建式的关键。' }
+        ],
+
+        presetExamples: [
+          { label: '诉诸公众示例', text: '99% 的人都在用 X 牌手机,大家都这么选,你不用就 out 了。' },
+          { label: '虚假两难示例', text: '要么支持这项法案,要么你就是不关心儿童的安全。' },
+          { label: '人身攻击示例', text: '他离过婚,所以他写的关于婚姻经营的书根本不值得看。' },
+          { label: '滑坡谬误示例', text: '今天政府允许同性婚姻,明天就要允许多人结婚,后天人和动物也能结婚了。' },
+          { label: '诉诸感情示例', text: '想想可怜的孩子吧!如果你不支持这项法案,你就是冷血!' }
+        ],
+
+        triggerMap: {
+          assumption: [
+            { keys: ['99%', '%', '大家都', '所有人都', '人人都', 'out了', '都这么', '没错'], idx: 3, weight: 1 },
+            { keys: ['要么', '不是…就是', '没有中间', '只能选'], idx: 4, weight: 1 },
+            { keys: ['今天…明天', '一旦', '就会', '紧接着'], idx: 0, weight: 0.7 },
+            { keys: ['没用', '反正都', '禁也禁不绝', '解决不了'], idx: 1, weight: 0.6 }
+          ],
+          distraction: [
+            { keys: ['他离过婚', '她是', '人格', '私生活', '他这种人'], idx: 7, weight: 1 },
+            { keys: ['想想', '可怜', '心痛', '冷血', '不爱', '难道你忍心'], idx: 8, weight: 1 },
+            { keys: ['你是说', '你的意思是', '所以你想', '你希望'], idx: 9, weight: 0.8 }
+          ],
+          circular: [
+            { keys: ['因为'], idx: 12, weight: 0.3 }
+          ]
+        },
+
+        diagnose() {
+          this.diagLoading = true;
+          this.diagResults = [];
+          if (!this.diagText.trim()) { this.diagLoading = false; return; }
+          const text = this.diagText;
+          const hits = new Map();
+
+          for (const mech of Object.keys(this.triggerMap)) {
+            for (const rule of this.triggerMap[mech]) {
+              for (const key of rule.keys) {
+                if (text.includes(key)) {
+                  const f = this.fallacies[rule.idx];
+                  if (!hits.has(rule.idx)) {
+                    hits.set(rule.idx, {
+                      name: f.name,
+                      mech: f.mech,
+                      mechLabel: f.mechLabel,
+                      def: f.def,
+                      trigger: key,
+                      score: rule.weight
+                    });
+                  } else if (hits.get(rule.idx).score < rule.weight) {
+                    hits.get(rule.idx).score = rule.weight;
+                  }
+                  break;
+                }
+              }
+            }
+          }
+
+          this.diagResults = Array.from(hits.values()).sort((a, b) => b.score - a.score);
+          this.diagLoading = false;
+        },
+
+        init() {
+          // Reading progress
+          window.addEventListener('scroll', () => {
+            const h = document.documentElement;
+            const scrolled = h.scrollTop;
+            const total = h.scrollHeight - h.clientHeight;
+            this.readProgress = total > 0 ? (scrolled / total) * 100 : 0;
+          });
+
+          // Section tracking
+          const sections = ['hero','core','mechanisms','fallacies','diagnostic','quotes','related'];
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+              if (e.isIntersecting) this.activeSection = e.target.id;
+            });
+          }, { rootMargin: '-50% 0px -50% 0px' });
+          sections.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) observer.observe(el);
+          });
+
+          // Reveal animations
+          const revealObs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+              if (e.isIntersecting) e.target.classList.add('visible');
+            });
+          }, { threshold: 0.1 });
+          document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+          // Initial six-question render (wait until marked is loaded)
+          const tryRender = () => {
+            if (typeof marked !== 'undefined') {
+              this.renderQ();
+            } else {
+              setTimeout(tryRender, 80);
+            }
+          };
+          tryRender();
+        }
+      }
+    }
+  </script>
+</body>
+</html>
